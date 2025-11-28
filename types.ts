@@ -39,6 +39,7 @@ export interface Product {
   minStock: number;
   image: string;
   type: 'PRODUCT' | 'SERVICE';
+  compatible?: string;
 }
 
 export interface Sale {

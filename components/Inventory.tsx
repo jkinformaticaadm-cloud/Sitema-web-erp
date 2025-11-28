@@ -14,9 +14,9 @@ const CATEGORIES = [
 ];
 
 const INITIAL_PRODUCTS: Product[] = [
-  { id: '1', name: 'Tela iPhone 13 Pro OEM', category: 'Diversos', price: 1200, cost: 600, stock: 4, minStock: 5, image: 'https://picsum.photos/100/100?random=1', type: 'PRODUCT' },
-  { id: '2', name: 'Película de Vidro 3D', category: 'Peliculas 3D', price: 30, cost: 5, stock: 150, minStock: 20, image: 'https://picsum.photos/100/100?random=2', type: 'PRODUCT' },
-  { id: '3', name: 'Cabo USB-C Original', category: 'Cabos', price: 80, cost: 35, stock: 42, minStock: 10, image: 'https://picsum.photos/100/100?random=3', type: 'PRODUCT' },
+  { id: '1', name: 'Tela iPhone 13 Pro OEM', category: 'Diversos', price: 1200, cost: 600, stock: 4, minStock: 5, image: 'https://picsum.photos/100/100?random=1', type: 'PRODUCT', compatible: 'iPhone 13 Pro, A2638' },
+  { id: '2', name: 'Película de Vidro 3D', category: 'Peliculas 3D', price: 30, cost: 5, stock: 150, minStock: 20, image: 'https://picsum.photos/100/100?random=2', type: 'PRODUCT', compatible: 'iPhone 11, XR' },
+  { id: '3', name: 'Cabo USB-C Original', category: 'Cabos', price: 80, cost: 35, stock: 42, minStock: 10, image: 'https://picsum.photos/100/100?random=3', type: 'PRODUCT', compatible: 'Samsung S20, S21, S22, Motorola' },
   { id: '4', name: 'Formatação PC', category: 'Informatica', price: 150, cost: 0, stock: 0, minStock: 0, image: 'https://picsum.photos/100/100?random=4', type: 'SERVICE' },
 ];
 
@@ -43,7 +43,8 @@ export const Inventory: React.FC = () => {
     stock: 0,
     minStock: 5,
     image: '',
-    type: 'PRODUCT'
+    type: 'PRODUCT',
+    compatible: ''
   });
 
   const handleNewProduct = () => {
@@ -56,7 +57,8 @@ export const Inventory: React.FC = () => {
       stock: 0,
       minStock: 5,
       image: '',
-      type: 'PRODUCT'
+      type: 'PRODUCT',
+      compatible: ''
     });
     setIsModalOpen(true);
   };
@@ -111,6 +113,17 @@ export const Inventory: React.FC = () => {
     }));
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, image: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleTypeChange = (type: 'PRODUCT' | 'SERVICE') => {
     setFormData(prev => ({ ...prev, type }));
   };
@@ -127,7 +140,8 @@ export const Inventory: React.FC = () => {
       const matchesSearch = 
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchQuery.toLowerCase());
+        product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (product.compatible && product.compatible.toLowerCase().includes(searchQuery.toLowerCase()));
       
       const matchesCategory = categoryFilter === 'Todas Categorias' || product.category === categoryFilter;
 
@@ -164,7 +178,7 @@ export const Inventory: React.FC = () => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
           <input 
             type="text" 
-            placeholder="Buscar por nome, código ou categoria..." 
+            placeholder="Buscar por nome, código, categoria ou compatibilidade..." 
             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -232,7 +246,12 @@ export const Inventory: React.FC = () => {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <img src={product.image} alt={product.name} className="h-10 w-10 rounded-lg object-cover bg-gray-100" />
-                        <span className="font-medium text-gray-900">{product.name}</span>
+                        <div>
+                            <span className="font-medium text-gray-900 block">{product.name}</span>
+                            {product.compatible && (
+                                <span className="text-xs text-gray-500 block max-w-[200px] truncate">Compatível: {product.compatible}</span>
+                            )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -355,6 +374,18 @@ export const Inventory: React.FC = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900" 
                   />
                 </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Compatível com (Modelos)</label>
+                  <input 
+                    type="text" 
+                    name="compatible"
+                    value={formData.compatible || ''}
+                    onChange={handleChange}
+                    placeholder="Ex: iPhone 11, XR, 12..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900" 
+                  />
+                </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
@@ -371,19 +402,22 @@ export const Inventory: React.FC = () => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">URL da Imagem</label>
-                  <div className="flex gap-2">
-                    <input 
-                        type="text" 
-                        name="image"
-                        value={formData.image}
-                        onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
-                        placeholder="http://..." 
-                    />
-                    <div className="w-10 h-10 bg-gray-100 rounded border border-gray-200 flex items-center justify-center text-gray-400">
-                       {formData.image ? <img src={formData.image} alt="Preview" className="w-full h-full object-cover rounded" /> : <ImageIcon size={20}/>}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Imagem</label>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+                       {formData.image ? <img src={formData.image} alt="Preview" className="w-full h-full object-cover" /> : <ImageIcon size={20} className="text-gray-400"/>}
                     </div>
+                    <label className="cursor-pointer bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium flex-1 text-center">
+                        <span className="flex items-center justify-center gap-2">
+                            <Upload size={16} /> Upload
+                        </span>
+                        <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                    </label>
+                    {formData.image && (
+                        <button onClick={() => setFormData(prev => ({ ...prev, image: '' }))} className="text-red-500 hover:bg-red-50 p-2 rounded-lg border border-gray-300 bg-white">
+                            <Trash2 size={18} />
+                        </button>
+                    )}
                   </div>
                 </div>
 
