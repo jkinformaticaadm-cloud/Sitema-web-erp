@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, Search, Filter, X, Save, Smartphone, User, Wrench, FileText, Trash2, DollarSign, Edit, RefreshCw, CheckCircle, Wallet, CreditCard, Eye, Printer, Share2, FileCheck } from 'lucide-react';
-import { Order, OrderStatus, CashierTransaction, OrderItem } from '../types';
+import { Order, OrderStatus, CashierTransaction, OrderItem, Customer } from '../types';
 
 interface OrdersProps {
   onAddTransaction: (t: CashierTransaction) => void;
+  customers: Customer[];
 }
 
 const MOCK_SERVICES = [
@@ -33,7 +34,7 @@ const STATUS_OPTIONS: OrderStatus[] = [
   'Entregue'
 ];
 
-export const Orders: React.FC<OrdersProps> = ({ onAddTransaction }) => {
+export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -44,6 +45,10 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction }) => {
   // Search and Filter State
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('Todos Status');
+
+  // Customer Autocomplete State
+  const [customerSearchQuery, setCustomerSearchQuery] = useState('');
+  const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
 
   // Print Mode State
   const [printMode, setPrintMode] = useState<'A4' | 'THERMAL'>('A4');
@@ -88,6 +93,12 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction }) => {
     });
   }, [orders, searchQuery, statusFilter]);
 
+  const filteredCustomers = useMemo(() => {
+    if (!customerSearchQuery) return [];
+    const q = customerSearchQuery.toLowerCase();
+    return customers.filter(c => c.name.toLowerCase().includes(q) || c.phone.includes(q));
+  }, [customers, customerSearchQuery]);
+
   // Reset or Populate form when Modal opens/closes or selection changes
   useEffect(() => {
     if (isModalOpen) {
@@ -102,6 +113,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction }) => {
           defect: selectedOrder.defect || '',
         });
         setAddedItems(selectedOrder.items || []);
+        setCustomerSearchQuery('');
       } else {
         // Reset for new order
         setFormData({
@@ -114,6 +126,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction }) => {
           defect: '',
         });
         setAddedItems([]);
+        setCustomerSearchQuery('');
       }
     }
   }, [isModalOpen, selectedOrder]);
@@ -121,6 +134,17 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction }) => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectCustomer = (customer: Customer) => {
+    setFormData(prev => ({
+      ...prev,
+      customerName: customer.name,
+      customerPhone: customer.phone,
+      address: customer.address || prev.address
+    }));
+    setCustomerSearchQuery('');
+    setShowCustomerSuggestions(false);
   };
 
   // Logic to handle selecting a preset service
@@ -154,8 +178,11 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction }) => {
     };
 
     setAddedItems([...addedItems, newItem]);
-    if (type === 'SERVICE') setServiceInput({ name: '', price: '' });
-    else setProductInput({ name: '', price: '' });
+    if (type === 'SERVICE') {
+        setServiceInput({ name: '', price: '' });
+    } else {
+        setProductInput({ name: '', price: '' });
+    }
   };
 
   const removeItem = (id: string) => {
@@ -409,11 +436,13 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction }) => {
         </div>
       </div>
 
+      {/* ... (View Modal, Status Modal, Payment Modal remain unchanged) ... */}
+      {/* Keeping Modal structures intact, just focusing on Main OS Modal change below */}
+      
       {/* View/Print Modal */}
       {isViewModalOpen && selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh] animate-scale-in">
-             {/* Header Controls */}
              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl print:hidden">
                 <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                   <FileCheck className="text-blue-600" />
@@ -422,12 +451,10 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction }) => {
                 <button onClick={() => setIsViewModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={24}/></button>
              </div>
              
-             {/* Printable Content */}
              <div 
                className={`p-8 overflow-y-auto bg-white flex-1 ${printMode === 'THERMAL' ? 'print-thermal' : ''}`} 
                id="printable-area"
              >
-                {/* Print Header */}
                 <div className="border-b-2 border-gray-800 pb-6 mb-6">
                     <div className="flex justify-between items-start">
                         <div>
@@ -445,7 +472,6 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction }) => {
                     </div>
                 </div>
 
-                {/* Customer & Device Info - Responsive Grid for Print */}
                 <div className="grid grid-cols-2 gap-8 mb-8">
                     <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
                         <h3 className="font-bold text-gray-800 mb-2 border-b border-gray-200 pb-1">Cliente</h3>
@@ -461,7 +487,6 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction }) => {
                     </div>
                 </div>
 
-                {/* Defect Description */}
                 <div className="mb-8">
                     <h3 className="font-bold text-gray-800 mb-2">Defeito Relatado / Observações</h3>
                     <div className="p-4 border border-gray-200 rounded-lg text-gray-700 bg-white italic min-h-[80px]">
@@ -469,7 +494,6 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction }) => {
                     </div>
                 </div>
 
-                {/* Services/Products Table */}
                 <div className="mb-8">
                     <h3 className="font-bold text-gray-800 mb-2">Serviços e Peças</h3>
                     <table className="w-full text-left border border-gray-200 rounded-lg overflow-hidden">
@@ -506,7 +530,6 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction }) => {
                     </table>
                 </div>
 
-                {/* Footer / Terms */}
                 <div className="mt-12 pt-6 border-t border-gray-200 text-center">
                     <p className="text-xs text-gray-500 mb-4">
                         Garantia de 90 dias para peças substituídas e mão de obra, não cobrindo danos causados por mau uso, líquidos ou quedas.
@@ -523,7 +546,6 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction }) => {
                 </div>
              </div>
 
-             {/* Footer Actions */}
              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-xl flex justify-between items-center print:hidden">
                  <div className="flex gap-2">
                      <button onClick={handleWhatsApp} className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-sm">
@@ -546,7 +568,6 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction }) => {
         </div>
       )}
 
-      {/* Status Selection Modal */}
       {isStatusModalOpen && selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-20 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm animate-scale-in">
@@ -574,7 +595,6 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction }) => {
         </div>
       )}
 
-      {/* Payment/Finalize Modal */}
       {isPaymentModalOpen && selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md animate-scale-in">
@@ -643,9 +663,45 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction }) => {
                 
                 {/* Section: Dados do Cliente */}
                 <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm space-y-4">
-                  <h4 className="text-sm font-bold text-blue-600 uppercase tracking-wide flex items-center gap-2 border-b border-gray-100 pb-2">
-                    <User size={16} /> Dados do Cliente
-                  </h4>
+                  <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                    <h4 className="text-sm font-bold text-blue-600 uppercase tracking-wide flex items-center gap-2">
+                      <User size={16} /> Dados do Cliente
+                    </h4>
+                    {/* Customer Autocomplete Search */}
+                    <div className="relative w-64">
+                       <input 
+                         type="text"
+                         className="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-blue-50 focus:bg-white focus:ring-1 focus:ring-blue-500 outline-none"
+                         placeholder="Buscar cliente cadastrado..."
+                         value={customerSearchQuery}
+                         onChange={(e) => {
+                           setCustomerSearchQuery(e.target.value);
+                           setShowCustomerSuggestions(true);
+                         }}
+                         onFocus={() => setShowCustomerSuggestions(true)}
+                       />
+                       <Search size={14} className="absolute left-2.5 top-2 text-gray-400" />
+                       {showCustomerSuggestions && customerSearchQuery && (
+                         <div className="absolute top-full left-0 w-full bg-white shadow-xl border border-gray-200 rounded-lg mt-1 z-20 max-h-40 overflow-y-auto">
+                            {filteredCustomers.length > 0 ? (
+                                filteredCustomers.map(c => (
+                                  <button
+                                    key={c.id}
+                                    onClick={() => handleSelectCustomer(c)}
+                                    className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 border-b border-gray-50 last:border-0"
+                                  >
+                                    <span className="font-bold text-gray-800 block">{c.name}</span>
+                                    <span className="text-xs text-gray-500">{c.phone}</span>
+                                  </button>
+                                ))
+                            ) : (
+                              <div className="p-2 text-xs text-gray-500 text-center">Nenhum encontrado</div>
+                            )}
+                         </div>
+                       )}
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="col-span-1 md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Cliente</label>

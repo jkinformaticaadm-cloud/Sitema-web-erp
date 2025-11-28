@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ShoppingCart, Zap, FileText, User, Search, Plus, Trash2, ArrowLeft, X, Check, Package, Smartphone, History, RefreshCcw, DollarSign, Wallet, Truck, UserCheck, MapPin, Mail, Barcode, Eye, Printer, Share2, RotateCcw } from 'lucide-react';
-import { Product } from '../types';
+import { Product, Customer } from '../types';
 
 // --- MOCK DATA ---
 
@@ -12,13 +12,8 @@ const INITIAL_MOCK_PRODUCTS: Product[] = [
   { id: '5', name: 'Formatação e Backup', category: 'Serviços', price: 100.00, cost: 0.00, stock: 0, minStock: 0, image: '', type: 'SERVICE' },
 ];
 
-interface Customer {
-  id: string;
-  name: string;
-  cpf: string;
-  phone: string;
-  email?: string;
-  address?: string; 
+interface SalesProps {
+  customers: Customer[];
 }
 
 // Interface for Cart Item with details
@@ -53,21 +48,14 @@ interface CompletedSale {
   refundType?: 'CREDIT' | 'MONEY';
 }
 
-const INITIAL_CUSTOMERS: Customer[] = [
-  { id: '1', name: 'João da Silva', cpf: '123.456.789-00', phone: '(11) 99999-1234', address: 'Rua A, 123', email: 'joao@email.com' },
-  { id: '2', name: 'Maria Oliveira', cpf: '987.654.321-99', phone: '(21) 98888-5678', address: 'Av. Brasil, 500', email: 'maria@email.com' },
-  { id: '3', name: 'Pedro Souza', cpf: '456.123.789-55', phone: '(31) 97777-1111', address: 'Rua das Flores, 10', email: 'pedro@email.com' },
-];
-
 type SalesMode = 'MENU' | 'POS' | 'DETAILED' | 'PREORDER';
 
-export const Sales: React.FC = () => {
+export const Sales: React.FC<SalesProps> = ({ customers }) => {
   const [mode, setMode] = useState<SalesMode>('MENU');
   
   // Data State
   const [availableProducts, setAvailableProducts] = useState<Product[]>(INITIAL_MOCK_PRODUCTS);
-  const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
-
+  
   // Sale State
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -247,7 +235,7 @@ export const Sales: React.FC = () => {
         if (selectedCustomer) {
             finalCustomerName = selectedCustomer.name;
             finalCustomerPhone = selectedCustomer.phone;
-            finalCustomerCpf = selectedCustomer.cpf;
+            finalCustomerCpf = selectedCustomer.cpfOrCnpj;
             finalCustomerAddress = selectedCustomer.address || '';
             finalCustomerEmail = selectedCustomer.email || '';
         }
@@ -389,7 +377,7 @@ export const Sales: React.FC = () => {
     const q = customerSearchQuery.toLowerCase();
     return customers.filter(c => 
       c.name.toLowerCase().includes(q) || 
-      c.cpf.includes(q) || 
+      c.cpfOrCnpj.includes(q) || 
       c.phone.includes(q)
     );
   }, [customers, customerSearchQuery]);
@@ -410,7 +398,7 @@ export const Sales: React.FC = () => {
       setDetailedCustomerForm({
           name: c.name,
           phone: c.phone,
-          cpf: c.cpf,
+          cpf: c.cpfOrCnpj,
           address: c.address || '',
           email: c.email || ''
       });
@@ -576,11 +564,14 @@ export const Sales: React.FC = () => {
                  />
                  {customerSearchQuery && (
                    <div className="absolute top-full left-0 w-full bg-white shadow-xl rounded-lg border border-gray-100 mt-1 z-50 max-h-60 overflow-y-auto">
-                      {filteredCustomers.map(c => (
+                      {filteredCustomers.length > 0 ? filteredCustomers.map(c => (
                         <button key={c.id} onClick={() => { setSelectedCustomer(c); setCustomerSearchQuery(''); }} className="w-full text-left px-3 py-2 hover:bg-gray-50 border-b border-gray-50 last:border-0">
                           <p className="text-sm font-medium text-gray-800">{c.name}</p>
+                          <p className="text-xs text-gray-500">{c.phone}</p>
                         </button>
-                      ))}
+                      )) : (
+                          <div className="p-3 text-sm text-gray-500 text-center">Nenhum cliente encontrado</div>
+                      )}
                    </div>
                  )}
               </div>
@@ -674,11 +665,13 @@ export const Sales: React.FC = () => {
                           <Search className="absolute left-2.5 top-2 text-gray-400" size={14} />
                           {customerSearchQuery && (
                             <div className="absolute top-full left-0 w-full bg-white shadow-lg border border-gray-100 mt-1 z-20 max-h-40 overflow-y-auto">
-                                {filteredCustomers.map(c => (
+                                {filteredCustomers.length > 0 ? filteredCustomers.map(c => (
                                     <button key={c.id} onClick={() => selectCustomerForDetailed(c)} className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm">
                                         {c.name}
                                     </button>
-                                ))}
+                                )) : (
+                                    <div className="p-2 text-xs text-gray-500">Nenhum cliente encontrado</div>
+                                )}
                             </div>
                           )}
                       </div>
@@ -1069,6 +1062,7 @@ export const Sales: React.FC = () => {
       {mode === 'DETAILED' && <DetailedView />}
       {mode === 'PREORDER' && <PreOrderView />}
 
+      {/* PAYMENT MODAL and VIEW MODAL components remain unchanged */}
       {isPaymentModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-60 z-[70] flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl animate-scale-in flex flex-col">
@@ -1098,11 +1092,9 @@ export const Sales: React.FC = () => {
         </div>
       )}
       
-      {/* VIEW / PRINT MODAL */}
       {isViewModalOpen && selectedSale && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] animate-scale-in">
-             {/* Header */}
              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl print:hidden">
                 <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                   <FileText className="text-blue-600" />
@@ -1110,8 +1102,6 @@ export const Sales: React.FC = () => {
                 </h3>
                 <button onClick={() => setIsViewModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={24}/></button>
              </div>
-             
-             {/* Content Area (Printable) */}
              <div 
                className={`p-6 overflow-y-auto bg-white flex-1 ${printMode === 'THERMAL' ? 'print-thermal' : ''}`} 
                id="printable-area"
@@ -1125,7 +1115,6 @@ export const Sales: React.FC = () => {
                        <p><span className="font-bold">Data:</span> {selectedSale.date}</p>
                     </div>
                 </div>
-
                 <div className="mb-6">
                     <h3 className="text-sm font-bold uppercase text-gray-500 mb-2">Cliente</h3>
                     <p className="font-medium text-gray-900">{selectedSale.customerName}</p>
@@ -1137,7 +1126,6 @@ export const Sales: React.FC = () => {
                         </div>
                     )}
                 </div>
-
                 <div className="mb-6">
                     <h3 className="text-sm font-bold uppercase text-gray-500 mb-2">Itens</h3>
                     <table className="w-full text-sm">
@@ -1163,7 +1151,6 @@ export const Sales: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
-
                 <div className="border-t border-gray-200 pt-4 space-y-1">
                     <div className="flex justify-between text-sm text-gray-600">
                         <span>Subtotal</span>
@@ -1184,14 +1171,11 @@ export const Sales: React.FC = () => {
                         <span>{selectedSale.paymentMethod}</span>
                     </div>
                 </div>
-                
                 <div className="mt-8 text-center text-xs text-gray-400">
                     <p>Obrigado pela preferência!</p>
                     <p>Documento sem valor fiscal.</p>
                 </div>
              </div>
-
-             {/* Footer Actions */}
              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-xl flex justify-end gap-2 print:hidden">
                  <button className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-sm">
                      <Share2 size={18} />
@@ -1210,7 +1194,6 @@ export const Sales: React.FC = () => {
         </div>
       )}
 
-      {/* REFUND MODAL */}
       {isRefundModalOpen && saleToRefund && (
         <div className="fixed inset-0 bg-black bg-opacity-60 z-[80] flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md animate-scale-in">
@@ -1221,34 +1204,21 @@ export const Sales: React.FC = () => {
                </h3>
                <button onClick={() => setIsRefundModalOpen(false)}><X size={20} className="text-gray-400 hover:text-gray-600" /></button>
              </div>
-             
              <div className="p-6">
                 <p className="text-gray-600 mb-6 text-sm">
                     Você está prestes a estornar a venda <strong>#{saleToRefund.id}</strong> no valor de <strong>R$ {saleToRefund.total.toFixed(2)}</strong>. 
                     Selecione como deseja proceder com a devolução:
                 </p>
-
                 <div className="space-y-3">
-                    <button 
-                        onClick={() => confirmRefund('CREDIT')}
-                        className="w-full flex items-center p-4 border border-blue-200 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors group"
-                    >
-                        <div className="bg-blue-200 p-2 rounded-lg text-blue-700 mr-4 group-hover:bg-blue-300">
-                            <Wallet size={24} />
-                        </div>
+                    <button onClick={() => confirmRefund('CREDIT')} className="w-full flex items-center p-4 border border-blue-200 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors group">
+                        <div className="bg-blue-200 p-2 rounded-lg text-blue-700 mr-4 group-hover:bg-blue-300"><Wallet size={24} /></div>
                         <div className="text-left">
                             <h4 className="font-bold text-blue-900">Crédito na Loja</h4>
                             <p className="text-xs text-blue-700">Gera crédito para o cliente trocar por outros produtos.</p>
                         </div>
                     </button>
-
-                    <button 
-                         onClick={() => confirmRefund('MONEY')}
-                         className="w-full flex items-center p-4 border border-orange-200 bg-orange-50 rounded-xl hover:bg-orange-100 transition-colors group"
-                    >
-                        <div className="bg-orange-200 p-2 rounded-lg text-orange-700 mr-4 group-hover:bg-orange-300">
-                            <DollarSign size={24} />
-                        </div>
+                    <button onClick={() => confirmRefund('MONEY')} className="w-full flex items-center p-4 border border-orange-200 bg-orange-50 rounded-xl hover:bg-orange-100 transition-colors group">
+                        <div className="bg-orange-200 p-2 rounded-lg text-orange-700 mr-4 group-hover:bg-orange-300"><DollarSign size={24} /></div>
                         <div className="text-left">
                             <h4 className="font-bold text-orange-900">Devolução em Dinheiro</h4>
                             <p className="text-xs text-orange-700">Registra uma saída no caixa e devolve o valor ao cliente.</p>
@@ -1256,7 +1226,6 @@ export const Sales: React.FC = () => {
                     </button>
                 </div>
              </div>
-             
              <div className="p-4 bg-gray-50 border-t border-gray-100 rounded-b-xl flex justify-end">
                  <button onClick={() => setIsRefundModalOpen(false)} className="px-4 py-2 text-gray-500 hover:text-gray-700 font-medium text-sm">Cancelar</button>
              </div>

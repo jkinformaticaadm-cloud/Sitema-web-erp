@@ -5,20 +5,50 @@ import { Inventory } from './components/Inventory';
 import { Cashier } from './components/Cashier';
 import { Orders } from './components/Orders';
 import { Sales } from './components/Sales';
-import { View, CashierTransaction } from './types';
+import { Customers } from './components/Customers';
+import { View, CashierTransaction, Customer } from './types';
 import { Menu, Bell, Search } from 'lucide-react';
+
+const INITIAL_CUSTOMERS: Customer[] = [
+  { 
+    id: '1', name: 'João da Silva', cpfOrCnpj: '123.456.789-00', phone: '(11) 99999-1234', email: 'joao@email.com', 
+    address: 'Rua das Palmeiras, 123', city: 'São Paulo', state: 'SP', zipCode: '12230-000', neighborhood: 'Jardim Satélite',
+    deviceHistory: 'iPhone 11 (IMEI: 3569888...)', createdAt: '2024-01-15' 
+  },
+  { 
+    id: '2', name: 'Maria Oliveira', cpfOrCnpj: '987.654.321-99', phone: '(21) 98888-5678', email: 'maria@email.com', 
+    address: 'Av. Brasil, 500', city: 'Rio de Janeiro', state: 'RJ',
+    deviceHistory: 'Samsung S21', createdAt: '2024-02-20' 
+  },
+];
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
+  // Global State for Customers
+  const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
+
+  const handleSaveCustomer = (customer: Customer) => {
+    setCustomers(prev => {
+      const exists = prev.find(c => c.id === customer.id);
+      if (exists) {
+        return prev.map(c => c.id === customer.id ? customer : c);
+      }
+      return [customer, ...prev];
+    });
+  };
+
+  const handleDeleteCustomer = (id: string) => {
+    setCustomers(prev => prev.filter(c => c.id !== id));
+  };
+
   // Shared state for Financial Transactions (Cashier)
-  // This allows Orders to add transactions automatically when finalized
   const [transactions, setTransactions] = useState<CashierTransaction[]>([
-    { id: '1', type: 'ENTRY', category: 'Venda #1024', amount: 1200, description: 'Venda de Tela iPhone', date: '14:30' },
-    { id: '2', type: 'EXIT', category: 'Alimentação', amount: 45, description: 'Almoço Equipe', date: '12:00' },
-    { id: '3', type: 'ENTRY', category: 'Serviço #552', amount: 250, description: 'Troca de Bateria', date: '10:15' },
-    { id: '4', type: 'EXIT', category: 'Fornecedor', amount: 600, description: 'Peças Reposição', date: '09:00' },
+    { id: '1', type: 'ENTRY', category: 'Venda #1024', amount: 1200, description: 'Venda de Tela iPhone', date: '08/11/2024 14:30', operator: 'Administrador' },
+    { id: '2', type: 'EXIT', category: 'Alimentação', amount: 45, description: 'Almoço Equipe', date: '08/11/2024 12:00', operator: 'Administrador' },
+    { id: '3', type: 'ENTRY', category: 'Serviço #552', amount: 250, description: 'Troca de Bateria', date: '08/11/2024 10:15', operator: 'Carlos Técnico' },
+    { id: '4', type: 'EXIT', category: 'Fornecedor', amount: 600, description: 'Peças Reposição', date: '08/11/2024 09:00', operator: 'Administrador' },
   ]);
 
   const addTransaction = (transaction: CashierTransaction) => {
@@ -30,13 +60,15 @@ const App: React.FC = () => {
       case View.DASHBOARD:
         return <Dashboard />;
       case View.SALES:
-        return <Sales />;
+        return <Sales customers={customers} />;
       case View.INVENTORY:
         return <Inventory />;
       case View.CASHIER:
         return <Cashier transactions={transactions} onAddTransaction={addTransaction} />;
       case View.ORDERS:
-        return <Orders onAddTransaction={addTransaction} />;
+        return <Orders onAddTransaction={addTransaction} customers={customers} />;
+      case View.CUSTOMERS:
+        return <Customers customers={customers} onSave={handleSaveCustomer} onDelete={handleDeleteCustomer} />;
       default:
         return (
           <div className="flex flex-col items-center justify-center h-96 text-gray-400">

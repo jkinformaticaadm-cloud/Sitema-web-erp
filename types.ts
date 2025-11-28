@@ -48,6 +48,27 @@ export interface Sale {
   paymentMethod: 'Credit Card' | 'Cash' | 'Pix';
 }
 
+export interface Customer {
+  id: string;
+  name: string;
+  cpfOrCnpj: string;
+  rg?: string;
+  phone: string; // Celular
+  email: string;
+  
+  // Address
+  zipCode?: string;
+  address: string;
+  complement?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+  
+  deviceHistory?: string; 
+  notes?: string;
+  createdAt: string;
+}
+
 export interface Order {
   id: string;
   customerName: string;
@@ -70,6 +91,7 @@ export interface CashierTransaction {
   amount: number;
   description: string;
   date: string;
+  operator?: string;
 }
 
 export interface DashboardStat {
