@@ -34,6 +34,13 @@ const STATUS_OPTIONS: OrderStatus[] = [
   'Entregue'
 ];
 
+const INITIAL_ORDERS: Order[] = [
+    { id: '1024', customerName: 'Maria Silva', customerPhone: '(11) 99999-9999', device: 'iPhone 11', status: 'Em Análise', date: '08/11/2024', total: 0, items: [] },
+    { id: '1023', customerName: 'João Souza', device: 'Samsung A52', status: 'Aguardando Peça', date: '07/11/2024', total: 450, items: [{id: 'p1', name: 'Tela iPhone 11 Original', price: 450, type: 'PRODUCT'}] },
+    { id: '1022', customerName: 'Pedro Santos', device: 'Xiaomi Note 10', status: 'Finalizado' as OrderStatus, date: '06/11/2024', total: 180, items: [] },
+    { id: '1021', customerName: 'Ana Clara', device: 'Motorola G8', status: 'Entregue' as OrderStatus, date: '05/11/2024', total: 120, items: [] },
+];
+
 export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
@@ -53,13 +60,15 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
   // Print Mode State
   const [printMode, setPrintMode] = useState<'A4' | 'THERMAL'>('A4');
 
-  // Local list of orders (Mocking backend)
-  const [orders, setOrders] = useState<Order[]>([
-    { id: '1024', customerName: 'Maria Silva', customerPhone: '(11) 99999-9999', device: 'iPhone 11', status: 'Em Análise', date: '08/11/2024', total: 0, items: [] },
-    { id: '1023', customerName: 'João Souza', device: 'Samsung A52', status: 'Aguardando Peça', date: '07/11/2024', total: 450, items: [{id: 'p1', name: 'Tela iPhone 11 Original', price: 450, type: 'PRODUCT'}] },
-    { id: '1022', customerName: 'Pedro Santos', device: 'Xiaomi Note 10', status: 'Finalizado' as OrderStatus, date: '06/11/2024', total: 180, items: [] },
-    { id: '1021', customerName: 'Ana Clara', device: 'Motorola G8', status: 'Entregue' as OrderStatus, date: '05/11/2024', total: 120, items: [] },
-  ]);
+  // Orders State with LocalStorage Persistence
+  const [orders, setOrders] = useState<Order[]>(() => {
+    const saved = localStorage.getItem('techfix_orders');
+    return saved ? JSON.parse(saved) : INITIAL_ORDERS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('techfix_orders', JSON.stringify(orders));
+  }, [orders]);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -436,9 +445,6 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
         </div>
       </div>
 
-      {/* ... (View Modal, Status Modal, Payment Modal remain unchanged) ... */}
-      {/* Keeping Modal structures intact, just focusing on Main OS Modal change below */}
-      
       {/* View/Print Modal */}
       {isViewModalOpen && selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">

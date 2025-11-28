@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CreditCard, 
   TrendingUp, 
@@ -19,7 +19,8 @@ import {
   ArrowRight,
   CheckCircle,
   AlertCircle,
-  Clock
+  Clock,
+  X
 } from 'lucide-react';
 import { CardMachine } from '../types';
 
@@ -27,48 +28,95 @@ type FinancialTab = 'PAYABLES' | 'RECEIVABLES' | 'DRE' | 'CASH_FLOW' | 'PAYMENT_
 
 interface PixConfig {
   id: string;
-  name: string; // Nome da máquina ou Nome do Banco
-  rate: number; // Taxa percentual
+  name: string;
+  rate: number;
 }
 
-export const Financial: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<FinancialTab>('PAYMENT_METHODS');
+interface FinancialRecord {
+  id: string;
+  description: string;
+  amount: number;
+  dueDate: string;
+  category: string;
+  status: 'PENDING' | 'PAID' | 'OVERDUE';
+  type: 'PAYABLE' | 'RECEIVABLE';
+}
 
-  // --- PAYMENT METHODS STATE ---
-  const [machines, setMachines] = useState<CardMachine[]>([
+const INITIAL_MACHINES: CardMachine[] = [
     {
       id: '1',
       name: 'Moderninha Pro',
       debitRate: 1.99,
       creditSightRate: 3.19,
-      installmentRates: Array(18).fill(0).map((_, i) => (i === 0 ? 3.79 : 4.59 + (i * 1.5))) // Mock initial data
+      installmentRates: Array(18).fill(0).map((_, i) => (i === 0 ? 3.79 : 4.59 + (i * 1.5)))
     }
-  ]);
+];
 
-  const [pixTerminals, setPixTerminals] = useState<PixConfig[]>([
+const INITIAL_PIX_TERMINALS: PixConfig[] = [
     { id: '1', name: 'Pix Cielo', rate: 0.99 }
-  ]);
+];
 
-  const [pixBanks, setPixBanks] = useState<PixConfig[]>([
+const INITIAL_PIX_BANKS: PixConfig[] = [
     { id: '1', name: 'Pix Itaú CNPJ', rate: 0.00 }
-  ]);
+];
 
-  // --- CARD MACHINE ACTIONS ---
+const INITIAL_RECORDS: FinancialRecord[] = [
+  { id: '1', description: 'Aluguel Loja', amount: 2500.00, dueDate: '2024-11-10', category: 'Infraestrutura', status: 'PENDING', type: 'PAYABLE' },
+  { id: '2', description: 'Fornecedor Peças', amount: 1200.00, dueDate: '2024-11-05', category: 'Fornecedores', status: 'PAID', type: 'PAYABLE' },
+  { id: '3', description: 'Internet Fibra', amount: 150.00, dueDate: '2024-11-15', category: 'Infraestrutura', status: 'PENDING', type: 'PAYABLE' },
+  { id: '4', description: 'Recebimento Cartão (Antecipação)', amount: 3500.00, dueDate: '2024-11-12', category: 'Cartão de Crédito', status: 'PENDING', type: 'RECEIVABLE' },
+];
+
+export const Financial: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<FinancialTab>('PAYMENT_METHODS');
+
+  // --- PERSISTENCE STATE ---
+  const [machines, setMachines] = useState<CardMachine[]>(() => {
+    const saved = localStorage.getItem('techfix_machines');
+    return saved ? JSON.parse(saved) : INITIAL_MACHINES;
+  });
+
+  const [pixTerminals, setPixTerminals] = useState<PixConfig[]>(() => {
+    const saved = localStorage.getItem('techfix_pix_terminals');
+    return saved ? JSON.parse(saved) : INITIAL_PIX_TERMINALS;
+  });
+
+  const [pixBanks, setPixBanks] = useState<PixConfig[]>(() => {
+    const saved = localStorage.getItem('techfix_pix_banks');
+    return saved ? JSON.parse(saved) : INITIAL_PIX_BANKS;
+  });
+
+  const [records, setRecords] = useState<FinancialRecord[]>(() => {
+    const saved = localStorage.getItem('techfix_financial_records');
+    return saved ? JSON.parse(saved) : INITIAL_RECORDS;
+  });
+
+  // --- EFFECTS TO SAVE ---
+  useEffect(() => { localStorage.setItem('techfix_machines', JSON.stringify(machines)); }, [machines]);
+  useEffect(() => { localStorage.setItem('techfix_pix_terminals', JSON.stringify(pixTerminals)); }, [pixTerminals]);
+  useEffect(() => { localStorage.setItem('techfix_pix_banks', JSON.stringify(pixBanks)); }, [pixBanks]);
+  useEffect(() => { localStorage.setItem('techfix_financial_records', JSON.stringify(records)); }, [records]);
+
+  // --- MODAL STATES ---
+  const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
+  const [recordForm, setRecordForm] = useState<Partial<FinancialRecord>>({
+    description: '', amount: 0, dueDate: '', category: '', type: 'PAYABLE', status: 'PENDING'
+  });
+
+  // --- ACTIONS ---
+
   const handleAddMachine = () => {
-    const newMachine: CardMachine = {
+    setMachines([...machines, {
       id: Date.now().toString(),
-      name: '',
+      name: 'Nova Máquina',
       debitRate: 0,
       creditSightRate: 0,
       installmentRates: Array(18).fill(0)
-    };
-    setMachines([...machines, newMachine]);
+    }]);
   };
 
   const handleRemoveMachine = (id: string) => {
-    if (confirm('Tem certeza que deseja remover esta máquina?')) {
-      setMachines(machines.filter(m => m.id !== id));
-    }
+    if (confirm('Remover esta máquina?')) setMachines(machines.filter(m => m.id !== id));
   };
 
   const updateMachine = (id: string, field: keyof CardMachine, value: any) => {
@@ -87,79 +135,92 @@ export const Financial: React.FC = () => {
     }));
   };
 
-  // --- PIX ACTIONS ---
-  const handleAddPixTerminal = () => {
-    setPixTerminals([...pixTerminals, { id: Date.now().toString(), name: '', rate: 0 }]);
+  const handleAddPixTerminal = () => setPixTerminals([...pixTerminals, { id: Date.now().toString(), name: '', rate: 0 }]);
+  const handleRemovePixTerminal = (id: string) => setPixTerminals(pixTerminals.filter(p => p.id !== id));
+  const updatePixTerminal = (id: string, field: keyof PixConfig, value: any) => setPixTerminals(pixTerminals.map(p => p.id === id ? { ...p, [field]: value } : p));
+
+  const handleAddPixBank = () => setPixBanks([...pixBanks, { id: Date.now().toString(), name: '', rate: 0 }]);
+  const handleRemovePixBank = (id: string) => setPixBanks(pixBanks.filter(p => p.id !== id));
+  const updatePixBank = (id: string, field: keyof PixConfig, value: any) => setPixBanks(pixBanks.map(p => p.id === id ? { ...p, [field]: value } : p));
+
+  // --- FINANCIAL RECORDS ACTIONS ---
+  const handleNewRecord = (type: 'PAYABLE' | 'RECEIVABLE') => {
+    setRecordForm({ description: '', amount: 0, dueDate: '', category: '', type, status: 'PENDING' });
+    setIsRecordModalOpen(true);
   };
 
-  const handleRemovePixTerminal = (id: string) => {
-    setPixTerminals(pixTerminals.filter(p => p.id !== id));
+  const handleSaveRecord = () => {
+    if (!recordForm.description || !recordForm.amount || !recordForm.dueDate) {
+      alert("Preencha descrição, valor e data de vencimento.");
+      return;
+    }
+    const newRecord: FinancialRecord = {
+      id: Date.now().toString(),
+      description: recordForm.description!,
+      amount: Number(recordForm.amount),
+      dueDate: recordForm.dueDate!,
+      category: recordForm.category || 'Geral',
+      type: recordForm.type || 'PAYABLE',
+      status: recordForm.status || 'PENDING'
+    };
+    setRecords([...records, newRecord]);
+    setIsRecordModalOpen(false);
   };
 
-  const updatePixTerminal = (id: string, field: keyof PixConfig, value: any) => {
-    setPixTerminals(pixTerminals.map(p => p.id === id ? { ...p, [field]: value } : p));
+  const handleDeleteRecord = (id: string) => {
+    if(confirm("Deseja excluir este lançamento?")) setRecords(records.filter(r => r.id !== id));
   };
 
-  const handleAddPixBank = () => {
-    setPixBanks([...pixBanks, { id: Date.now().toString(), name: '', rate: 0 }]);
+  const toggleStatus = (id: string) => {
+    setRecords(records.map(r => r.id === id ? { ...r, status: r.status === 'PENDING' ? 'PAID' : 'PENDING' } : r));
   };
 
-  const handleRemovePixBank = (id: string) => {
-    setPixBanks(pixBanks.filter(p => p.id !== id));
-  };
+  // --- CALCULATIONS ---
+  const payables = records.filter(r => r.type === 'PAYABLE');
+  const receivables = records.filter(r => r.type === 'RECEIVABLE');
 
-  const updatePixBank = (id: string, field: keyof PixConfig, value: any) => {
-    setPixBanks(pixBanks.map(p => p.id === id ? { ...p, [field]: value } : p));
-  };
+  const totalPayables = payables.reduce((acc, r) => acc + r.amount, 0);
+  const totalReceivables = receivables.reduce((acc, r) => acc + r.amount, 0);
+  const totalPaid = payables.filter(r => r.status === 'PAID').reduce((acc, r) => acc + r.amount, 0);
+  const totalReceived = receivables.filter(r => r.status === 'PAID').reduce((acc, r) => acc + r.amount, 0);
 
-  // --- RENDER DEMOS ---
+  // --- RENDERERS ---
 
   const renderPayables = () => (
     <div className="space-y-6 animate-fade-in">
-        {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-5 rounded-xl border border-red-100 shadow-sm flex items-center justify-between">
                 <div>
-                    <p className="text-gray-500 text-sm">Vencendo Hoje</p>
-                    <h3 className="text-2xl font-bold text-red-600">R$ 2.450,00</h3>
+                    <p className="text-gray-500 text-sm">Total a Pagar</p>
+                    <h3 className="text-2xl font-bold text-red-600">R$ {totalPayables.toFixed(2)}</h3>
                 </div>
-                <div className="bg-red-50 p-3 rounded-lg text-red-500"><Calendar size={24}/></div>
+                <div className="bg-red-50 p-3 rounded-lg text-red-600"><TrendingDown size={24}/></div>
             </div>
-            <div className="bg-white p-5 rounded-xl border border-orange-100 shadow-sm flex items-center justify-between">
+            <div className="bg-white p-5 rounded-xl border border-green-100 shadow-sm flex items-center justify-between">
                 <div>
-                    <p className="text-gray-500 text-sm">Próximos 7 dias</p>
-                    <h3 className="text-2xl font-bold text-orange-600">R$ 5.120,00</h3>
+                    <p className="text-gray-500 text-sm">Total Pago</p>
+                    <h3 className="text-2xl font-bold text-green-600">R$ {totalPaid.toFixed(2)}</h3>
                 </div>
-                <div className="bg-orange-50 p-3 rounded-lg text-orange-500"><Clock size={24}/></div>
+                <div className="bg-green-50 p-3 rounded-lg text-green-600"><CheckCircle size={24}/></div>
             </div>
             <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
                 <div>
-                    <p className="text-gray-500 text-sm">Total a Pagar (Mês)</p>
-                    <h3 className="text-2xl font-bold text-gray-800">R$ 12.890,00</h3>
+                    <p className="text-gray-500 text-sm">Pendente</p>
+                    <h3 className="text-2xl font-bold text-gray-800">R$ {(totalPayables - totalPaid).toFixed(2)}</h3>
                 </div>
-                <div className="bg-gray-50 p-3 rounded-lg text-gray-500"><TrendingDown size={24}/></div>
+                <div className="bg-gray-100 p-3 rounded-lg text-gray-600"><AlertCircle size={24}/></div>
             </div>
         </div>
 
-        {/* Filters and Actions */}
-        <div className="flex justify-between items-center">
-            <div className="flex gap-2">
-                <button className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-600 flex items-center gap-2 hover:bg-gray-50">
-                    <Filter size={16}/> Filtrar
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 className="font-bold text-gray-800 flex items-center gap-2"><FileText size={18}/> Contas a Pagar</h3>
+                <button onClick={() => handleNewRecord('PAYABLE')} className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm font-medium flex items-center gap-2">
+                    <Plus size={16}/> Nova Conta
                 </button>
-                <div className="relative">
-                    <input type="text" placeholder="Buscar conta..." className="pl-3 pr-10 py-2 border border-gray-200 rounded-lg text-sm outline-none w-64 bg-white text-gray-900" />
-                </div>
             </div>
-            <button className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-red-700">
-                <Plus size={16}/> Nova Conta
-            </button>
-        </div>
-
-        {/* Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <table className="w-full text-left text-sm">
-                <thead className="bg-gray-50 text-gray-500 uppercase font-semibold">
+                <thead className="bg-gray-50 text-gray-500 uppercase font-medium">
                     <tr>
                         <th className="px-6 py-3">Vencimento</th>
                         <th className="px-6 py-3">Descrição</th>
@@ -170,31 +231,24 @@ export const Financial: React.FC = () => {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                    {[
-                        { date: '10/11/2024', desc: 'Aluguel Loja 01', cat: 'Aluguel', val: 2500, status: 'Pendente' },
-                        { date: '10/11/2024', desc: 'Fornecedor Peças SP', cat: 'Fornecedores', val: 1250.50, status: 'Pendente' },
-                        { date: '12/11/2024', desc: 'Conta de Energia', cat: 'Utilidades', val: 450.00, status: 'Agendado' },
-                        { date: '05/11/2024', desc: 'Internet Fibra', cat: 'Utilidades', val: 120.00, status: 'Pago' },
-                    ].map((item, i) => (
-                        <tr key={i} className="hover:bg-gray-50">
-                            <td className={`px-6 py-4 font-medium ${item.status === 'Pendente' ? 'text-red-600' : 'text-gray-600'}`}>{item.date}</td>
-                            <td className="px-6 py-4 text-gray-800">{item.desc}</td>
-                            <td className="px-6 py-4 text-gray-500">{item.cat}</td>
-                            <td className="px-6 py-4 font-bold text-gray-800">R$ {item.val.toFixed(2)}</td>
+                    {payables.length > 0 ? payables.map(r => (
+                        <tr key={r.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 text-gray-600"><div className="flex items-center gap-2"><Calendar size={14}/> {r.dueDate}</div></td>
+                            <td className="px-6 py-4 font-medium text-gray-800">{r.description}</td>
+                            <td className="px-6 py-4 text-gray-500">{r.category}</td>
+                            <td className="px-6 py-4 font-bold text-red-600">R$ {r.amount.toFixed(2)}</td>
                             <td className="px-6 py-4">
-                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                                    item.status === 'Pago' ? 'bg-green-100 text-green-700' : 
-                                    item.status === 'Pendente' ? 'bg-red-100 text-red-700' : 
-                                    'bg-blue-100 text-blue-700'
-                                }`}>
-                                    {item.status}
-                                </span>
+                                <button onClick={() => toggleStatus(r.id)} className={`px-2 py-1 rounded text-xs font-bold border ${r.status === 'PAID' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
+                                    {r.status === 'PAID' ? 'PAGO' : 'PENDENTE'}
+                                </button>
                             </td>
-                            <td className="px-6 py-4 text-right text-gray-400">
-                                <button className="hover:text-blue-600"><FileText size={18}/></button>
+                            <td className="px-6 py-4 text-right">
+                                <button onClick={() => handleDeleteRecord(r.id)} className="text-gray-400 hover:text-red-600"><Trash2 size={16}/></button>
                             </td>
                         </tr>
-                    ))}
+                    )) : (
+                        <tr><td colSpan={6} className="px-6 py-8 text-center text-gray-400">Nenhuma conta a pagar registrada.</td></tr>
+                    )}
                 </tbody>
             </table>
         </div>
@@ -203,219 +257,60 @@ export const Financial: React.FC = () => {
 
   const renderReceivables = () => (
     <div className="space-y-6 animate-fade-in">
-        {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-5 rounded-xl border border-green-100 shadow-sm flex items-center justify-between">
-                <div>
-                    <p className="text-gray-500 text-sm">Disponível Hoje</p>
-                    <h3 className="text-2xl font-bold text-green-600">R$ 890,00</h3>
-                </div>
-                <div className="bg-green-50 p-3 rounded-lg text-green-500"><DollarSign size={24}/></div>
-            </div>
             <div className="bg-white p-5 rounded-xl border border-blue-100 shadow-sm flex items-center justify-between">
                 <div>
-                    <p className="text-gray-500 text-sm">A Receber (Cartão)</p>
-                    <h3 className="text-2xl font-bold text-blue-600">R$ 4.350,00</h3>
+                    <p className="text-gray-500 text-sm">Total a Receber</p>
+                    <h3 className="text-2xl font-bold text-blue-600">R$ {totalReceivables.toFixed(2)}</h3>
                 </div>
-                <div className="bg-blue-50 p-3 rounded-lg text-blue-500"><CreditCard size={24}/></div>
+                <div className="bg-blue-50 p-3 rounded-lg text-blue-600"><TrendingUp size={24}/></div>
             </div>
-            <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+            <div className="bg-white p-5 rounded-xl border border-green-100 shadow-sm flex items-center justify-between">
                 <div>
-                    <p className="text-gray-500 text-sm">Total Previsto (Mês)</p>
-                    <h3 className="text-2xl font-bold text-gray-800">R$ 18.200,00</h3>
+                    <p className="text-gray-500 text-sm">Recebido</p>
+                    <h3 className="text-2xl font-bold text-green-600">R$ {totalReceived.toFixed(2)}</h3>
                 </div>
-                <div className="bg-gray-50 p-3 rounded-lg text-gray-500"><TrendingUp size={24}/></div>
+                <div className="bg-green-50 p-3 rounded-lg text-green-600"><CheckCircle size={24}/></div>
             </div>
         </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                <h3 className="font-bold text-gray-700">Previsão de Recebimentos</h3>
-                <button className="text-blue-600 text-sm font-medium hover:underline">Ver Extrato Completo</button>
-            </div>
-            <table className="w-full text-left text-sm">
-                <thead className="bg-white text-gray-500 uppercase font-semibold border-b border-gray-100">
-                    <tr>
-                        <th className="px-6 py-3">Data Prevista</th>
-                        <th className="px-6 py-3">Origem</th>
-                        <th className="px-6 py-3">Parcela</th>
-                        <th className="px-6 py-3">Valor Líquido</th>
-                        <th className="px-6 py-3">Status</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                    {[
-                        { date: '10/11/2024', orig: 'Pix Máquina Cielo', parc: 'À vista', val: 450.00, status: 'Disponível' },
-                        { date: '10/11/2024', orig: 'Pix Conta Itaú', parc: 'À vista', val: 120.00, status: 'Disponível' },
-                        { date: '11/11/2024', orig: 'Stone Crédito', parc: '1/3', val: 320.50, status: 'Agendado' },
-                        { date: '15/11/2024', orig: 'Moderninha Débito', parc: 'À vista', val: 180.00, status: 'Agendado' },
-                        { date: '20/11/2024', orig: 'Stone Crédito', parc: '2/3', val: 320.50, status: 'Futuro' },
-                    ].map((item, i) => (
-                        <tr key={i} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 text-gray-600">{item.date}</td>
-                            <td className="px-6 py-4 font-medium text-gray-800">{item.orig}</td>
-                            <td className="px-6 py-4 text-gray-500">{item.parc}</td>
-                            <td className="px-6 py-4 font-bold text-green-600">R$ {item.val.toFixed(2)}</td>
-                            <td className="px-6 py-4">
-                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                                    item.status === 'Disponível' ? 'bg-green-100 text-green-700' : 
-                                    item.status === 'Futuro' ? 'bg-gray-100 text-gray-600' : 
-                                    'bg-blue-100 text-blue-700'
-                                }`}>
-                                    {item.status}
-                                </span>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    </div>
-  );
-
-  const renderDRE = () => (
-    <div className="space-y-6 animate-fade-in max-w-4xl mx-auto">
-        <div className="flex justify-between items-center">
-            <h3 className="text-lg font-bold text-gray-800">Demonstrativo de Resultados (Outubro/2024)</h3>
-            <div className="flex gap-2">
-                <button className="p-2 border rounded hover:bg-gray-50"><Calendar size={18}/></button>
-                <button className="p-2 border rounded hover:bg-gray-50"><Download size={18}/></button>
-            </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            {/* Revenue */}
-            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-blue-50/50">
-                <span className="font-bold text-gray-800">(+) RECEITA BRUTA</span>
-                <span className="font-bold text-blue-600">R$ 45.000,00</span>
-            </div>
-            <div className="p-3 pl-8 text-sm text-gray-600 border-b border-gray-50 flex justify-between">
-                <span>Venda de Produtos</span>
-                <span>R$ 25.000,00</span>
-            </div>
-            <div className="p-3 pl-8 text-sm text-gray-600 border-b border-gray-50 flex justify-between">
-                <span>Serviços Prestados</span>
-                <span>R$ 20.000,00</span>
-            </div>
-
-            {/* Deductions */}
-            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-red-50/30">
-                <span className="font-bold text-gray-800">(-) DEDUÇÕES DA RECEITA</span>
-                <span className="font-bold text-red-500">R$ 3.150,00</span>
-            </div>
-            <div className="p-3 pl-8 text-sm text-gray-600 border-b border-gray-50 flex justify-between">
-                <span>Impostos (Simples)</span>
-                <span>R$ 2.700,00</span>
-            </div>
-            <div className="p-3 pl-8 text-sm text-gray-600 border-b border-gray-50 flex justify-between">
-                <span>Taxas Cartão/Pix</span>
-                <span>R$ 450,00</span>
-            </div>
-
-            {/* Net Revenue */}
-            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-100 font-bold">
-                <span className="text-gray-900">(=) RECEITA LÍQUIDA</span>
-                <span className="text-gray-900">R$ 41.850,00</span>
-            </div>
-
-            {/* Variable Costs */}
-            <div className="p-4 border-b border-gray-100 flex justify-between items-center">
-                <span className="font-bold text-gray-700">(-) CUSTOS VARIÁVEIS (CMV/CSV)</span>
-                <span className="font-bold text-red-500">R$ 12.000,00</span>
-            </div>
-
-            {/* Contribution Margin */}
-            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-green-50/50">
-                <span className="font-bold text-green-800">(=) MARGEM DE CONTRIBUIÇÃO</span>
-                <span className="font-bold text-green-700">R$ 29.850,00</span>
-            </div>
-
-            {/* Fixed Costs */}
-            <div className="p-4 border-b border-gray-100 flex justify-between items-center">
-                <span className="font-bold text-gray-700">(-) DESPESAS FIXAS / OPERACIONAIS</span>
-                <span className="font-bold text-red-500">R$ 9.500,00</span>
-            </div>
-             <div className="p-3 pl-8 text-sm text-gray-600 border-b border-gray-50 flex justify-between">
-                <span>Aluguel, Água, Luz, Internet</span>
-                <span>R$ 3.500,00</span>
-            </div>
-            <div className="p-3 pl-8 text-sm text-gray-600 border-b border-gray-50 flex justify-between">
-                <span>Folha de Pagamento</span>
-                <span>R$ 6.000,00</span>
-            </div>
-
-            {/* Net Profit */}
-            <div className="p-6 flex justify-between items-center bg-gray-800 text-white rounded-b-xl mt-4 m-2">
-                <div>
-                    <span className="block text-sm text-gray-400 uppercase tracking-wider">Resultado Líquido</span>
-                    <span className="block text-2xl font-bold">(=) Lucro Operacional</span>
-                </div>
-                <div className="text-right">
-                    <span className="block text-3xl font-bold text-green-400">R$ 20.350,00</span>
-                    <span className="block text-sm text-gray-400">Margem Líquida: 45%</span>
-                </div>
-            </div>
-        </div>
-    </div>
-  );
-
-  const renderCashFlow = () => (
-    <div className="space-y-6 animate-fade-in">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Chart placeholder */}
-            <div className="lg:col-span-3 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                <h3 className="font-bold text-gray-800 mb-4">Evolução do Saldo (Últimos 7 dias)</h3>
-                <div className="h-48 flex items-end justify-between gap-2 px-4">
-                    {[40, 60, 45, 80, 55, 90, 75].map((h, i) => (
-                        <div key={i} className="w-full flex flex-col justify-end group">
-                             <div 
-                                className="bg-blue-500 rounded-t-lg transition-all hover:bg-blue-600 relative" 
-                                style={{height: `${h}%`}}
-                             >
-                                <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-gray-600 opacity-0 group-hover:opacity-100">
-                                    R$ {h}k
-                                </span>
-                             </div>
-                             <span className="text-xs text-center text-gray-400 mt-2">Dia {i+1}</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                <h3 className="font-bold text-gray-700">Fluxo Diário Detalhado</h3>
-                <button className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 border px-3 py-1 rounded bg-white">
-                    <Calendar size={14}/> Este Mês
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 className="font-bold text-gray-800 flex items-center gap-2"><FileText size={18}/> Contas a Receber</h3>
+                <button onClick={() => handleNewRecord('RECEIVABLE')} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium flex items-center gap-2">
+                    <Plus size={16}/> Novo Recebimento
                 </button>
             </div>
             <table className="w-full text-left text-sm">
-                <thead className="bg-white text-gray-500 uppercase font-semibold border-b border-gray-100">
+                <thead className="bg-gray-50 text-gray-500 uppercase font-medium">
                     <tr>
-                        <th className="px-6 py-3">Data</th>
-                        <th className="px-6 py-3">Descrição Resumida</th>
-                        <th className="px-6 py-3 text-right text-green-600">Entradas</th>
-                        <th className="px-6 py-3 text-right text-red-600">Saídas</th>
-                        <th className="px-6 py-3 text-right text-blue-600">Saldo Acumulado</th>
+                        <th className="px-6 py-3">Data Prevista</th>
+                        <th className="px-6 py-3">Descrição</th>
+                        <th className="px-6 py-3">Categoria</th>
+                        <th className="px-6 py-3">Valor</th>
+                        <th className="px-6 py-3">Status</th>
+                        <th className="px-6 py-3 text-right">Ações</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                    {[
-                        { date: '10/11/2024', desc: 'Vendas e Pagamentos', in: 3500.00, out: 1200.00, bal: 15450.00 },
-                        { date: '09/11/2024', desc: 'Movimento Sábado', in: 5200.00, out: 450.00, bal: 13150.00 },
-                        { date: '08/11/2024', desc: 'Vendas e Aluguel', in: 2800.00, out: 2500.00, bal: 8400.00 },
-                        { date: '07/11/2024', desc: 'Movimento Diário', in: 1900.00, out: 200.00, bal: 8100.00 },
-                    ].map((item, i) => (
-                        <tr key={i} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 font-mono text-gray-600">{item.date}</td>
-                            <td className="px-6 py-4 text-gray-800">{item.desc}</td>
-                            <td className="px-6 py-4 text-right font-medium text-green-600">+ {item.in.toFixed(2)}</td>
-                            <td className="px-6 py-4 text-right font-medium text-red-600">- {item.out.toFixed(2)}</td>
-                            <td className="px-6 py-4 text-right font-bold text-blue-700">R$ {item.bal.toFixed(2)}</td>
+                    {receivables.length > 0 ? receivables.map(r => (
+                        <tr key={r.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 text-gray-600"><div className="flex items-center gap-2"><Calendar size={14}/> {r.dueDate}</div></td>
+                            <td className="px-6 py-4 font-medium text-gray-800">{r.description}</td>
+                            <td className="px-6 py-4 text-gray-500">{r.category}</td>
+                            <td className="px-6 py-4 font-bold text-blue-600">R$ {r.amount.toFixed(2)}</td>
+                            <td className="px-6 py-4">
+                                <button onClick={() => toggleStatus(r.id)} className={`px-2 py-1 rounded text-xs font-bold border ${r.status === 'PAID' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
+                                    {r.status === 'PAID' ? 'RECEBIDO' : 'A RECEBER'}
+                                </button>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                                <button onClick={() => handleDeleteRecord(r.id)} className="text-gray-400 hover:text-red-600"><Trash2 size={16}/></button>
+                            </td>
                         </tr>
-                    ))}
+                    )) : (
+                         <tr><td colSpan={6} className="px-6 py-8 text-center text-gray-400">Nenhum recebimento registrado.</td></tr>
+                    )}
                 </tbody>
             </table>
         </div>
@@ -423,228 +318,154 @@ export const Financial: React.FC = () => {
   );
 
   const renderPaymentMethods = () => (
-    <div className="space-y-8 animate-fade-in">
-      
-      {/* SECTION: PIX CONFIGURATION */}
-      <div>
-        <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <QrCode className="text-green-600" /> Configurações de Pix
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* Pix Machine Card */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-                <div className="bg-green-50 px-6 py-4 border-b border-green-100 flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                        <Smartphone size={20} className="text-green-700" />
-                        <h4 className="font-bold text-green-800">Pix Máquina</h4>
-                    </div>
-                    <button onClick={handleAddPixTerminal} className="text-green-700 hover:bg-green-100 p-1.5 rounded-lg transition-colors">
-                        <Plus size={20} />
-                    </button>
+    <div className="space-y-8 animate-fade-in max-w-5xl">
+       {/* Card Machines Section */}
+       <div className="space-y-4">
+          <div className="flex justify-between items-center">
+             <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <CreditCard className="text-blue-600" size={20} /> Máquinas de Cartão
+             </h3>
+             <button onClick={handleAddMachine} className="text-sm bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-100 font-medium flex items-center gap-1">
+                <Plus size={16} /> Adicionar Máquina
+             </button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6">
+             {machines.map((machine) => (
+                <div key={machine.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                   <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                         <div className="bg-blue-600 p-2 rounded-lg text-white"><CreditCard size={18} /></div>
+                         <input 
+                            type="text" 
+                            value={machine.name}
+                            onChange={(e) => updateMachine(machine.id, 'name', e.target.value)}
+                            placeholder="Nome da Máquina (ex: Moderninha)"
+                            className="bg-transparent font-bold text-gray-800 outline-none border-b border-transparent focus:border-blue-500 transition-colors"
+                         />
+                      </div>
+                      <button onClick={() => handleRemoveMachine(machine.id)} className="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors">
+                         <Trash2 size={18} />
+                      </button>
+                   </div>
+                   
+                   <div className="p-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                         <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                            <label className="block text-xs font-bold text-blue-700 uppercase mb-1">Taxa Débito (%)</label>
+                            <input 
+                               type="number" 
+                               step="0.01"
+                               value={machine.debitRate}
+                               onChange={(e) => updateMachine(machine.id, 'debitRate', parseFloat(e.target.value))}
+                               className="w-full bg-white border border-blue-200 rounded px-3 py-2 font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                         </div>
+                         <div className="bg-green-50 p-4 rounded-lg border border-green-100">
+                            <label className="block text-xs font-bold text-green-700 uppercase mb-1">Crédito à Vista (%)</label>
+                            <input 
+                               type="number" 
+                               step="0.01"
+                               value={machine.creditSightRate}
+                               onChange={(e) => updateMachine(machine.id, 'creditSightRate', parseFloat(e.target.value))}
+                               className="w-full bg-white border border-green-200 rounded px-3 py-2 font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-green-500"
+                            />
+                         </div>
+                      </div>
+
+                      <div>
+                         <h4 className="font-bold text-gray-700 mb-3 text-sm flex items-center gap-2">
+                             <TrendingUp size={16} /> Taxas de Parcelamento (Crédito)
+                         </h4>
+                         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                            {machine.installmentRates.map((rate, idx) => (
+                               <div key={idx} className="relative">
+                                  <label className="block text-xs text-gray-500 mb-1 font-medium">{idx + 1}x</label>
+                                  <div className="relative">
+                                    <input 
+                                        type="number" 
+                                        step="0.01"
+                                        value={rate}
+                                        onChange={(e) => updateInstallmentRate(machine.id, idx, e.target.value)}
+                                        className="w-full pl-2 pr-6 py-2 text-sm border border-gray-200 rounded bg-gray-50 focus:bg-white focus:outline-none focus:border-blue-500 transition-colors text-gray-800 font-medium"
+                                    />
+                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">%</span>
+                                  </div>
+                               </div>
+                            ))}
+                         </div>
+                      </div>
+                   </div>
                 </div>
-                <div className="p-6 space-y-4 flex-1">
-                    <p className="text-xs text-gray-500 mb-2">Cadastre os nomes e taxas das máquinas que recebem Pix.</p>
-                    {pixTerminals.map((pix) => (
-                        <div key={pix.id} className="flex gap-2 items-center group">
+             ))}
+          </div>
+       </div>
+
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* PIX Terminals */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden h-fit">
+                <div className="bg-purple-50 px-6 py-4 border-b border-purple-100 flex justify-between items-center">
+                    <h3 className="font-bold text-purple-800 flex items-center gap-2"><QrCode size={18}/> Pix Maquininha</h3>
+                    <button onClick={handleAddPixTerminal} className="p-1 hover:bg-purple-100 rounded text-purple-600"><Plus size={18}/></button>
+                </div>
+                <div className="p-4 space-y-3">
+                    {pixTerminals.map(pix => (
+                        <div key={pix.id} className="flex items-center gap-3 p-2 border border-gray-100 rounded-lg hover:bg-gray-50">
                             <input 
                                 type="text" 
                                 value={pix.name}
                                 onChange={(e) => updatePixTerminal(pix.id, 'name', e.target.value)}
-                                placeholder="Nome (ex: Pix Cielo)"
-                                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-sm bg-white text-gray-900"
+                                placeholder="Nome (ex: Cielo)"
+                                className="flex-1 bg-transparent border-none outline-none text-sm font-medium text-gray-800"
                             />
-                            <div className="relative w-24">
+                            <div className="flex items-center gap-1 w-20 bg-white border border-gray-200 rounded px-2 py-1">
                                 <input 
-                                    type="number" 
+                                    type="number" step="0.01" 
                                     value={pix.rate}
-                                    step="0.01"
                                     onChange={(e) => updatePixTerminal(pix.id, 'rate', parseFloat(e.target.value))}
-                                    className="w-full px-2 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-sm pr-6 bg-white text-gray-900"
-                                    placeholder="0.00"
+                                    className="w-full bg-transparent outline-none text-right text-sm font-bold text-gray-700"
                                 />
-                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">%</span>
+                                <span className="text-xs text-gray-400">%</span>
                             </div>
-                            <button 
-                                onClick={() => handleRemovePixTerminal(pix.id)}
-                                className="text-gray-400 hover:text-red-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                                <Trash2 size={16} />
-                            </button>
+                            <button onClick={() => handleRemovePixTerminal(pix.id)} className="text-gray-400 hover:text-red-500"><Trash2 size={16}/></button>
                         </div>
                     ))}
-                    {pixTerminals.length === 0 && <p className="text-sm text-gray-400 italic text-center py-4">Nenhuma opção cadastrada.</p>}
+                    {pixTerminals.length === 0 && <p className="text-xs text-gray-400 text-center py-2">Nenhuma configuração</p>}
                 </div>
             </div>
 
-            {/* Pix Bank/CNPJ Card */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-                <div className="bg-blue-50 px-6 py-4 border-b border-blue-100 flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                        <Landmark size={20} className="text-blue-700" />
-                        <h4 className="font-bold text-blue-800">Pix Conta / CNPJ</h4>
-                    </div>
-                    <button onClick={handleAddPixBank} className="text-blue-700 hover:bg-blue-100 p-1.5 rounded-lg transition-colors">
-                        <Plus size={20} />
-                    </button>
+            {/* PIX Bank */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden h-fit">
+                <div className="bg-green-50 px-6 py-4 border-b border-green-100 flex justify-between items-center">
+                    <h3 className="font-bold text-green-800 flex items-center gap-2"><Landmark size={18}/> Pix Bancário (CNPJ)</h3>
+                    <button onClick={handleAddPixBank} className="p-1 hover:bg-green-100 rounded text-green-600"><Plus size={18}/></button>
                 </div>
-                <div className="p-6 space-y-4 flex-1">
-                    <p className="text-xs text-gray-500 mb-2">Cadastre bancos e taxas para recebimento via chave Pix.</p>
-                    {pixBanks.map((pix) => (
-                        <div key={pix.id} className="flex gap-2 items-center group">
+                <div className="p-4 space-y-3">
+                    {pixBanks.map(pix => (
+                        <div key={pix.id} className="flex items-center gap-3 p-2 border border-gray-100 rounded-lg hover:bg-gray-50">
                             <input 
                                 type="text" 
                                 value={pix.name}
                                 onChange={(e) => updatePixBank(pix.id, 'name', e.target.value)}
-                                placeholder="Nome (ex: Pix Itaú)"
-                                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white text-gray-900"
+                                placeholder="Banco (ex: Itaú)"
+                                className="flex-1 bg-transparent border-none outline-none text-sm font-medium text-gray-800"
                             />
-                            <div className="relative w-24">
+                            <div className="flex items-center gap-1 w-20 bg-white border border-gray-200 rounded px-2 py-1">
                                 <input 
-                                    type="number" 
+                                    type="number" step="0.01" 
                                     value={pix.rate}
-                                    step="0.01"
                                     onChange={(e) => updatePixBank(pix.id, 'rate', parseFloat(e.target.value))}
-                                    className="w-full px-2 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm pr-6 bg-white text-gray-900"
-                                    placeholder="0.00"
+                                    className="w-full bg-transparent outline-none text-right text-sm font-bold text-gray-700"
                                 />
-                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">%</span>
+                                <span className="text-xs text-gray-400">%</span>
                             </div>
-                            <button 
-                                onClick={() => handleRemovePixBank(pix.id)}
-                                className="text-gray-400 hover:text-red-500 p-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                                <Trash2 size={16} />
-                            </button>
+                            <button onClick={() => handleRemovePixBank(pix.id)} className="text-gray-400 hover:text-red-500"><Trash2 size={16}/></button>
                         </div>
                     ))}
-                    {pixBanks.length === 0 && <p className="text-sm text-gray-400 italic text-center py-4">Nenhuma opção cadastrada.</p>}
+                    {pixBanks.length === 0 && <p className="text-xs text-gray-400 text-center py-2">Nenhuma configuração</p>}
                 </div>
             </div>
-        </div>
-      </div>
-
-      <div className="border-t border-gray-200 my-6"></div>
-
-      {/* SECTION: CARD MACHINES */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-            <div>
-            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                <CreditCard className="text-purple-600" /> Cadastro de Máquinas de Cartão
-            </h3>
-            <p className="text-gray-500 text-sm">Configure as taxas de débito e crédito.</p>
-            </div>
-            <button 
-            onClick={handleAddMachine}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-sm"
-            >
-            <Plus size={18} />
-            Adicionar Nova Máquina
-            </button>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6">
-            {machines.map((machine) => (
-            <div key={machine.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all hover:shadow-md">
-                {/* Machine Header */}
-                <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                <div className="flex items-center gap-3 flex-1">
-                    <div className="bg-purple-100 p-2 rounded-lg text-purple-600">
-                    <CreditCard size={20} />
-                    </div>
-                    <input 
-                    type="text" 
-                    value={machine.name}
-                    onChange={(e) => updateMachine(machine.id, 'name', e.target.value)}
-                    placeholder="Nome da Máquina (Ex: Cielo, Stone)"
-                    className="bg-transparent font-bold text-gray-800 text-lg outline-none border-b border-dashed border-gray-300 focus:border-purple-500 placeholder-gray-400 w-full max-w-md"
-                    />
-                </div>
-                <button 
-                    onClick={() => handleRemoveMachine(machine.id)}
-                    className="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Remover Máquina"
-                >
-                    <Trash2 size={20} />
-                </button>
-                </div>
-
-                <div className="p-6">
-                {/* Main Rates */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div className="bg-green-50 p-4 rounded-xl border border-green-100">
-                    <label className="block text-sm font-semibold text-green-800 mb-1">Taxa Débito (%)</label>
-                    <div className="relative">
-                        <input 
-                        type="number" 
-                        step="0.01"
-                        value={machine.debitRate}
-                        onChange={(e) => updateMachine(machine.id, 'debitRate', parseFloat(e.target.value))}
-                        className="w-full pl-3 pr-8 py-2 bg-white border border-green-200 rounded-lg focus:ring-2 focus:ring-green-500 outline-none font-bold text-green-700"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 font-bold">%</span>
-                    </div>
-                    </div>
-                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                    <label className="block text-sm font-semibold text-blue-800 mb-1">Taxa Crédito à Vista (%)</label>
-                    <div className="relative">
-                        <input 
-                        type="number" 
-                        step="0.01"
-                        value={machine.creditSightRate}
-                        onChange={(e) => updateMachine(machine.id, 'creditSightRate', parseFloat(e.target.value))}
-                        className="w-full pl-3 pr-8 py-2 bg-white border border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-bold text-blue-700"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-600 font-bold">%</span>
-                    </div>
-                    </div>
-                </div>
-
-                {/* Installment Rates Grid */}
-                <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
-                    <h4 className="font-bold text-gray-700 mb-4 flex items-center gap-2">
-                    <TrendingUp size={18} className="text-purple-500"/> Taxas de Crédito Parcelado
-                    </h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                    {machine.installmentRates.map((rate, index) => (
-                        <div key={index} className="relative group">
-                        <label className="block text-xs font-medium text-gray-500 mb-1 ml-1">
-                            Crédito {index + 1}x
-                        </label>
-                        <div className="relative">
-                            <input 
-                            type="number" 
-                            step="0.01"
-                            value={rate}
-                            onChange={(e) => updateInstallmentRate(machine.id, index, e.target.value)}
-                            className="w-full pl-2 pr-6 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-purple-500 outline-none transition-all bg-white text-gray-900"
-                            />
-                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-bold">%</span>
-                        </div>
-                        </div>
-                    ))}
-                    </div>
-                </div>
-                </div>
-                
-                <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex justify-end">
-                    <button className="flex items-center gap-2 text-blue-600 font-medium text-sm hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-colors">
-                        <Save size={16} /> Salvar Alterações
-                    </button>
-                </div>
-            </div>
-            ))}
-
-            {machines.length === 0 && (
-            <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
-                <CreditCard className="mx-auto h-12 w-12 text-gray-300 mb-3" />
-                <h3 className="text-lg font-medium text-gray-900">Nenhuma máquina cadastrada</h3>
-                <p className="text-gray-500">Adicione uma máquina para configurar as taxas.</p>
-            </div>
-            )}
-        </div>
-      </div>
+       </div>
     </div>
   );
 
@@ -652,45 +473,88 @@ export const Financial: React.FC = () => {
     <div className="space-y-6 h-full flex flex-col">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Módulo Financeiro</h2>
-          <p className="text-gray-500">Gestão completa de contas, resultados e taxas.</p>
+          <h2 className="text-2xl font-bold text-gray-800">Financeiro</h2>
+          <p className="text-gray-500">Gestão de contas, taxas e fluxo de caixa.</p>
         </div>
       </div>
 
-      {/* Navigation Tabs */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-1 flex overflow-x-auto">
-        {[
-            { id: 'PAYABLES', label: 'Contas a Pagar', icon: TrendingDown },
-            { id: 'RECEIVABLES', label: 'Contas a Receber', icon: TrendingUp },
-            { id: 'DRE', label: 'DRE Gerencial', icon: FileText },
-            { id: 'CASH_FLOW', label: 'Fluxo de Caixa', icon: Activity },
-            { id: 'PAYMENT_METHODS', label: 'Formas de Pagamento', icon: CreditCard },
-        ].map((tab) => {
-            const Icon = tab.icon;
-            return (
-                <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id as FinancialTab)}
-                    className={`flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap
-                        ${activeTab === tab.id 
-                            ? 'bg-blue-50 text-blue-700 shadow-sm' 
-                            : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}
-                >
-                    <Icon size={18} />
-                    {tab.label}
-                </button>
-            );
-        })}
+        <button onClick={() => setActiveTab('PAYMENT_METHODS')} className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'PAYMENT_METHODS' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
+            <CreditCard size={18} /> Taxas e Máquinas
+        </button>
+        <button onClick={() => setActiveTab('PAYABLES')} className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'PAYABLES' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
+            <TrendingDown size={18} /> Contas a Pagar
+        </button>
+        <button onClick={() => setActiveTab('RECEIVABLES')} className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'RECEIVABLES' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
+            <TrendingUp size={18} /> Contas a Receber
+        </button>
+        <button onClick={() => setActiveTab('CASH_FLOW')} className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'CASH_FLOW' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
+            <Activity size={18} /> Fluxo de Caixa
+        </button>
       </div>
 
-      {/* Content Area */}
       <div className="flex-1 overflow-y-auto pb-6 custom-scrollbar">
           {activeTab === 'PAYMENT_METHODS' && renderPaymentMethods()}
           {activeTab === 'PAYABLES' && renderPayables()}
           {activeTab === 'RECEIVABLES' && renderReceivables()}
-          {activeTab === 'DRE' && renderDRE()}
-          {activeTab === 'CASH_FLOW' && renderCashFlow()}
+          {activeTab === 'CASH_FLOW' && (
+              <div className="flex flex-col items-center justify-center h-64 text-gray-400 bg-white rounded-xl border border-gray-100 border-dashed">
+                  <Activity size={48} className="mb-4 text-gray-300"/>
+                  <h3 className="text-lg font-bold text-gray-600">Relatório de Fluxo de Caixa</h3>
+                  <p>Funcionalidade em desenvolvimento. Em breve gráficos detalhados.</p>
+              </div>
+          )}
       </div>
+
+      {/* Record Modal */}
+      {isRecordModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 animate-scale-in">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold text-gray-800">
+                        {recordForm.type === 'PAYABLE' ? 'Nova Conta a Pagar' : 'Novo Recebimento'}
+                    </h3>
+                    <button onClick={() => setIsRecordModalOpen(false)}><X size={24} className="text-gray-400"/></button>
+                </div>
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                        <input type="text" className="w-full px-3 py-2 border rounded-lg bg-white text-gray-900" 
+                            value={recordForm.description} onChange={e => setRecordForm({...recordForm, description: e.target.value})} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Valor (R$)</label>
+                            <input type="number" step="0.01" className="w-full px-3 py-2 border rounded-lg bg-white text-gray-900 font-bold" 
+                                value={recordForm.amount} onChange={e => setRecordForm({...recordForm, amount: parseFloat(e.target.value)})} />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Vencimento</label>
+                            <input type="date" className="w-full px-3 py-2 border rounded-lg bg-white text-gray-900" 
+                                value={recordForm.dueDate} onChange={e => setRecordForm({...recordForm, dueDate: e.target.value})} />
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                        <select className="w-full px-3 py-2 border rounded-lg bg-white text-gray-900"
+                            value={recordForm.category} onChange={e => setRecordForm({...recordForm, category: e.target.value})}>
+                            <option value="">Selecione...</option>
+                            <option value="Fornecedores">Fornecedores</option>
+                            <option value="Infraestrutura">Infraestrutura (Luz, Água, Net)</option>
+                            <option value="Pessoal">Pessoal / Salários</option>
+                            <option value="Impostos">Impostos</option>
+                            <option value="Cartão de Crédito">Cartão de Crédito</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                </div>
+                <div className="mt-6 flex justify-end gap-3">
+                    <button onClick={() => setIsRecordModalOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
+                    <button onClick={handleSaveRecord} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Salvar</button>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Plus, Filter, Download, Upload, AlertTriangle, X, Save, Trash2, Image as ImageIcon, Package, Wrench } from 'lucide-react';
 import { Product } from '../types';
 
@@ -21,7 +21,15 @@ const INITIAL_PRODUCTS: Product[] = [
 ];
 
 export const Inventory: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>(() => {
+    const saved = localStorage.getItem('techfix_products');
+    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('techfix_products', JSON.stringify(products));
+  }, [products]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('Todas Categorias');
   

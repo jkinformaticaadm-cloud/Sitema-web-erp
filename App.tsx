@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
 import { Inventory } from './components/Inventory';
@@ -56,13 +56,46 @@ const INITIAL_USERS: User[] = [
   }
 ];
 
+const INITIAL_TRANSACTIONS: CashierTransaction[] = [
+    { id: '1', type: 'ENTRY', category: 'Venda #1024', amount: 1200, description: 'Venda de Tela iPhone', date: '08/11/2024 14:30', operator: 'Administrador' },
+    { id: '2', type: 'EXIT', category: 'Alimentação', amount: 45, description: 'Almoço Equipe', date: '08/11/2024 12:00', operator: 'Administrador' },
+    { id: '3', type: 'ENTRY', category: 'Serviço #552', amount: 250, description: 'Troca de Bateria', date: '08/11/2024 10:15', operator: 'Carlos Técnico' },
+    { id: '4', type: 'EXIT', category: 'Fornecedor', amount: 600, description: 'Peças Reposição', date: '08/11/2024 09:00', operator: 'Administrador' },
+];
+
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  // Global State
-  const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
-  const [users, setUsers] = useState<User[]>(INITIAL_USERS);
+  // Global State with LocalStorage Persistence
+  const [customers, setCustomers] = useState<Customer[]>(() => {
+    const saved = localStorage.getItem('techfix_customers');
+    return saved ? JSON.parse(saved) : INITIAL_CUSTOMERS;
+  });
+
+  const [users, setUsers] = useState<User[]>(() => {
+    const saved = localStorage.getItem('techfix_users');
+    return saved ? JSON.parse(saved) : INITIAL_USERS;
+  });
+
+  const [transactions, setTransactions] = useState<CashierTransaction[]>(() => {
+    const saved = localStorage.getItem('techfix_transactions');
+    return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
+  });
+
+  // Effects to save data whenever it changes
+  useEffect(() => {
+    localStorage.setItem('techfix_customers', JSON.stringify(customers));
+  }, [customers]);
+
+  useEffect(() => {
+    localStorage.setItem('techfix_users', JSON.stringify(users));
+  }, [users]);
+
+  useEffect(() => {
+    localStorage.setItem('techfix_transactions', JSON.stringify(transactions));
+  }, [transactions]);
+
 
   const handleSaveCustomer = (customer: Customer) => {
     setCustomers(prev => {
@@ -77,14 +110,6 @@ const App: React.FC = () => {
   const handleDeleteCustomer = (id: string) => {
     setCustomers(prev => prev.filter(c => c.id !== id));
   };
-
-  // Shared state for Financial Transactions (Cashier)
-  const [transactions, setTransactions] = useState<CashierTransaction[]>([
-    { id: '1', type: 'ENTRY', category: 'Venda #1024', amount: 1200, description: 'Venda de Tela iPhone', date: '08/11/2024 14:30', operator: 'Administrador' },
-    { id: '2', type: 'EXIT', category: 'Alimentação', amount: 45, description: 'Almoço Equipe', date: '08/11/2024 12:00', operator: 'Administrador' },
-    { id: '3', type: 'ENTRY', category: 'Serviço #552', amount: 250, description: 'Troca de Bateria', date: '08/11/2024 10:15', operator: 'Carlos Técnico' },
-    { id: '4', type: 'EXIT', category: 'Fornecedor', amount: 600, description: 'Peças Reposição', date: '08/11/2024 09:00', operator: 'Administrador' },
-  ]);
 
   const addTransaction = (transaction: CashierTransaction) => {
     setTransactions(prev => [transaction, ...prev]);

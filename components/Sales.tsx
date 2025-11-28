@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ShoppingCart, Zap, FileText, User, Search, Plus, Trash2, ArrowLeft, X, Check, Package, Smartphone, History, RefreshCcw, DollarSign, Wallet, Truck, UserCheck, MapPin, Mail, Barcode, Eye, Printer, Share2, RotateCcw } from 'lucide-react';
 import { Product, Customer } from '../types';
 
@@ -10,6 +10,22 @@ const INITIAL_MOCK_PRODUCTS: Product[] = [
   { id: '3', name: 'Carregador Samsung 25W', category: 'Carregadores', price: 120.00, cost: 70.00, stock: 15, minStock: 3, image: '', type: 'PRODUCT' },
   { id: '4', name: 'Capa Anti-Impacto S21', category: 'Capas', price: 45.00, cost: 10.00, stock: 30, minStock: 5, image: '', type: 'PRODUCT' },
   { id: '5', name: 'Formatação e Backup', category: 'Serviços', price: 100.00, cost: 0.00, stock: 0, minStock: 0, image: '', type: 'SERVICE' },
+];
+
+const INITIAL_SALES_HISTORY: CompletedSale[] = [
+    {
+      id: '1001',
+      customerName: 'Cliente Balcão',
+      customerPhone: '',
+      items: [{ product: INITIAL_MOCK_PRODUCTS[0], quantity: 1, unitPrice: 30.00, discount: 0, note: '' }],
+      subtotal: 30.00,
+      shippingCost: 0,
+      total: 30.00,
+      deliveryType: 'RETIRADA',
+      date: new Date().toLocaleTimeString(),
+      paymentMethod: 'Dinheiro',
+      status: 'Pago'
+    }
 ];
 
 interface SalesProps {
@@ -88,22 +104,16 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
   const [customerSearchQuery, setCustomerSearchQuery] = useState('');
   const [historySearchQuery, setHistorySearchQuery] = useState('');
   
-  // Sales History State
-  const [salesHistory, setSalesHistory] = useState<CompletedSale[]>([
-    {
-      id: '1001',
-      customerName: 'Cliente Balcão',
-      customerPhone: '',
-      items: [{ product: INITIAL_MOCK_PRODUCTS[0], quantity: 1, unitPrice: 30.00, discount: 0, note: '' }],
-      subtotal: 30.00,
-      shippingCost: 0,
-      total: 30.00,
-      deliveryType: 'RETIRADA',
-      date: new Date().toLocaleTimeString(),
-      paymentMethod: 'Dinheiro',
-      status: 'Pago'
-    }
-  ]);
+  // Sales History State with LocalStorage
+  const [salesHistory, setSalesHistory] = useState<CompletedSale[]>(() => {
+    const saved = localStorage.getItem('techfix_sales');
+    return saved ? JSON.parse(saved) : INITIAL_SALES_HISTORY;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('techfix_sales', JSON.stringify(salesHistory));
+  }, [salesHistory]);
+
   
   // Modal States
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
