@@ -5,6 +5,7 @@ export enum View {
   INVENTORY = 'INVENTORY',
   CUSTOMERS = 'CUSTOMERS',
   CASHIER = 'CASHIER',
+  FINANCIAL = 'FINANCIAL',
   REPORTS = 'REPORTS',
   TEAM = 'TEAM',
   SETTINGS = 'SETTINGS'
@@ -100,4 +101,12 @@ export interface DashboardStat {
   subValue?: string;
   icon: string;
   trend?: 'up' | 'down' | 'neutral';
+}
+
+export interface CardMachine {
+  id: string;
+  name: string;
+  debitRate: number;
+  creditSightRate: number;
+  installmentRates: number[]; // Index 0 = 1x, Index 1 = 2x, etc.
 }

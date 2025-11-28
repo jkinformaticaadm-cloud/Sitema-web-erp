@@ -343,7 +343,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
           <input 
             type="text" 
             placeholder="Buscar por cliente, OS, telefone ou aparelho..." 
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -671,7 +671,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
                     <div className="relative w-64">
                        <input 
                          type="text"
-                         className="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-blue-50 focus:bg-white focus:ring-1 focus:ring-blue-500 outline-none"
+                         className="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-blue-50 focus:bg-white focus:ring-1 focus:ring-blue-500 outline-none text-gray-900"
                          placeholder="Buscar cliente cadastrado..."
                          value={customerSearchQuery}
                          onChange={(e) => {
@@ -710,7 +710,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
                         name="customerName"
                         value={formData.customerName}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900" 
                         placeholder="Nome completo" 
                       />
                     </div>
@@ -721,7 +721,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
                         name="customerPhone"
                         value={formData.customerPhone}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900" 
                         placeholder="(00) 00000-0000" 
                       />
                     </div>
@@ -732,7 +732,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
                         name="address"
                         value={formData.address}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900" 
                         placeholder="Rua, Número, Bairro" 
                       />
                     </div>
@@ -752,7 +752,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
                         name="device"
                         value={formData.device}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900" 
                         placeholder="Ex: iPhone 11" 
                       />
                     </div>
@@ -763,7 +763,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
                         name="model"
                         value={formData.model}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900" 
                         placeholder="Ex: A2111" 
                       />
                     </div>
@@ -774,7 +774,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
                         name="imei"
                         value={formData.imei}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900" 
                         placeholder="Opcional" 
                       />
                     </div>
@@ -785,7 +785,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
                         name="defect"
                         value={formData.defect}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900" 
                         placeholder="Descreva o problema relatado pelo cliente..."
                       ></textarea>
                     </div>
@@ -803,7 +803,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
                     <label className="block text-sm font-medium text-gray-700">Mão de Obra / Serviços</label>
                     <div className="flex flex-col md:flex-row gap-2">
                       <select 
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
                         onChange={handleServiceSelect}
                         defaultValue=""
                       >
@@ -814,14 +814,14 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
                       <input 
                         type="text" 
                         placeholder="Nome do Serviço"
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
                         value={serviceInput.name}
                         onChange={(e) => setServiceInput({...serviceInput, name: e.target.value})}
                       />
                       <input 
                         type="number" 
                         placeholder="Valor R$"
-                        className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
                         value={serviceInput.price}
                         onChange={(e) => setServiceInput({...serviceInput, price: e.target.value})}
                       />
@@ -840,7 +840,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
                     <label className="block text-sm font-medium text-gray-700">Peças e Produtos</label>
                     <div className="flex flex-col md:flex-row gap-2">
                       <select 
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
                         onChange={handleProductSelect}
                         defaultValue=""
                       >
@@ -851,14 +851,14 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
                       <input 
                         type="text" 
                         placeholder="Nome do Produto"
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
                         value={productInput.name}
                         onChange={(e) => setProductInput({...productInput, name: e.target.value})}
                       />
                       <input 
                         type="number" 
                         placeholder="Valor R$"
-                        className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
                         value={productInput.price}
                         onChange={(e) => setProductInput({...productInput, price: e.target.value})}
                       />
@@ -921,8 +921,8 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
                     <div className="md:col-span-1">
                         <label className="block text-sm font-medium text-gray-700 mb-1">Garantia</label>
                         <div className="flex gap-2">
-                          <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="90" />
-                          <select className="px-3 py-2 border border-gray-300 rounded-lg bg-white outline-none">
+                          <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900" placeholder="90" />
+                          <select className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 outline-none">
                             <option>Dias</option>
                             <option>Meses</option>
                           </select>
@@ -930,7 +930,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
                     </div>
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1">Observação da Garantia</label>
-                      <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ex: Garantia cobre apenas defeitos de peça" />
+                      <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900" placeholder="Ex: Garantia cobre apenas defeitos de peça" />
                     </div>
                   </div>
                 </div>

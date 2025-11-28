@@ -156,7 +156,7 @@ export const Inventory: React.FC = () => {
           <input 
             type="text" 
             placeholder="Buscar por nome, código ou categoria..." 
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -343,7 +343,7 @@ export const Inventory: React.FC = () => {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900" 
                   />
                 </div>
                 
@@ -353,7 +353,7 @@ export const Inventory: React.FC = () => {
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
                   >
                     {CATEGORIES.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
@@ -369,7 +369,7 @@ export const Inventory: React.FC = () => {
                         name="image"
                         value={formData.image}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
                         placeholder="http://..." 
                     />
                     <div className="w-10 h-10 bg-gray-100 rounded border border-gray-200 flex items-center justify-center text-gray-400">
@@ -386,7 +386,7 @@ export const Inventory: React.FC = () => {
                     value={formData.cost}
                     onChange={handleChange}
                     step="0.01"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900" 
                   />
                 </div>
                 
@@ -398,7 +398,7 @@ export const Inventory: React.FC = () => {
                     value={formData.price}
                     onChange={handleChange}
                     step="0.01"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-bold text-gray-800" 
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-bold text-gray-800 bg-white" 
                   />
                 </div>
                 
@@ -410,7 +410,7 @@ export const Inventory: React.FC = () => {
                     value={isService ? 0 : formData.stock}
                     onChange={handleChange}
                     disabled={isService}
-                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${isService ? 'bg-gray-100 text-gray-400' : ''}`}
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${isService ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-900'}`}
                   />
                   {isService && <p className="text-xs text-gray-400 mt-1">Não aplicável para serviços</p>}
                 </div>
@@ -423,7 +423,7 @@ export const Inventory: React.FC = () => {
                     value={isService ? 0 : formData.minStock}
                     onChange={handleChange}
                     disabled={isService}
-                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${isService ? 'bg-gray-100 text-gray-400' : ''}`}
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${isService ? 'bg-gray-100 text-gray-400' : 'bg-white text-gray-900'}`}
                   />
                   {isService && <p className="text-xs text-gray-400 mt-1">Não aplicável para serviços</p>}
                 </div>

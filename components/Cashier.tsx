@@ -183,7 +183,7 @@ export const Cashier: React.FC<CashierProps> = ({ transactions, onAddTransaction
                         type="text" 
                         value={operator}
                         onChange={(e) => setOperator(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900" 
                         placeholder="Nome do operador"
                     />
                 </div>
@@ -198,7 +198,7 @@ export const Cashier: React.FC<CashierProps> = ({ transactions, onAddTransaction
                 step="0.01"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-bold text-lg text-gray-800" 
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-bold text-lg text-gray-800 bg-white" 
                 placeholder="0,00" 
               />
             </div>
@@ -211,7 +211,7 @@ export const Cashier: React.FC<CashierProps> = ({ transactions, onAddTransaction
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 disabled={transactionType === 'ENTRY'}
-                className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${transactionType === 'ENTRY' ? 'bg-gray-100 text-gray-500' : 'bg-white'}`}
+                className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none ${transactionType === 'ENTRY' ? 'bg-gray-100 text-gray-500' : 'bg-white text-gray-900'}`}
               >
                 {transactionType === 'ENTRY' ? (
                     <option value="Troco Caixa">Troco Caixa / Suprimento</option>
@@ -234,7 +234,7 @@ export const Cashier: React.FC<CashierProps> = ({ transactions, onAddTransaction
                 type="text" 
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900" 
                 placeholder={transactionType === 'ENTRY' ? "Ex: Abertura de caixa" : "Ex: Pagamento almoço equipe"} 
               />
             </div>

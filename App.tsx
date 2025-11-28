@@ -6,8 +6,10 @@ import { Cashier } from './components/Cashier';
 import { Orders } from './components/Orders';
 import { Sales } from './components/Sales';
 import { Customers } from './components/Customers';
+import { Financial } from './components/Financial';
+import { Settings } from './components/Settings';
 import { View, CashierTransaction, Customer } from './types';
-import { Menu, Bell, Search } from 'lucide-react';
+import { Menu, Bell, Search, PieChart } from 'lucide-react';
 
 const INITIAL_CUSTOMERS: Customer[] = [
   { 
@@ -69,6 +71,10 @@ const App: React.FC = () => {
         return <Orders onAddTransaction={addTransaction} customers={customers} />;
       case View.CUSTOMERS:
         return <Customers customers={customers} onSave={handleSaveCustomer} onDelete={handleDeleteCustomer} />;
+      case View.FINANCIAL:
+        return <Financial />;
+      case View.SETTINGS:
+        return <Settings />;
       default:
         return (
           <div className="flex flex-col items-center justify-center h-96 text-gray-400">

@@ -10,7 +10,8 @@ import {
   Briefcase, 
   Settings,
   Menu,
-  X
+  X,
+  PieChart
 } from 'lucide-react';
 import { View } from '../types';
 
@@ -30,6 +31,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, isM
     { id: View.INVENTORY, label: 'Produtos / Serviços', icon: Package },
     { id: View.CUSTOMERS, label: 'Clientes', icon: Users },
     { id: View.CASHIER, label: 'Contas / Caixa', icon: Wallet },
+    { id: View.FINANCIAL, label: 'Financeiro', icon: PieChart },
     { id: View.REPORTS, label: 'Relatórios', icon: FileText },
     { id: View.TEAM, label: 'Equipe', icon: Briefcase },
     { id: View.SETTINGS, label: 'Configurações', icon: Settings },

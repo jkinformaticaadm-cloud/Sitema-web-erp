@@ -444,7 +444,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
       <div className="max-w-5xl mx-auto w-full bg-white rounded-xl shadow-sm border border-gray-100 flex-1 overflow-hidden flex flex-col min-h-[400px]">
           <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
              <h3 className="font-bold text-gray-800 flex items-center gap-2"><History size={18}/> Histórico Recente</h3>
-             <input type="text" placeholder="Buscar..." className="border rounded-lg px-3 py-1 text-sm" value={historySearchQuery} onChange={e => setHistorySearchQuery(e.target.value)} />
+             <input type="text" placeholder="Buscar..." className="border rounded-lg px-3 py-1 text-sm bg-white text-gray-900" value={historySearchQuery} onChange={e => setHistorySearchQuery(e.target.value)} />
           </div>
           <div className="overflow-y-auto flex-1">
              <table className="w-full text-left">
@@ -507,7 +507,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
                 autoFocus
                 type="text" 
                 placeholder="Buscar produto (Nome, Código ou Barras)..." 
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 text-gray-900"
                 value={productSearchQuery}
                 onChange={(e) => setProductSearchQuery(e.target.value)}
               />
@@ -558,7 +558,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
                  <input 
                    type="text" 
                    placeholder="Buscar Cliente..."
-                   className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                   className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white text-gray-900"
                    value={customerSearchQuery}
                    onChange={(e) => setCustomerSearchQuery(e.target.value)}
                  />
@@ -658,7 +658,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
                           <input 
                             type="text" 
                             placeholder="Buscar cliente salvo..."
-                            className="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded text-sm bg-gray-50 focus:bg-white"
+                            className="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded text-sm bg-gray-50 focus:bg-white text-gray-900"
                             value={customerSearchQuery}
                             onChange={(e) => setCustomerSearchQuery(e.target.value)}
                           />
@@ -680,27 +680,27 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                        <div className="md:col-span-2">
                            <label className="block text-xs font-semibold text-gray-500 mb-1">Nome Completo</label>
-                           <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none"
+                           <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none bg-white text-gray-900"
                                value={detailedCustomerForm.name} onChange={(e) => setDetailedCustomerForm({...detailedCustomerForm, name: e.target.value})} />
                        </div>
                        <div>
                            <label className="block text-xs font-semibold text-gray-500 mb-1">Telefone</label>
-                           <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none"
+                           <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none bg-white text-gray-900"
                                value={detailedCustomerForm.phone} onChange={(e) => setDetailedCustomerForm({...detailedCustomerForm, phone: e.target.value})} />
                        </div>
                        <div>
                            <label className="block text-xs font-semibold text-gray-500 mb-1">CPF/CNPJ</label>
-                           <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none"
+                           <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none bg-white text-gray-900"
                                value={detailedCustomerForm.cpf} onChange={(e) => setDetailedCustomerForm({...detailedCustomerForm, cpf: e.target.value})} />
                        </div>
                        <div className="md:col-span-2">
                            <label className="block text-xs font-semibold text-gray-500 mb-1">Email</label>
-                           <input type="email" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none"
+                           <input type="email" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none bg-white text-gray-900"
                                value={detailedCustomerForm.email} onChange={(e) => setDetailedCustomerForm({...detailedCustomerForm, email: e.target.value})} />
                        </div>
                        <div className="md:col-span-2">
                            <label className="block text-xs font-semibold text-gray-500 mb-1">Endereço Completo</label>
-                           <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none"
+                           <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none bg-white text-gray-900"
                                value={detailedCustomerForm.address} onChange={(e) => setDetailedCustomerForm({...detailedCustomerForm, address: e.target.value})} />
                        </div>
                   </div>
@@ -716,7 +716,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
                           <label className="block text-xs font-semibold text-gray-500 mb-1">Nome do Produto</label>
                           <input 
                               type="text" 
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none bg-white text-gray-900"
                               placeholder="Ex: Troca de Tela iPhone 11"
                               value={manualProduct.name}
                               onChange={(e) => setManualProduct({...manualProduct, name: e.target.value})}
@@ -726,7 +726,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
                           <label className="block text-xs font-semibold text-gray-500 mb-1">Valor (R$)</label>
                           <input 
                               type="number" 
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none font-bold text-gray-800"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none font-bold text-gray-800 bg-white"
                               placeholder="0.00"
                               value={manualProduct.price}
                               onChange={(e) => setManualProduct({...manualProduct, price: e.target.value})}
@@ -736,7 +736,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
                           <label className="block text-xs font-semibold text-gray-500 mb-1">IMEI/Serial (Opcional)</label>
                           <input 
                               type="text" 
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none text-sm font-mono"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none text-sm font-mono bg-white text-gray-900"
                               placeholder="..."
                               value={manualProduct.imei}
                               onChange={(e) => setManualProduct({...manualProduct, imei: e.target.value})}
@@ -807,7 +807,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
                                    <label className="block text-xs font-semibold text-gray-500 mb-1">Custo do Frete</label>
                                    <input 
                                        type="number" 
-                                       className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none"
+                                       className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none bg-white text-gray-900"
                                        value={logistics.cost}
                                        onChange={(e) => setLogistics({...logistics, cost: parseFloat(e.target.value) || 0})}
                                    />
@@ -878,7 +878,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                                 <input 
                                     type="text" 
-                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white text-gray-900"
                                     value={preOrderForm.name}
                                     onChange={(e) => {
                                         setPreOrderForm({...preOrderForm, name: e.target.value});
@@ -911,7 +911,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
                             <label className="block text-sm font-medium text-gray-700 mb-1">Telefone / WhatsApp</label>
                             <input 
                                 type="text" 
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white text-gray-900"
                                 value={preOrderForm.phone}
                                 onChange={(e) => setPreOrderForm({...preOrderForm, phone: e.target.value})}
                                 placeholder="(00) 00000-0000"
@@ -923,7 +923,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
                                 <UserCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                                 <input 
                                     type="text" 
-                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-gray-50"
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white text-gray-900"
                                     value={preOrderForm.authorizedPickup}
                                     onChange={(e) => setPreOrderForm({...preOrderForm, authorizedPickup: e.target.value})}
                                     placeholder="Nome de quem irá retirar (se diferente do cliente)"
@@ -945,7 +945,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                                 <input 
                                     type="text" 
-                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white text-gray-900"
                                     value={preOrderForm.product}
                                     onChange={(e) => {
                                         setPreOrderForm({...preOrderForm, product: e.target.value});
@@ -983,7 +983,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
                             <label className="block text-sm font-medium text-gray-700 mb-1">Previsão de Retirada</label>
                             <input 
                                 type="date" 
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white text-gray-900"
                                 value={preOrderForm.date}
                                 onChange={(e) => setPreOrderForm({...preOrderForm, date: e.target.value})}
                             />
@@ -1001,7 +1001,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
                             <label className="block text-sm font-medium text-gray-700 mb-1">Valor Total (R$)</label>
                             <input 
                                 type="number" 
-                                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-lg font-bold"
+                                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-lg font-bold bg-white text-gray-900"
                                 value={preOrderForm.totalValue}
                                 onChange={(e) => setPreOrderForm({...preOrderForm, totalValue: e.target.value})}
                                 placeholder="0.00"
@@ -1011,7 +1011,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
                             <label className="block text-sm font-medium text-gray-700 mb-1">Entrada / Sinal (R$)</label>
                             <input 
                                 type="number" 
-                                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-lg font-bold text-green-600"
+                                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-lg font-bold text-green-600 bg-white"
                                 value={preOrderForm.entryValue}
                                 onChange={(e) => setPreOrderForm({...preOrderForm, entryValue: e.target.value})}
                                 placeholder="0.00"

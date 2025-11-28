@@ -276,7 +276,7 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
                                     name="name" 
                                     value={formData.name} 
                                     onChange={handleChange} 
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase" 
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase bg-white text-gray-900" 
                                     placeholder="Nome do Cliente"
                                 />
                             </div>
@@ -288,7 +288,7 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
                                     name="cpfOrCnpj" 
                                     value={formData.cpfOrCnpj} 
                                     onChange={handleChange} 
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900" 
                                     placeholder="000.000.000-00"
                                 />
                             </div>
@@ -300,7 +300,7 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
                                     name="rg" 
                                     value={formData.rg} 
                                     onChange={handleChange} 
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900" 
                                     placeholder="00.000.000-0"
                                 />
                             </div>
@@ -312,7 +312,7 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
                                     name="phone" 
                                     value={formData.phone} 
                                     onChange={handleChange} 
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900" 
                                     placeholder="(00) 90000-0000"
                                 />
                             </div>
@@ -324,7 +324,7 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
                                     name="email" 
                                     value={formData.email} 
                                     onChange={handleChange} 
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none lowercase" 
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none lowercase bg-white text-gray-900" 
                                     placeholder="cliente@email.com"
                                 />
                             </div>
@@ -341,7 +341,7 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
                                     name="zipCode" 
                                     value={formData.zipCode} 
                                     onChange={handleChange} 
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900" 
                                 />
                             </div>
 
@@ -352,7 +352,7 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
                                     name="city" 
                                     value={formData.city} 
                                     onChange={handleChange} 
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase" 
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase bg-white text-gray-900" 
                                 />
                             </div>
 
@@ -363,7 +363,7 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
                                     name="state" 
                                     value={formData.state} 
                                     onChange={handleChange} 
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase" 
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase bg-white text-gray-900" 
                                     maxLength={2}
                                 />
                             </div>
@@ -375,7 +375,7 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
                                     name="neighborhood" 
                                     value={formData.neighborhood} 
                                     onChange={handleChange} 
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase" 
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase bg-white text-gray-900" 
                                 />
                             </div>
 
@@ -386,7 +386,7 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
                                     name="address" 
                                     value={formData.address} 
                                     onChange={handleChange} 
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase" 
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase bg-white text-gray-900" 
                                 />
                             </div>
 
@@ -397,7 +397,7 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
                                     name="complement" 
                                     value={formData.complement} 
                                     onChange={handleChange} 
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase" 
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none uppercase bg-white text-gray-900" 
                                 />
                             </div>
                             
@@ -409,7 +409,7 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
                                     value={formData.notes} 
                                     onChange={handleChange} 
                                     rows={3} 
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none bg-white text-gray-900"
                                 ></textarea>
                             </div>
                         </div>
