@@ -49,18 +49,26 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers, goals, onUp
     alert('Metas atualizadas com sucesso!');
   };
 
-  // State for Company Settings
-  const [companyForm, setCompanyForm] = useState({
-    name: 'TechFix Assistência',
-    legalName: 'TechFix Soluções LTDA',
-    cnpj: '00.000.000/0001-00',
-    ie: '',
-    address: 'Rua da Tecnologia, 123 - Centro, São Paulo - SP',
-    phone1: '(11) 99999-9999',
-    phone2: '(11) 3333-3333',
-    email: 'contato@techfix.com.br',
-    logo: ''
+  // State for Company Settings with Persistence
+  const [companyForm, setCompanyForm] = useState(() => {
+    const saved = localStorage.getItem('techfix_company_settings');
+    return saved ? JSON.parse(saved) : {
+      name: 'TechFix Assistência',
+      legalName: 'TechFix Soluções LTDA',
+      cnpj: '00.000.000/0001-00',
+      ie: '',
+      address: 'Rua da Tecnologia, 123 - Centro, São Paulo - SP',
+      phone1: '(11) 99999-9999',
+      phone2: '(11) 3333-3333',
+      email: 'contato@techfix.com.br',
+      logo: ''
+    };
   });
+
+  const handleSaveCompany = () => {
+    localStorage.setItem('techfix_company_settings', JSON.stringify(companyForm));
+    alert('Dados da empresa salvos com sucesso!');
+  };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -344,7 +352,10 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers, goals, onUp
         </div>
         
         <div className="mt-8 flex justify-end">
-            <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg shadow-blue-900/20">
+            <button 
+                onClick={handleSaveCompany}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg shadow-blue-900/20"
+            >
                 <Save size={18} /> Salvar Alterações
             </button>
         </div>
