@@ -20,7 +20,8 @@ import {
   Globe,
   Database,
   Lock,
-  User as UserIcon
+  User as UserIcon,
+  X
 } from 'lucide-react';
 import { User } from '../types';
 
@@ -94,7 +95,6 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
 
   const handleSaveUser = () => {
       if (!userForm.name || !userForm.username || !userForm.password) {
-          alert("Preencha Nome, Usuário e Senha.");
           return;
       }
 
@@ -128,6 +128,9 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
           setUsers(users.filter(u => u.id !== id));
       }
   };
+
+  // Validar formulário
+  const isUserFormValid = !!(userForm.name && userForm.username && userForm.password);
 
   // Helper for rendering tabs
   const renderCompanySettings = () => (
@@ -315,105 +318,120 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
        {/* User Modal */}
        {isUserModalOpen && (
            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-               <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 animate-scale-in">
-                   <h3 className="text-lg font-bold text-gray-800 mb-4">{editingUser ? 'Editar Usuário' : 'Novo Usuário'}</h3>
-                   <div className="space-y-4">
-                       <div>
-                           <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
-                           <input 
-                                type="text" 
-                                placeholder="Ex: João da Silva" 
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 outline-none focus:border-blue-500" 
-                                value={userForm.name}
-                                onChange={(e) => setUserForm({...userForm, name: e.target.value})}
-                           />
-                       </div>
+               <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col animate-scale-in">
+                   <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-xl flex justify-between items-center">
+                       <h3 className="text-lg font-bold text-gray-800">{editingUser ? 'Editar Usuário' : 'Novo Usuário'}</h3>
+                       <button onClick={() => setIsUserModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={24}/></button>
+                   </div>
+                   
+                   <div className="p-6 overflow-y-auto custom-scrollbar">
+                       <div className="space-y-4">
+                           <div>
+                               <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                               <input 
+                                    type="text" 
+                                    placeholder="Ex: João da Silva" 
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 outline-none focus:border-blue-500" 
+                                    value={userForm.name}
+                                    onChange={(e) => setUserForm({...userForm, name: e.target.value})}
+                               />
+                           </div>
 
-                       <div className="grid grid-cols-2 gap-4">
-                           <div>
-                               <label className="block text-sm font-medium text-gray-700 mb-1">Usuário de Acesso</label>
-                               <input 
-                                    type="text" 
-                                    placeholder="Ex: joao.silva" 
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 outline-none focus:border-blue-500" 
-                                    value={userForm.username}
-                                    onChange={(e) => setUserForm({...userForm, username: e.target.value})}
-                               />
+                           <div className="grid grid-cols-2 gap-4">
+                               <div>
+                                   <label className="block text-sm font-medium text-gray-700 mb-1">Usuário de Acesso</label>
+                                   <input 
+                                        type="text" 
+                                        placeholder="Ex: joao.silva" 
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 outline-none focus:border-blue-500" 
+                                        value={userForm.username}
+                                        onChange={(e) => setUserForm({...userForm, username: e.target.value})}
+                                   />
+                               </div>
+                               <div>
+                                   <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                                   <input 
+                                        type="text" 
+                                        placeholder="••••••" 
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 outline-none focus:border-blue-500" 
+                                        value={userForm.password}
+                                        onChange={(e) => setUserForm({...userForm, password: e.target.value})}
+                                   />
+                               </div>
                            </div>
+                           
                            <div>
-                               <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
-                               <input 
-                                    type="text" 
-                                    placeholder="••••••" 
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 outline-none focus:border-blue-500" 
-                                    value={userForm.password}
-                                    onChange={(e) => setUserForm({...userForm, password: e.target.value})}
-                               />
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Email (Opcional)</label>
+                                <input 
+                                        type="email" 
+                                        placeholder="email@empresa.com" 
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 outline-none focus:border-blue-500" 
+                                        value={userForm.email}
+                                        onChange={(e) => setUserForm({...userForm, email: e.target.value})}
+                                />
                            </div>
-                       </div>
-                       
-                       <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Email (Opcional)</label>
-                            <input 
-                                    type="email" 
-                                    placeholder="email@empresa.com" 
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 outline-none focus:border-blue-500" 
-                                    value={userForm.email}
-                                    onChange={(e) => setUserForm({...userForm, email: e.target.value})}
-                            />
-                       </div>
-                       
-                       <div>
-                           <label className="block text-sm font-bold text-gray-700 mb-2">Permissões de Acesso</label>
-                           <div className="grid grid-cols-2 gap-3">
-                                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={userForm.permissions?.financial} 
-                                        onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, financial: e.target.checked}})}
-                                    /> Financeiro
-                                </label>
-                                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={userForm.permissions?.sales} 
-                                        onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, sales: e.target.checked}})}
-                                    /> Vendas
-                                </label>
-                                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={userForm.permissions?.stock} 
-                                        onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, stock: e.target.checked}})}
-                                    /> Estoque
-                                </label>
-                                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={userForm.permissions?.support} 
-                                        onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, support: e.target.checked}})}
-                                    /> Suporte
-                                </label>
-                                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={userForm.permissions?.settings} 
-                                        onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, settings: e.target.checked}})}
-                                    /> Configurações
-                                </label>
-                                <label className="flex items-center gap-2 p-2 border rounded cursor-pointer bg-red-50 border-red-100 text-red-800">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={userForm.permissions?.admin} 
-                                        onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, admin: e.target.checked}})}
-                                    /> Administrador
-                                </label>
+                           
+                           <div>
+                               <label className="block text-sm font-bold text-gray-700 mb-2">Permissões de Acesso</label>
+                               <div className="grid grid-cols-2 gap-3">
+                                    <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={userForm.permissions?.financial} 
+                                            onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, financial: e.target.checked}})}
+                                        /> Financeiro
+                                    </label>
+                                    <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={userForm.permissions?.sales} 
+                                            onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, sales: e.target.checked}})}
+                                        /> Vendas
+                                    </label>
+                                    <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={userForm.permissions?.stock} 
+                                            onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, stock: e.target.checked}})}
+                                        /> Estoque
+                                    </label>
+                                    <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={userForm.permissions?.support} 
+                                            onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, support: e.target.checked}})}
+                                        /> Suporte
+                                    </label>
+                                    <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={userForm.permissions?.settings} 
+                                            onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, settings: e.target.checked}})}
+                                        /> Configurações
+                                    </label>
+                                    <label className="flex items-center gap-2 p-2 border rounded cursor-pointer bg-red-50 border-red-100 text-red-800">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={userForm.permissions?.admin} 
+                                            onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, admin: e.target.checked}})}
+                                        /> Administrador
+                                    </label>
+                               </div>
                            </div>
                        </div>
                    </div>
-                   <div className="mt-6 flex justify-end gap-3">
+
+                   <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-end gap-3">
                        <button onClick={() => setIsUserModalOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
-                       <button onClick={handleSaveUser} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Salvar</button>
+                       <button 
+                            onClick={handleSaveUser}
+                            disabled={!isUserFormValid}
+                            className={`px-4 py-2 rounded-lg text-white transition-colors shadow-sm
+                                ${isUserFormValid ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-300 cursor-not-allowed'}
+                            `}
+                        >
+                            Salvar
+                        </button>
                    </div>
                </div>
            </div>

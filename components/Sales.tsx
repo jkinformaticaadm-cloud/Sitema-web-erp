@@ -1075,12 +1075,12 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
       {/* PAYMENT MODAL and VIEW MODAL components remain unchanged */}
       {isPaymentModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-60 z-[70] flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl animate-scale-in flex flex-col">
-             <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-scale-in">
+             <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl flex-shrink-0">
                <h3 className="text-xl font-bold text-gray-800">Pagamento</h3>
                <button onClick={() => setIsPaymentModalOpen(false)}><X size={24} className="text-gray-400" /></button>
              </div>
-             <div className="p-6">
+             <div className="p-6 overflow-y-auto custom-scrollbar">
                 <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100 text-center mb-6">
                    <p className="text-gray-500 text-sm mb-1 uppercase tracking-wide">Valor Total a Pagar</p>
                    <p className="text-4xl font-bold text-blue-700">R$ {cartTotal.toFixed(2)}</p>
@@ -1094,7 +1094,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
                    </div>
                 </div>
              </div>
-             <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 rounded-b-xl">
+             <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 rounded-b-xl flex-shrink-0">
                 <button onClick={() => setIsPaymentModalOpen(false)} className="px-6 py-3 text-gray-600 hover:bg-gray-200 rounded-xl">Cancelar</button>
                 <button onClick={handleFinalizeSale} className="px-8 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 flex items-center gap-2"><Check size={20} /> Confirmar</button>
              </div>
