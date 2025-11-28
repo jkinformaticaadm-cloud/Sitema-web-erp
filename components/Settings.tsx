@@ -94,25 +94,28 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
   };
 
   const handleSaveUser = () => {
-      if (!userForm.name || !userForm.username || !userForm.password) {
+      // Validação final antes de salvar
+      if (!userForm.name?.trim() || !userForm.username?.trim() || !userForm.password?.trim()) {
           return;
       }
 
+      const defaultPermissions = {
+        financial: false,
+        sales: false,
+        stock: false,
+        support: false,
+        settings: false,
+        admin: false
+      };
+
       const newUser: User = {
           id: editingUser ? editingUser.id : Date.now().toString(),
-          name: userForm.name!,
-          username: userForm.username!,
-          password: userForm.password!,
+          name: userForm.name.trim(),
+          username: userForm.username.trim(),
+          password: userForm.password.trim(),
           email: userForm.email || '',
           role: userForm.permissions?.admin ? 'Administrador' : 'Técnico',
-          permissions: userForm.permissions || {
-            financial: false,
-            sales: false,
-            stock: false,
-            support: false,
-            settings: false,
-            admin: false
-          }
+          permissions: userForm.permissions || defaultPermissions
       };
 
       if (editingUser) {
@@ -129,8 +132,12 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
       }
   };
 
-  // Validar formulário
-  const isUserFormValid = !!(userForm.name && userForm.username && userForm.password);
+  // Validar formulário (Check robusto)
+  const isUserFormValid = Boolean(
+      userForm.name?.trim() && 
+      userForm.username?.trim() && 
+      userForm.password?.trim()
+  );
 
   // Helper for rendering tabs
   const renderCompanySettings = () => (
@@ -327,34 +334,34 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
                    <div className="p-6 overflow-y-auto custom-scrollbar">
                        <div className="space-y-4">
                            <div>
-                               <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                               <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo *</label>
                                <input 
                                     type="text" 
                                     placeholder="Ex: João da Silva" 
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 outline-none focus:border-blue-500" 
-                                    value={userForm.name}
+                                    value={userForm.name || ''}
                                     onChange={(e) => setUserForm({...userForm, name: e.target.value})}
                                />
                            </div>
 
                            <div className="grid grid-cols-2 gap-4">
                                <div>
-                                   <label className="block text-sm font-medium text-gray-700 mb-1">Usuário de Acesso</label>
+                                   <label className="block text-sm font-medium text-gray-700 mb-1">Usuário de Acesso *</label>
                                    <input 
                                         type="text" 
                                         placeholder="Ex: joao.silva" 
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 outline-none focus:border-blue-500" 
-                                        value={userForm.username}
+                                        value={userForm.username || ''}
                                         onChange={(e) => setUserForm({...userForm, username: e.target.value})}
                                    />
                                </div>
                                <div>
-                                   <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                                   <label className="block text-sm font-medium text-gray-700 mb-1">Senha *</label>
                                    <input 
                                         type="text" 
                                         placeholder="••••••" 
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 outline-none focus:border-blue-500" 
-                                        value={userForm.password}
+                                        value={userForm.password || ''}
                                         onChange={(e) => setUserForm({...userForm, password: e.target.value})}
                                    />
                                </div>
@@ -366,7 +373,7 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
                                         type="email" 
                                         placeholder="email@empresa.com" 
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 outline-none focus:border-blue-500" 
-                                        value={userForm.email}
+                                        value={userForm.email || ''}
                                         onChange={(e) => setUserForm({...userForm, email: e.target.value})}
                                 />
                            </div>
@@ -377,43 +384,43 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
                                     <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
                                         <input 
                                             type="checkbox" 
-                                            checked={userForm.permissions?.financial} 
-                                            onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, financial: e.target.checked}})}
+                                            checked={userForm.permissions?.financial || false} 
+                                            onChange={(e) => setUserForm({...userForm, permissions: {...(userForm.permissions || {}), financial: e.target.checked} as any})}
                                         /> Financeiro
                                     </label>
                                     <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
                                         <input 
                                             type="checkbox" 
-                                            checked={userForm.permissions?.sales} 
-                                            onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, sales: e.target.checked}})}
+                                            checked={userForm.permissions?.sales || false} 
+                                            onChange={(e) => setUserForm({...userForm, permissions: {...(userForm.permissions || {}), sales: e.target.checked} as any})}
                                         /> Vendas
                                     </label>
                                     <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
                                         <input 
                                             type="checkbox" 
-                                            checked={userForm.permissions?.stock} 
-                                            onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, stock: e.target.checked}})}
+                                            checked={userForm.permissions?.stock || false} 
+                                            onChange={(e) => setUserForm({...userForm, permissions: {...(userForm.permissions || {}), stock: e.target.checked} as any})}
                                         /> Estoque
                                     </label>
                                     <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
                                         <input 
                                             type="checkbox" 
-                                            checked={userForm.permissions?.support} 
-                                            onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, support: e.target.checked}})}
+                                            checked={userForm.permissions?.support || false} 
+                                            onChange={(e) => setUserForm({...userForm, permissions: {...(userForm.permissions || {}), support: e.target.checked} as any})}
                                         /> Suporte
                                     </label>
                                     <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
                                         <input 
                                             type="checkbox" 
-                                            checked={userForm.permissions?.settings} 
-                                            onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, settings: e.target.checked}})}
+                                            checked={userForm.permissions?.settings || false} 
+                                            onChange={(e) => setUserForm({...userForm, permissions: {...(userForm.permissions || {}), settings: e.target.checked} as any})}
                                         /> Configurações
                                     </label>
                                     <label className="flex items-center gap-2 p-2 border rounded cursor-pointer bg-red-50 border-red-100 text-red-800">
                                         <input 
                                             type="checkbox" 
-                                            checked={userForm.permissions?.admin} 
-                                            onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, admin: e.target.checked}})}
+                                            checked={userForm.permissions?.admin || false} 
+                                            onChange={(e) => setUserForm({...userForm, permissions: {...(userForm.permissions || {}), admin: e.target.checked} as any})}
                                         /> Administrador
                                     </label>
                                </div>
@@ -426,11 +433,11 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
                        <button 
                             onClick={handleSaveUser}
                             disabled={!isUserFormValid}
-                            className={`px-4 py-2 rounded-lg text-white transition-colors shadow-sm
+                            className={`px-4 py-2 rounded-lg text-white transition-colors shadow-sm flex items-center gap-2 font-medium
                                 ${isUserFormValid ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-300 cursor-not-allowed'}
                             `}
                         >
-                            Salvar
+                            <Save size={18} /> Salvar
                         </button>
                    </div>
                </div>
