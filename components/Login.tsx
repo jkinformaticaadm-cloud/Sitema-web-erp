@@ -16,8 +16,10 @@ export const Login: React.FC<LoginProps> = ({ onLogin, users }) => {
     e.preventDefault();
     
     // Procura o usuário na lista
+    // Usa optional chaining e trim para garantir comparação robusta
     const foundUser = users.find(u => 
-      u.username.toLowerCase() === username.toLowerCase() && 
+      u.username && 
+      u.username.trim().toLowerCase() === username.trim().toLowerCase() && 
       u.password === password
     );
 

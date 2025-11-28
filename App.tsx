@@ -86,7 +86,20 @@ const App: React.FC = () => {
 
   const [users, setUsers] = useState<User[]>(() => {
     const saved = localStorage.getItem('techfix_users');
-    return saved ? JSON.parse(saved) : INITIAL_USERS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Validação de migração: Verifica se os dados salvos possuem a nova estrutura (username)
+        // Se não tiverem, ou se a lista estiver vazia, reseta para os usuários iniciais
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].username) {
+            return parsed;
+        }
+      } catch (e) {
+        console.error("Erro ao carregar usuários do localStorage", e);
+      }
+    }
+    // Fallback para usuários iniciais se não houver dados salvos ou se forem incompatíveis
+    return INITIAL_USERS;
   });
 
   const [transactions, setTransactions] = useState<CashierTransaction[]>(() => {
