@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from 'react';
-import { ShoppingCart, Zap, FileText, User, Search, Plus, Trash2, ArrowLeft, CreditCard, X, Check, Package, Smartphone, History, RefreshCcw, DollarSign, Wallet, Calendar, Edit, Tag, AlignLeft, Phone, ArrowLeftRight, Eye, Printer } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { ShoppingCart, Zap, FileText, User, Search, Plus, Trash2, ArrowLeft, CreditCard, X, Check, Package, Smartphone, History, RefreshCcw, DollarSign, Wallet, Calendar, Edit, Tag, AlignLeft, Phone, ArrowLeftRight, Eye, Printer, Truck, CalendarClock, UserCheck, MapPin } from 'lucide-react';
 import { Product } from '../types';
 
 // --- MOCK DATA ---
 
-const MOCK_PRODUCTS: Product[] = [
+const INITIAL_MOCK_PRODUCTS: Product[] = [
   { id: '1', name: 'Película 3D iPhone 11', category: 'Peliculas', price: 30.00, cost: 5.00, stock: 50, minStock: 10, image: '', type: 'PRODUCT' },
   { id: '2', name: 'Cabo Lightning Foxconn', category: 'Cabos', price: 60.00, cost: 20.00, stock: 20, minStock: 5, image: '', type: 'PRODUCT' },
   { id: '3', name: 'Carregador Samsung 25W', category: 'Carregadores', price: 120.00, cost: 70.00, stock: 15, minStock: 3, image: '', type: 'PRODUCT' },
@@ -18,6 +18,7 @@ interface Customer {
   cpf: string;
   phone: string;
   email?: string;
+  address?: string; // Added Address
 }
 
 // Interface for Cart Item with details
@@ -34,28 +35,42 @@ interface CompletedSale {
   id: string;
   customerName: string;
   customerPhone?: string;
+  customerCpf?: string; // Added CPF to Sale Record
+  customerAddress?: string; // Added Address to Sale Record
   items: CartItem[];
   total: number;
   date: string; // ISO string or formatted time
   paymentMethod: 'Pix' | 'Dinheiro' | 'Débito' | 'Crédito' | 'Crediário' | 'Outros';
-  status: 'Pago' | 'A Receber' | 'Não Pago' | 'Estornado' | 'Estornado (Crédito)' | 'Estornado (Dinheiro)';
+  status: 'Pago' | 'A Receber' | 'Não Pago' | 'Estornado' | 'Estornado (Crédito)' | 'Estornado (Dinheiro)' | 'Encomenda';
   refundType?: 'CREDIT' | 'MONEY';
 }
 
 const INITIAL_CUSTOMERS: Customer[] = [
-  { id: '1', name: 'João da Silva', cpf: '123.456.789-00', phone: '(11) 99999-1234' },
-  { id: '2', name: 'Maria Oliveira', cpf: '987.654.321-99', phone: '(21) 98888-5678' },
-  { id: '3', name: 'Pedro Souza', cpf: '456.123.789-55', phone: '(31) 97777-1111' },
+  { id: '1', name: 'João da Silva', cpf: '123.456.789-00', phone: '(11) 99999-1234', address: 'Rua A, 123' },
+  { id: '2', name: 'Maria Oliveira', cpf: '987.654.321-99', phone: '(21) 98888-5678', address: 'Av. Brasil, 500' },
+  { id: '3', name: 'Pedro Souza', cpf: '456.123.789-55', phone: '(31) 97777-1111', address: 'Rua das Flores, 10' },
 ];
 
-type SalesMode = 'MENU' | 'POS' | 'DETAILED';
+type SalesMode = 'MENU' | 'POS' | 'DETAILED' | 'PREORDER';
 
 export const Sales: React.FC = () => {
   const [mode, setMode] = useState<SalesMode>('MENU');
   
+  // Data State (Lifted up to allow updates)
+  const [availableProducts, setAvailableProducts] = useState<Product[]>(INITIAL_MOCK_PRODUCTS);
+  const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
+
   // Sale State
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  
+  // Detailed Sale Specific State
+  const [detailedCustomerForm, setDetailedCustomerForm] = useState({
+    name: '',
+    phone: '',
+    cpf: '',
+    address: ''
+  });
   
   // Search States
   const [productSearchQuery, setProductSearchQuery] = useState('');
@@ -68,7 +83,7 @@ export const Sales: React.FC = () => {
       id: '1001',
       customerName: 'Cliente Balcão',
       customerPhone: '',
-      items: [{ product: MOCK_PRODUCTS[0], quantity: 1, unitPrice: 30.00, discount: 0, note: '' }],
+      items: [{ product: INITIAL_MOCK_PRODUCTS[0], quantity: 1, unitPrice: 30.00, discount: 0, note: '' }],
       total: 30.00,
       date: new Date().toLocaleTimeString(),
       paymentMethod: 'Dinheiro',
@@ -78,7 +93,7 @@ export const Sales: React.FC = () => {
       id: '1002',
       customerName: 'João da Silva',
       customerPhone: '(11) 99999-1234',
-      items: [{ product: MOCK_PRODUCTS[2], quantity: 1, unitPrice: 120.00, discount: 0, note: '' }],
+      items: [{ product: INITIAL_MOCK_PRODUCTS[2], quantity: 1, unitPrice: 120.00, discount: 0, note: '' }],
       total: 120.00,
       date: new Date().toLocaleTimeString(),
       paymentMethod: 'Pix',
@@ -109,8 +124,20 @@ export const Sales: React.FC = () => {
   const [paymentStatus, setPaymentStatus] = useState<CompletedSale['status']>('Pago');
   const [amountPaid, setAmountPaid] = useState(''); // For change calculation
 
-  // Data
-  const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
+  // Pre-Order State
+  const [preOrderForm, setPreOrderForm] = useState({
+    name: '',
+    phone: '',
+    product: '',
+    totalValue: '',
+    entryValue: '',
+    date: '',
+    paymentMethod: 'Pix',
+    authorizedPickup: ''
+  });
+  // Helper for PreOrder Search
+  const [showPreOrderProductSuggestions, setShowPreOrderProductSuggestions] = useState(false);
+  const [showPreOrderCustomerSuggestions, setShowPreOrderCustomerSuggestions] = useState(false);
 
   // --- Actions ---
 
@@ -173,10 +200,32 @@ export const Sales: React.FC = () => {
   }, 0);
 
   const handleFinalizeSale = () => {
+    // Determine customer info based on mode
+    let finalCustomerName = 'Cliente Balcão';
+    let finalCustomerPhone = '';
+    let finalCustomerCpf = '';
+    let finalCustomerAddress = '';
+
+    if (mode === 'DETAILED') {
+        finalCustomerName = detailedCustomerForm.name || 'Cliente Balcão';
+        finalCustomerPhone = detailedCustomerForm.phone;
+        finalCustomerCpf = detailedCustomerForm.cpf;
+        finalCustomerAddress = detailedCustomerForm.address;
+    } else {
+        if (selectedCustomer) {
+            finalCustomerName = selectedCustomer.name;
+            finalCustomerPhone = selectedCustomer.phone;
+            finalCustomerCpf = selectedCustomer.cpf;
+            finalCustomerAddress = selectedCustomer.address || '';
+        }
+    }
+
     const newSale: CompletedSale = {
       id: Math.floor(Math.random() * 100000).toString(),
-      customerName: selectedCustomer ? selectedCustomer.name : 'Cliente Balcão',
-      customerPhone: selectedCustomer ? selectedCustomer.phone : '',
+      customerName: finalCustomerName,
+      customerPhone: finalCustomerPhone,
+      customerCpf: finalCustomerCpf,
+      customerAddress: finalCustomerAddress,
       items: [...cart],
       total: cartTotal,
       date: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
@@ -189,10 +238,86 @@ export const Sales: React.FC = () => {
     // Reset
     setCart([]);
     setSelectedCustomer(null);
+    setDetailedCustomerForm({ name: '', phone: '', cpf: '', address: '' }); // Reset detailed form
     setIsPaymentModalOpen(false);
     setAmountPaid('');
     setPaymentStatus('Pago');
     setPaymentMethod('Dinheiro');
+  };
+
+  const handleSavePreOrder = () => {
+    if(!preOrderForm.name || !preOrderForm.product || !preOrderForm.totalValue || !preOrderForm.date) {
+        alert("Preencha os campos obrigatórios!");
+        return;
+    }
+
+    // 1. Check and Save Customer if new
+    let customerToUse = customers.find(c => c.name.toLowerCase() === preOrderForm.name.toLowerCase());
+    if (!customerToUse) {
+        customerToUse = {
+            id: Math.random().toString(36).substr(2, 9),
+            name: preOrderForm.name,
+            cpf: '',
+            phone: preOrderForm.phone
+        };
+        setCustomers(prev => [...prev, customerToUse!]);
+    }
+
+    // 2. Check and Save Product if new
+    let productToUse = availableProducts.find(p => p.name.toLowerCase() === preOrderForm.product.toLowerCase());
+    if (!productToUse) {
+        productToUse = {
+            id: Math.random().toString(36).substr(2, 9),
+            name: preOrderForm.product,
+            category: 'Encomendas',
+            price: parseFloat(preOrderForm.totalValue) || 0,
+            cost: 0,
+            stock: 0, // Registered but no stock yet
+            minStock: 1,
+            image: '',
+            type: 'PRODUCT'
+        };
+        setAvailableProducts(prev => [...prev, productToUse!]);
+    }
+
+    // 3. Create Sale Record for History
+    const total = parseFloat(preOrderForm.totalValue) || 0;
+    const entry = parseFloat(preOrderForm.entryValue) || 0;
+    
+    const newPreOrderSale: CompletedSale = {
+        id: Math.floor(Math.random() * 100000).toString(),
+        customerName: preOrderForm.name,
+        customerPhone: preOrderForm.phone,
+        items: [{
+            product: productToUse,
+            quantity: 1,
+            unitPrice: total,
+            discount: 0,
+            note: `Encomenda. Entrega: ${preOrderForm.date}. Entrada: R$ ${entry.toFixed(2)}. Retira: ${preOrderForm.authorizedPickup || 'Cliente'}`
+        }],
+        total: total,
+        date: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        paymentMethod: preOrderForm.paymentMethod as any,
+        status: 'Encomenda',
+        refundType: undefined
+    };
+
+    setSalesHistory([newPreOrderSale, ...salesHistory]);
+
+    // In a real app, save the Pre-Order object to backend
+    alert(`Encomenda Salva com Sucesso!\nAdicionada ao histórico.\nProduto "${productToUse.name}" registrado no sistema.\nCliente "${customerToUse.name}" registrado.`);
+    
+    setMode('MENU');
+    setPreOrderForm({
+        name: '',
+        phone: '',
+        product: '',
+        totalValue: '',
+        entryValue: '',
+        date: '',
+        paymentMethod: 'Pix',
+        authorizedPickup: ''
+    });
   };
 
   // View Sale
@@ -223,12 +348,12 @@ export const Sales: React.FC = () => {
 
   // Filtered Lists
   const filteredProducts = useMemo(() => {
-    return MOCK_PRODUCTS.filter(p => 
+    return availableProducts.filter(p => 
       p.name.toLowerCase().includes(productSearchQuery.toLowerCase()) || 
       p.category.toLowerCase().includes(productSearchQuery.toLowerCase()) ||
       p.id.includes(productSearchQuery)
     );
-  }, [productSearchQuery]);
+  }, [productSearchQuery, availableProducts]);
 
   const filteredCustomers = useMemo(() => {
     if (!customerSearchQuery) return [];
@@ -239,6 +364,19 @@ export const Sales: React.FC = () => {
       c.phone.includes(q)
     );
   }, [customers, customerSearchQuery]);
+
+  // Pre-Order Specific Filters
+  const filteredPreOrderProducts = useMemo(() => {
+      const q = preOrderForm.product.toLowerCase();
+      if(!q) return [];
+      return availableProducts.filter(p => p.name.toLowerCase().includes(q));
+  }, [preOrderForm.product, availableProducts]);
+
+  const filteredPreOrderCustomers = useMemo(() => {
+      const q = preOrderForm.name.toLowerCase();
+      if(!q) return [];
+      return customers.filter(c => c.name.toLowerCase().includes(q));
+  }, [preOrderForm.name, customers]);
 
   // Filtered History
   const filteredHistory = useMemo(() => {
@@ -258,11 +396,23 @@ export const Sales: React.FC = () => {
       name: formData.get('name') as string,
       cpf: formData.get('cpf') as string,
       phone: formData.get('phone') as string,
+      address: '', // Init empty
     };
     setCustomers([...customers, newCustomer]);
     setSelectedCustomer(newCustomer);
     setIsNewCustomerModalOpen(false);
     setCustomerSearchQuery('');
+  };
+
+  // Populate Detailed form when a customer is selected from search
+  const selectCustomerForDetailed = (c: Customer) => {
+      setDetailedCustomerForm({
+          name: c.name,
+          phone: c.phone,
+          cpf: c.cpf,
+          address: c.address || ''
+      });
+      setCustomerSearchQuery(''); // Close search
   };
 
   // --- Styles Helper ---
@@ -271,6 +421,7 @@ export const Sales: React.FC = () => {
       case 'Pago': return 'bg-green-100 text-green-800 border-green-200';
       case 'A Receber': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'Não Pago': return 'bg-red-100 text-red-800 border-red-200';
+      case 'Encomenda': return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'Estornado': 
       case 'Estornado (Crédito)':
       case 'Estornado (Dinheiro)':
@@ -290,7 +441,7 @@ export const Sales: React.FC = () => {
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto w-full mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto w-full mb-8">
         {/* Button 1: Quick POS */}
         <button 
           onClick={() => setMode('POS')}
@@ -324,13 +475,30 @@ export const Sales: React.FC = () => {
           </div>
           <p className="text-xs text-gray-500 relative z-10">Ideal para orçamentos e cadastros completos.</p>
         </button>
+
+        {/* Button 3: Pre-Orders (Encomendas) */}
+        <button 
+          onClick={() => setMode('PREORDER')}
+          className="group bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:border-purple-500 hover:shadow-lg transition-all duration-300 text-left relative overflow-hidden flex flex-col justify-between h-40"
+        >
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <Truck size={80} className="text-purple-600" />
+          </div>
+          <div>
+            <div className="bg-purple-100 w-10 h-10 rounded-lg flex items-center justify-center mb-3 text-purple-600 group-hover:scale-110 transition-transform">
+                <Package size={20} />
+            </div>
+            <h3 className="text-lg font-bold text-gray-800 group-hover:text-purple-600 transition-colors">Encomendas</h3>
+          </div>
+          <p className="text-xs text-gray-500 relative z-10">Registrar pedidos de peças ou produtos.</p>
+        </button>
       </div>
 
       {/* History Section Inline */}
       <div className="max-w-5xl mx-auto w-full bg-white rounded-xl shadow-sm border border-gray-100 flex-1 overflow-hidden flex flex-col min-h-[400px]">
           <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
              <h3 className="font-bold text-gray-800 flex items-center gap-2">
-               <History size={18} className="text-blue-600"/> Últimas Vendas
+               <History size={18} className="text-blue-600"/> Últimas Vendas & Encomendas
              </h3>
              <div className="relative w-full sm:w-64">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
@@ -595,234 +763,446 @@ export const Sales: React.FC = () => {
   );
 
   const DetailedView = () => (
-    <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-fade-in h-[calc(100vh-140px)] flex flex-col">
-       <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50">
-          <div className="flex items-center gap-3">
-             <button onClick={() => setMode('MENU')} className="p-2 hover:bg-white rounded-full border border-transparent hover:border-gray-200 transition-all text-gray-500">
-                <ArrowLeft size={20} />
-             </button>
-             <div>
-                <h2 className="text-xl font-bold text-gray-800">Venda Detalhada</h2>
-                <p className="text-xs text-gray-500">Venda #00124 • {new Date().toLocaleDateString()}</p>
-             </div>
-          </div>
-          <div className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold border border-yellow-200">
-             Rascunho
-          </div>
-       </div>
-
-       <div className="p-8 space-y-8 overflow-y-auto flex-1 custom-scrollbar">
-          {/* Step 1: Customer */}
-          <section className="space-y-4">
-             <h3 className="text-sm font-bold text-blue-600 uppercase tracking-wide flex items-center gap-2 border-b border-gray-100 pb-2">
-                <User size={16} /> Identificação do Cliente
-             </h3>
-             <div className="flex gap-4 items-start">
-                <div className="flex-1 relative">
-                   <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                      <input 
-                        type="text" 
-                        placeholder="Buscar cliente (Nome, CPF, Telefone)..." 
-                        className={`w-full pl-10 pr-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 ${selectedCustomer ? 'border-blue-300 bg-blue-50 text-blue-800 font-medium' : 'border-gray-300'}`}
-                        value={selectedCustomer ? selectedCustomer.name : customerSearchQuery}
-                        onChange={(e) => {
-                           if(selectedCustomer) setSelectedCustomer(null);
-                           setCustomerSearchQuery(e.target.value);
-                        }}
-                      />
-                      {selectedCustomer && (
-                         <button onClick={() => setSelectedCustomer(null)} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-500 hover:bg-blue-100 rounded-full p-1">
-                            <X size={16} />
-                         </button>
-                      )}
-                   </div>
-                   
-                   {/* Search Dropdown for Detailed View */}
-                   {customerSearchQuery && !selectedCustomer && (
-                      <div className="absolute top-full left-0 w-full bg-white shadow-xl rounded-lg border border-gray-100 mt-2 z-50">
-                          {filteredCustomers.length > 0 ? (
-                             filteredCustomers.map(c => (
-                               <button 
-                                 key={c.id} 
-                                 onClick={() => { setSelectedCustomer(c); setCustomerSearchQuery(''); }}
-                                 className="w-full text-left px-4 py-3 hover:bg-gray-50 flex justify-between items-center border-b border-gray-50 last:border-0"
-                               >
-                                 <div>
-                                   <p className="font-medium text-gray-800">{c.name}</p>
-                                   <p className="text-xs text-gray-500">CPF: {c.cpf}</p>
-                                 </div>
-                                 <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">{c.phone}</span>
-                               </button>
-                             ))
-                          ) : (
-                             <div className="p-4 text-center">
-                               <p className="text-sm text-gray-500 mb-2">Nenhum cliente encontrado.</p>
-                             </div>
-                          )}
-                      </div>
-                   )}
-                </div>
-                <button 
-                  onClick={() => setIsNewCustomerModalOpen(true)}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2 font-medium border border-gray-200"
-                >
-                   <Plus size={18} /> Novo Cliente
+    <div className="h-[calc(100vh-140px)] flex flex-col gap-4 animate-fade-in">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between shrink-0">
+             <div className="flex items-center gap-3">
+                <button onClick={() => setMode('MENU')} className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors">
+                  <ArrowLeft size={20} />
                 </button>
-             </div>
-             {selectedCustomer && (
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 flex gap-6 text-sm">
-                   <div><span className="text-blue-500 font-semibold">CPF:</span> <span className="text-blue-900">{selectedCustomer.cpf}</span></div>
-                   <div><span className="text-blue-500 font-semibold">Telefone:</span> <span className="text-blue-900">{selectedCustomer.phone}</span></div>
-                   <div className="text-green-600 flex items-center gap-1"><Check size={14}/> Cadastro Ativo</div>
+                <div>
+                   <h2 className="text-xl font-bold text-gray-800">Venda Detalhada</h2>
+                   <p className="text-xs text-gray-500">Adicione itens à lista, preencha dados do cliente e finalize.</p>
                 </div>
-             )}
-          </section>
-
-          {/* Step 2: Items */}
-          <section className="space-y-4">
-             <div className="flex justify-between items-end border-b border-gray-100 pb-2">
-                <h3 className="text-sm font-bold text-blue-600 uppercase tracking-wide flex items-center gap-2">
-                   <ShoppingCart size={16} /> Produtos e Serviços
-                </h3>
-                {cart.length > 0 && (
-                   <button 
-                     onClick={() => setIsProductModalOpen(true)}
-                     className="text-sm text-blue-600 hover:underline flex items-center gap-1"
-                   >
-                      <Plus size={14} /> Adicionar mais
-                   </button>
-                )}
              </div>
+             <div className="flex gap-2">
+                 <button 
+                   onClick={() => setIsProductModalOpen(true)}
+                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 shadow-sm shadow-blue-200"
+                 >
+                    <Plus size={18} /> Adicionar Itens
+                 </button>
+             </div>
+        </div>
 
-             {cart.length === 0 ? (
-                <div className="bg-gray-50 p-8 rounded-lg border border-dashed border-gray-300 text-center">
-                   <p className="text-gray-500 mb-4">Nenhum item adicionado à venda</p>
-                   <button 
-                     onClick={() => setIsProductModalOpen(true)}
-                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm inline-flex items-center gap-2"
-                   >
-                      <Plus size={18} /> Adicionar Itens
-                   </button>
-                </div>
-             ) : (
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                   <table className="w-full text-left text-sm">
-                      <thead className="bg-gray-50 text-gray-500 font-medium">
-                         <tr>
-                            <th className="px-4 py-3">Descrição</th>
-                            <th className="px-4 py-3 text-right">Qtd</th>
-                            <th className="px-4 py-3 text-right">Unitário</th>
-                            <th className="px-4 py-3 text-right">Desconto</th>
-                            <th className="px-4 py-3 text-right">Total</th>
-                            <th className="w-20 text-center">Ações</th>
-                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                         {cart.map((item, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50">
-                               <td className="px-4 py-3">
-                                  <p className="text-gray-900 font-medium">{item.product.name}</p>
-                                  <div className="flex flex-col gap-0.5 mt-0.5">
-                                    <p className="text-xs text-gray-500">{item.product.category}</p>
-                                    {item.note && (
-                                        <p className="text-xs text-blue-600 italic bg-blue-50 px-1 py-0.5 rounded w-fit flex items-center gap-1">
-                                            <AlignLeft size={10} /> {item.note}
-                                        </p>
-                                    )}
-                                  </div>
-                               </td>
-                               <td className="px-4 py-3 text-right">{item.quantity}</td>
-                               <td className="px-4 py-3 text-right">R$ {item.unitPrice.toFixed(2)}</td>
-                               <td className="px-4 py-3 text-right text-red-500">
-                                   {item.discount > 0 ? `- R$ ${item.discount.toFixed(2)}` : '-'}
-                               </td>
-                               <td className="px-4 py-3 text-right font-medium">
-                                   R$ {((item.unitPrice * item.quantity) - item.discount).toFixed(2)}
-                               </td>
-                               <td className="px-4 py-3 text-center">
-                                  <div className="flex items-center justify-center gap-1">
-                                    <button 
-                                        onClick={() => openItemDetails(idx)}
-                                        className="text-blue-400 hover:text-blue-600 p-1.5 hover:bg-blue-50 rounded transition-colors"
-                                        title="Editar Detalhes"
-                                    >
-                                        <Edit size={16}/>
-                                    </button>
-                                    <button 
-                                        onClick={() => removeFromCart(item.product.id)} 
-                                        className="text-red-400 hover:text-red-600 p-1.5 hover:bg-red-50 rounded transition-colors"
-                                        title="Remover Item"
-                                    >
-                                        <Trash2 size={16}/>
-                                    </button>
-                                  </div>
-                               </td>
+        <div className="flex-1 flex gap-4 overflow-hidden">
+             <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
+                 <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                    <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                        <ShoppingCart size={18} className="text-blue-600" /> Itens do Pedido
+                    </h3>
+                    <span className="text-sm text-gray-500">{cart.length} itens</span>
+                 </div>
+                 <div className="flex-1 overflow-y-auto p-0">
+                    <table className="w-full text-left">
+                        <thead className="bg-white text-gray-500 text-xs uppercase sticky top-0 z-10 border-b border-gray-100">
+                            <tr>
+                                <th className="px-6 py-3">Produto / Serviço</th>
+                                <th className="px-6 py-3 text-center">Qtd</th>
+                                <th className="px-6 py-3 text-right">Unitário</th>
+                                <th className="px-6 py-3 text-right">Desconto</th>
+                                <th className="px-6 py-3 text-right">Total</th>
+                                <th className="px-6 py-3 text-center">Ações</th>
                             </tr>
-                         ))}
-                      </tbody>
-                      <tfoot className="bg-gray-50 font-bold text-gray-800">
-                         <tr>
-                            <td colSpan={4} className="px-4 py-3 text-right">TOTAL</td>
-                            <td className="px-4 py-3 text-right text-lg text-blue-600">R$ {cartTotal.toFixed(2)}</td>
-                            <td></td>
-                         </tr>
-                      </tfoot>
-                   </table>
-                </div>
-             )}
-          </section>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {cart.length > 0 ? (
+                                cart.map((item, idx) => (
+                                    <tr key={idx} className="hover:bg-gray-50">
+                                        <td className="px-6 py-4">
+                                            <p className="font-medium text-gray-800">{item.product.name}</p>
+                                            {item.note && <p className="text-xs text-gray-500 italic">{item.note}</p>}
+                                        </td>
+                                        <td className="px-6 py-4 text-center">
+                                            {item.quantity}
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            R$ {item.unitPrice.toFixed(2)}
+                                        </td>
+                                        <td className="px-6 py-4 text-right text-red-500">
+                                            {item.discount > 0 ? `- R$ ${item.discount.toFixed(2)}` : '-'}
+                                        </td>
+                                        <td className="px-6 py-4 text-right font-bold text-gray-800">
+                                            R$ {((item.quantity * item.unitPrice) - item.discount).toFixed(2)}
+                                        </td>
+                                        <td className="px-6 py-4 text-center">
+                                            <div className="flex justify-center gap-2">
+                                                <button 
+                                                    onClick={() => openItemDetails(idx)}
+                                                    className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                                                    title="Editar"
+                                                >
+                                                    <Edit size={16} />
+                                                </button>
+                                                <button 
+                                                    onClick={() => removeFromCart(item.product.id)}
+                                                    className="p-1 text-red-500 hover:bg-red-50 rounded"
+                                                    title="Remover"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
+                                        Nenhum item adicionado. Clique em "Adicionar Itens".
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                 </div>
+                 <div className="p-4 bg-gray-50 border-t border-gray-100">
+                     <div className="flex justify-end gap-6 text-sm">
+                         <div className="text-gray-500">Subtotal: <span className="font-bold text-gray-800">R$ {cartTotal.toFixed(2)}</span></div>
+                     </div>
+                 </div>
+             </div>
 
-          {/* Step 3: Payment */}
-          <section className={`space-y-4 transition-opacity ${cart.length > 0 && selectedCustomer ? 'opacity-100' : 'opacity-50'}`}>
-             <h3 className="text-sm font-bold text-gray-600 uppercase tracking-wide flex items-center gap-2 border-b border-gray-100 pb-2">
-                <CreditCard size={16} /> Pagamento e Entrega
-             </h3>
-             {cart.length > 0 && selectedCustomer ? (
-                <div className="grid grid-cols-2 gap-4">
-                   <div 
-                     onClick={() => setIsPaymentModalOpen(true)}
-                     className="p-4 border rounded-lg hover:border-blue-500 cursor-pointer transition-colors bg-white hover:shadow-md"
-                   >
-                      <p className="font-bold text-gray-800 flex items-center gap-2">
-                          <DollarSign size={18} className="text-green-600" /> Pagamento Agora
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1">Receber pagamento e finalizar venda</p>
-                   </div>
-                   <div className="p-4 border rounded-lg hover:border-blue-500 cursor-pointer transition-colors bg-white hover:shadow-md">
-                      <p className="font-bold text-gray-800 flex items-center gap-2">
-                          <FileText size={18} className="text-orange-600" /> Gerar Orçamento
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1">Salvar apenas como rascunho</p>
-                   </div>
-                </div>
-             ) : (
-                <p className="text-sm text-gray-400 italic">Adicione itens e identifique o cliente para liberar as opções de pagamento.</p>
-             )}
-          </section>
-       </div>
-        
-       <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
-          <button onClick={() => setMode('MENU')} className="px-6 py-2 text-gray-600 font-medium hover:bg-gray-200 rounded-lg transition-colors">Cancelar</button>
-          <button 
-            disabled={!cart.length || !selectedCustomer}
-            onClick={() => setIsPaymentModalOpen(true)}
-            className={`px-6 py-2 text-white font-medium rounded-lg shadow-lg transition-all
-              ${cart.length && selectedCustomer 
-                ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-900/20' 
-                : 'bg-gray-400 cursor-not-allowed opacity-70'}`}
-          >
-            Finalizar Venda
-          </button>
-       </div>
+             <div className="w-96 flex flex-col gap-4">
+                  <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 relative">
+                       <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2 text-sm uppercase tracking-wide">
+                           <User size={16} className="text-blue-600" /> Dados do Cliente
+                       </h3>
+                       
+                       <div className="space-y-3">
+                           {/* Quick Search Overlay */}
+                           <div className="relative">
+                               <div className="relative">
+                                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                                   <input 
+                                     type="text" 
+                                     placeholder="Buscar Cliente Cadastrado..."
+                                     className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white transition-colors"
+                                     value={customerSearchQuery}
+                                     onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                                   />
+                               </div>
+                               {customerSearchQuery && (
+                                   <div className="absolute top-full left-0 w-full bg-white shadow-xl rounded-lg border border-gray-100 mt-1 z-20 max-h-40 overflow-y-auto">
+                                      {filteredCustomers.length > 0 ? (
+                                        filteredCustomers.map(c => (
+                                          <button 
+                                            key={c.id} 
+                                            onClick={() => selectCustomerForDetailed(c)}
+                                            className="w-full text-left px-3 py-2 hover:bg-gray-50 border-b border-gray-50 last:border-0"
+                                          >
+                                            <p className="text-sm font-medium text-gray-800">{c.name}</p>
+                                            <p className="text-xs text-gray-500">{c.cpf} | {c.phone}</p>
+                                          </button>
+                                        ))
+                                      ) : (
+                                        <div className="p-3 text-xs text-gray-500">Nenhum cliente encontrado</div>
+                                      )}
+                                   </div>
+                               )}
+                           </div>
+
+                           <div className="border-t border-gray-100 my-2"></div>
+
+                           {/* Detailed Fields */}
+                           <div>
+                               <label className="block text-xs font-medium text-gray-500 mb-1">Nome do Cliente</label>
+                               <input 
+                                   type="text"
+                                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-1 focus:ring-blue-500 outline-none"
+                                   placeholder="Nome Completo"
+                                   value={detailedCustomerForm.name}
+                                   onChange={(e) => setDetailedCustomerForm({...detailedCustomerForm, name: e.target.value})}
+                               />
+                           </div>
+                           
+                           <div>
+                               <label className="block text-xs font-medium text-gray-500 mb-1">CPF / CNPJ (Opcional)</label>
+                               <input 
+                                   type="text"
+                                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-1 focus:ring-blue-500 outline-none"
+                                   placeholder="000.000.000-00"
+                                   value={detailedCustomerForm.cpf}
+                                   onChange={(e) => setDetailedCustomerForm({...detailedCustomerForm, cpf: e.target.value})}
+                               />
+                           </div>
+
+                           <div>
+                               <label className="block text-xs font-medium text-gray-500 mb-1">Telefone</label>
+                               <div className="relative">
+                                   <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
+                                   <input 
+                                       type="text"
+                                       className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-1 focus:ring-blue-500 outline-none"
+                                       placeholder="(00) 00000-0000"
+                                       value={detailedCustomerForm.phone}
+                                       onChange={(e) => setDetailedCustomerForm({...detailedCustomerForm, phone: e.target.value})}
+                                   />
+                               </div>
+                           </div>
+
+                           <div>
+                               <label className="block text-xs font-medium text-gray-500 mb-1">Endereço Completo</label>
+                               <div className="relative">
+                                   <MapPin className="absolute left-3 top-3 text-gray-400" size={14} />
+                                   <textarea 
+                                       rows={2}
+                                       className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-1 focus:ring-blue-500 outline-none resize-none"
+                                       placeholder="Rua, Número, Bairro, Cidade..."
+                                       value={detailedCustomerForm.address}
+                                       onChange={(e) => setDetailedCustomerForm({...detailedCustomerForm, address: e.target.value})}
+                                   />
+                               </div>
+                           </div>
+                       </div>
+                  </div>
+
+                  <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex-1 flex flex-col justify-end">
+                       <div className="space-y-3 mb-6">
+                           <div className="flex justify-between items-center text-sm text-gray-600">
+                               <span>Itens</span>
+                               <span>{cart.reduce((a,b) => a+b.quantity, 0)}</span>
+                           </div>
+                           <div className="flex justify-between items-center text-sm text-gray-600">
+                               <span>Descontos</span>
+                               <span className="text-red-500">- R$ {cart.reduce((a,b) => a+b.discount, 0).toFixed(2)}</span>
+                           </div>
+                           <div className="pt-3 border-t border-gray-100 flex justify-between items-end">
+                               <span className="font-bold text-gray-800">Total</span>
+                               <span className="text-2xl font-bold text-blue-600">R$ {cartTotal.toFixed(2)}</span>
+                           </div>
+                       </div>
+                       <button 
+                          onClick={() => {
+                            if (cart.length > 0) setIsPaymentModalOpen(true);
+                          }}
+                          disabled={cart.length === 0}
+                          className={`w-full py-3 text-white rounded-xl font-bold text-base shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2
+                            ${cart.length > 0 ? 'bg-green-600 hover:bg-green-700 shadow-green-900/20' : 'bg-gray-400 cursor-not-allowed opacity-70'}`}
+                       >
+                          <Check size={20} />
+                          Finalizar Venda
+                       </button>
+                  </div>
+             </div>
+        </div>
     </div>
   );
+
+  const PreOrderView = () => {
+    // Calculated field
+    const total = parseFloat(preOrderForm.totalValue) || 0;
+    const entry = parseFloat(preOrderForm.entryValue) || 0;
+    const remaining = Math.max(0, total - entry);
+
+    return (
+        <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-fade-in h-[calc(100vh-140px)] flex flex-col">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50">
+                <div className="flex items-center gap-3">
+                    <button onClick={() => setMode('MENU')} className="p-2 hover:bg-white rounded-full border border-transparent hover:border-gray-200 transition-all text-gray-500">
+                        <ArrowLeft size={20} />
+                    </button>
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-800">Nova Encomenda</h2>
+                        <p className="text-xs text-gray-500">Registre pedidos de peças ou produtos sob demanda</p>
+                    </div>
+                </div>
+            </div>
+
+            <div className="p-8 overflow-y-auto flex-1 custom-scrollbar space-y-8">
+                {/* Section 1: Client */}
+                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm space-y-4 relative">
+                    <h3 className="text-sm font-bold text-purple-600 uppercase tracking-wide flex items-center gap-2 border-b border-gray-100 pb-2">
+                        <User size={16} /> Dados do Cliente
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="relative">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Cliente</label>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                                <input 
+                                    type="text" 
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                                    value={preOrderForm.name}
+                                    onChange={(e) => {
+                                        setPreOrderForm({...preOrderForm, name: e.target.value});
+                                        setShowPreOrderCustomerSuggestions(true);
+                                    }}
+                                    onFocus={() => setShowPreOrderCustomerSuggestions(true)}
+                                    placeholder="Buscar ou Digitar Nome"
+                                />
+                            </div>
+                            {/* Suggestions Dropdown */}
+                            {showPreOrderCustomerSuggestions && preOrderForm.name && filteredPreOrderCustomers.length > 0 && (
+                                <div className="absolute top-full left-0 w-full bg-white shadow-lg rounded-lg border border-gray-100 mt-1 z-20 max-h-40 overflow-y-auto">
+                                    {filteredPreOrderCustomers.map(c => (
+                                        <button 
+                                            key={c.id} 
+                                            className="w-full text-left px-4 py-2 hover:bg-gray-50 border-b border-gray-50 last:border-0 text-sm"
+                                            onClick={() => {
+                                                setPreOrderForm(prev => ({...prev, name: c.name, phone: c.phone}));
+                                                setShowPreOrderCustomerSuggestions(false);
+                                            }}
+                                        >
+                                            <p className="font-medium text-gray-800">{c.name}</p>
+                                            <p className="text-xs text-gray-500">{c.phone}</p>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Telefone / WhatsApp</label>
+                            <input 
+                                type="text" 
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                                value={preOrderForm.phone}
+                                onChange={(e) => setPreOrderForm({...preOrderForm, phone: e.target.value})}
+                                placeholder="(00) 00000-0000"
+                            />
+                        </div>
+                        <div className="md:col-span-2 relative">
+                             <label className="block text-sm font-medium text-gray-700 mb-1">Pessoa Autorizada para Retirada (Opcional)</label>
+                             <div className="relative">
+                                <UserCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                                <input 
+                                    type="text" 
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-gray-50"
+                                    value={preOrderForm.authorizedPickup}
+                                    onChange={(e) => setPreOrderForm({...preOrderForm, authorizedPickup: e.target.value})}
+                                    placeholder="Nome de quem irá retirar (se diferente do cliente)"
+                                />
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Section 2: Order Details */}
+                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
+                    <h3 className="text-sm font-bold text-purple-600 uppercase tracking-wide flex items-center gap-2 border-b border-gray-100 pb-2">
+                        <Package size={16} /> Detalhes do Pedido
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div className="md:col-span-2 relative">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Produto Encomendado</label>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                                <input 
+                                    type="text" 
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                                    value={preOrderForm.product}
+                                    onChange={(e) => {
+                                        setPreOrderForm({...preOrderForm, product: e.target.value});
+                                        setShowPreOrderProductSuggestions(true);
+                                    }}
+                                    onFocus={() => setShowPreOrderProductSuggestions(true)}
+                                    placeholder="Buscar produto existente ou digitar novo..."
+                                />
+                            </div>
+                            {/* Product Suggestions */}
+                            {showPreOrderProductSuggestions && preOrderForm.product && filteredPreOrderProducts.length > 0 && (
+                                <div className="absolute top-full left-0 w-full bg-white shadow-lg rounded-lg border border-gray-100 mt-1 z-20 max-h-40 overflow-y-auto">
+                                    {filteredPreOrderProducts.map(p => (
+                                        <button 
+                                            key={p.id} 
+                                            className="w-full text-left px-4 py-2 hover:bg-gray-50 border-b border-gray-50 last:border-0 text-sm flex justify-between"
+                                            onClick={() => {
+                                                setPreOrderForm(prev => ({
+                                                    ...prev, 
+                                                    product: p.name, 
+                                                    totalValue: p.price.toString()
+                                                }));
+                                                setShowPreOrderProductSuggestions(false);
+                                            }}
+                                        >
+                                            <span className="font-medium text-gray-800">{p.name}</span>
+                                            <span className="text-xs text-blue-600 font-bold">R$ {p.price.toFixed(2)}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                            <p className="text-xs text-gray-400 mt-1">Se o produto não existir, ele será salvo no estoque automaticamente ao confirmar.</p>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Previsão de Retirada</label>
+                            <input 
+                                type="date" 
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
+                                value={preOrderForm.date}
+                                onChange={(e) => setPreOrderForm({...preOrderForm, date: e.target.value})}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Section 3: Financials */}
+                <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm space-y-6">
+                    <h3 className="text-sm font-bold text-purple-600 uppercase tracking-wide flex items-center gap-2 border-b border-gray-100 pb-2">
+                        <DollarSign size={16} /> Financeiro
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Valor Total (R$)</label>
+                            <input 
+                                type="number" 
+                                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-lg font-bold"
+                                value={preOrderForm.totalValue}
+                                onChange={(e) => setPreOrderForm({...preOrderForm, totalValue: e.target.value})}
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Entrada / Sinal (R$)</label>
+                            <input 
+                                type="number" 
+                                className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none text-lg font-bold text-green-600"
+                                value={preOrderForm.entryValue}
+                                onChange={(e) => setPreOrderForm({...preOrderForm, entryValue: e.target.value})}
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 flex flex-col justify-center">
+                            <span className="text-sm text-gray-500 font-medium">Restante a Pagar</span>
+                            <span className="text-xl font-bold text-red-600">R$ {remaining.toFixed(2)}</span>
+                        </div>
+                    </div>
+
+                    {entry > 0 && (
+                        <div className="pt-4 border-t border-gray-100 animate-fade-in">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Método de Pagamento (Entrada)</label>
+                            <div className="flex gap-2">
+                                {['Pix', 'Dinheiro', 'Cartão'].map((method) => (
+                                    <button
+                                        key={method}
+                                        onClick={() => setPreOrderForm({...preOrderForm, paymentMethod: method})}
+                                        className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${preOrderForm.paymentMethod === method ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+                                    >
+                                        {method}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+                <button onClick={() => setMode('MENU')} className="px-6 py-2 text-gray-600 font-medium hover:bg-gray-200 rounded-lg transition-colors">Cancelar</button>
+                <button 
+                    onClick={handleSavePreOrder}
+                    className="px-6 py-2 bg-purple-600 text-white font-medium rounded-lg shadow-lg hover:bg-purple-700 transition-all flex items-center gap-2"
+                >
+                    <Check size={18} /> Salvar Encomenda
+                </button>
+            </div>
+        </div>
+    );
+  };
 
   return (
     <div className="h-full relative">
       {mode === 'MENU' && <SalesMenu />}
       {mode === 'POS' && <POSView />}
       {mode === 'DETAILED' && <DetailedView />}
+      {mode === 'PREORDER' && <PreOrderView />}
 
       {/* MODAL: New Customer */}
       {isNewCustomerModalOpen && (
@@ -1009,7 +1389,9 @@ export const Sales: React.FC = () => {
                <div>
                   <h3 className="text-xl font-bold text-gray-800">Finalizar Venda</h3>
                   <p className="text-sm text-gray-500">
-                    Cliente: <span className="font-medium text-gray-800">{selectedCustomer ? selectedCustomer.name : 'Consumidor Final'}</span>
+                    Cliente: <span className="font-medium text-gray-800">
+                        {mode === 'DETAILED' && detailedCustomerForm.name ? detailedCustomerForm.name : (selectedCustomer ? selectedCustomer.name : 'Consumidor Final')}
+                    </span>
                   </p>
                </div>
                <button onClick={() => setIsPaymentModalOpen(false)}><X size={24} className="text-gray-400 hover:text-gray-600" /></button>
@@ -1170,6 +1552,7 @@ export const Sales: React.FC = () => {
                        <td className="px-6 py-4 text-sm font-medium text-gray-700">
                          {sale.customerName}
                          {sale.customerPhone && <p className="text-xs text-gray-400 font-normal">{sale.customerPhone}</p>}
+                         {sale.customerCpf && <p className="text-xs text-gray-400 font-normal">CPF: {sale.customerCpf}</p>}
                        </td>
                        <td className="px-6 py-4">
                          <div className="max-w-[200px]">
@@ -1305,6 +1688,8 @@ export const Sales: React.FC = () => {
                       <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Cliente</h4>
                       <p className="font-bold text-gray-800">{saleToView.customerName}</p>
                       {saleToView.customerPhone && <p className="text-sm text-gray-600">{saleToView.customerPhone}</p>}
+                      {saleToView.customerCpf && <p className="text-sm text-gray-600">CPF: {saleToView.customerCpf}</p>}
+                      {saleToView.customerAddress && <p className="text-sm text-gray-600">Endereço: {saleToView.customerAddress}</p>}
                    </div>
                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
                       <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Pagamento & Status</h4>
