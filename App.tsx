@@ -69,10 +69,11 @@ const INITIAL_TRANSACTIONS: CashierTransaction[] = [
 ];
 
 const App: React.FC = () => {
-  // Auth State - Armazena o objeto do usuário logado
-  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+  // Auth State - Inicializa com Admin por padrão (Login desabilitado temporariamente)
+  const [currentUser, setCurrentUser] = useState<User>(() => {
     const saved = localStorage.getItem('rtjk_session_user');
-    return saved ? JSON.parse(saved) : null;
+    // Se existir salvo usa, senão usa o primeiro da lista (Admin)
+    return saved ? JSON.parse(saved) : INITIAL_USERS[0];
   });
 
   const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
@@ -145,8 +146,10 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('rtjk_session_user');
-    setCurrentUser(null);
+    // Login desabilitado, apenas avisa
+    alert("O sistema de Login está desabilitado temporariamente para desenvolvimento.");
+    // localStorage.removeItem('rtjk_session_user');
+    // setCurrentUser(null);
   };
 
   const renderView = () => {
@@ -182,10 +185,10 @@ const App: React.FC = () => {
     }
   };
 
-  // Se não estiver autenticado, exibe apenas a tela de Login
-  if (!currentUser) {
-    return <Login onLogin={handleLogin} users={users} />;
-  }
+  // OBS: Bloco de verificação de login removido conforme solicitado
+  // if (!currentUser) {
+  //   return <Login onLogin={handleLogin} users={users} />;
+  // }
 
   return (
     <div className="flex min-h-screen bg-[#f3f4f6]">
