@@ -177,6 +177,13 @@ export const Financial: React.FC = () => {
     setRecords(records.map(r => r.id === id ? { ...r, status: r.status === 'PENDING' ? 'PAID' : 'PENDING' } : r));
   };
 
+  const handleSavePaymentMethods = () => {
+    localStorage.setItem('techfix_machines', JSON.stringify(machines));
+    localStorage.setItem('techfix_pix_terminals', JSON.stringify(pixTerminals));
+    localStorage.setItem('techfix_pix_banks', JSON.stringify(pixBanks));
+    alert("Taxas e configurações salvas com sucesso!");
+  };
+
   // --- CALCULATIONS ---
   const payables = records.filter(r => r.type === 'PAYABLE');
   const receivables = records.filter(r => r.type === 'RECEIVABLE');
@@ -185,8 +192,6 @@ export const Financial: React.FC = () => {
   const totalReceivables = receivables.reduce((acc, r) => acc + r.amount, 0);
   const totalPaid = payables.filter(r => r.status === 'PAID').reduce((acc, r) => acc + r.amount, 0);
   const totalReceived = receivables.filter(r => r.status === 'PAID').reduce((acc, r) => acc + r.amount, 0);
-
-  // ... (renderPayables, renderReceivables, renderPaymentMethods remain the same structure logic) ...
 
   const renderPayables = () => (
     <div className="space-y-6 animate-fade-in">
@@ -323,13 +328,27 @@ export const Financial: React.FC = () => {
 
   const renderPaymentMethods = () => (
     <div className="space-y-8 animate-fade-in max-w-5xl">
-       {/* ... Content of PaymentMethods ... */}
+       {/* HEADER WITH SAVE BUTTON */}
+       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-blue-50 p-4 rounded-xl border border-blue-100">
+            <div>
+                <h3 className="font-bold text-blue-900 text-lg">Configuração de Taxas</h3>
+                <p className="text-blue-700 text-sm">Defina as taxas das maquininhas e Pix para cálculo correto no fechamento.</p>
+            </div>
+            <button 
+                onClick={handleSavePaymentMethods}
+                className="bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 font-bold shadow-lg shadow-blue-900/20 flex items-center gap-2 transition-all active:scale-95"
+            >
+                <Save size={18} /> Salvar Alterações
+            </button>
+       </div>
+
+       {/* ... Machines Section ... */}
        <div className="space-y-4">
           <div className="flex justify-between items-center">
              <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                 <CreditCard className="text-blue-600" size={20} /> Máquinas de Cartão
              </h3>
-             <button onClick={handleAddMachine} className="text-sm bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-100 font-medium flex items-center gap-1">
+             <button onClick={handleAddMachine} className="text-sm bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-200 font-medium flex items-center gap-1 border border-gray-200">
                 <Plus size={16} /> Adicionar Máquina
              </button>
           </div>
