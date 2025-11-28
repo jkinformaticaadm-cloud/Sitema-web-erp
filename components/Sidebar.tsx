@@ -25,7 +25,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, isMobileOpen, setIsMobileOpen }) => {
   
   const menuItems = [
-    { id: View.DASHBOARD, label: 'Início', icon: LayoutDashboard },
+    { id: View.DASHBOARD, label: 'Dashboard', icon: LayoutDashboard },
     { id: View.SALES, label: 'Vendas', icon: ShoppingCart },
     { id: View.ORDERS, label: 'Ordens de Serviço', icon: Wrench },
     { id: View.INVENTORY, label: 'Produtos / Serviços', icon: Package },
