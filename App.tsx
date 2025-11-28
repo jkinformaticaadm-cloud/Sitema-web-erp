@@ -9,9 +9,8 @@ import { Customers } from './components/Customers';
 import { Financial } from './components/Financial';
 import { Settings } from './components/Settings';
 import { Team } from './components/Team';
-import { Login } from './components/Login';
 import { View, CashierTransaction, Customer, User } from './types';
-import { Menu, Bell, Search, PieChart } from 'lucide-react';
+import { Menu, Bell, Search } from 'lucide-react';
 
 const INITIAL_CUSTOMERS: Customer[] = [
   { 
@@ -58,7 +57,6 @@ const INITIAL_USERS: User[] = [
 ];
 
 const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
@@ -91,15 +89,6 @@ const App: React.FC = () => {
   const addTransaction = (transaction: CashierTransaction) => {
     setTransactions(prev => [transaction, ...prev]);
   };
-
-  // Login Handler
-  const handleLogin = () => {
-    setIsAuthenticated(true);
-  };
-
-  if (!isAuthenticated) {
-    return <Login onLogin={handleLogin} />;
-  }
 
   const renderView = () => {
     switch (currentView) {
