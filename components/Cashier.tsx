@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { DollarSign, ArrowUpCircle, ArrowDownCircle, Lock, Unlock, Printer, X, User, Calendar, Clock } from 'lucide-react';
-import { CashierTransaction } from '../types';
+import { CashierTransaction, CompanySettings } from '../types';
 
 interface CashierProps {
   transactions: CashierTransaction[];
   onAddTransaction: (t: CashierTransaction) => void;
+  companySettings: CompanySettings;
 }
 
-export const Cashier: React.FC<CashierProps> = ({ transactions, onAddTransaction }) => {
+export const Cashier: React.FC<CashierProps> = ({ transactions, onAddTransaction, companySettings }) => {
   const [isRegisterOpen, setIsRegisterOpen] = useState(true);
   const [isReportOpen, setIsReportOpen] = useState(false);
 
@@ -318,7 +319,7 @@ export const Cashier: React.FC<CashierProps> = ({ transactions, onAddTransaction
              <div className="flex-1 overflow-y-auto p-8 bg-white custom-scrollbar" id="printable-area">
                  {/* Report Header */}
                  <div className="text-center border-b-2 border-gray-800 pb-6 mb-8">
-                     <h1 className="text-3xl font-bold text-gray-900 uppercase">TechFix Assistência</h1>
+                     <h1 className="text-3xl font-bold text-gray-900 uppercase">{companySettings.name}</h1>
                      <p className="text-gray-600">Relatório Detalhado de Movimentação de Caixa</p>
                      <p className="text-sm text-gray-500 mt-2">Data de Emissão: {new Date().toLocaleString()}</p>
                  </div>

@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, Search, Filter, X, Save, Smartphone, User, Wrench, FileText, Trash2, DollarSign, Edit, RefreshCw, CheckCircle, Wallet, CreditCard, Eye, Printer, Share2, FileCheck } from 'lucide-react';
-import { Order, OrderStatus, CashierTransaction, OrderItem, Customer } from '../types';
+import { Order, OrderStatus, CashierTransaction, OrderItem, Customer, CompanySettings } from '../types';
 
 interface OrdersProps {
   onAddTransaction: (t: CashierTransaction) => void;
   customers: Customer[];
+  companySettings: CompanySettings;
 }
 
 const MOCK_SERVICES = [
@@ -41,7 +42,7 @@ const INITIAL_ORDERS: Order[] = [
     { id: '1021', customerName: 'Ana Clara', device: 'Motorola G8', status: 'Entregue' as OrderStatus, date: '05/11/2024', total: 120, items: [] },
 ];
 
-export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) => {
+export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers, companySettings }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -464,10 +465,10 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
                 <div className="border-b-2 border-gray-800 pb-6 mb-6">
                     <div className="flex justify-between items-start">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900 uppercase tracking-wide">TechFix Assistência</h1>
-                            <p className="text-gray-500 text-sm mt-1">Rua da Tecnologia, 123 - Centro</p>
-                            <p className="text-gray-500 text-sm">CNPJ: 00.000.000/0001-00</p>
-                            <p className="text-gray-500 text-sm">Tel: (11) 99999-9999</p>
+                            <h1 className="text-2xl font-bold text-gray-900 uppercase tracking-wide">{companySettings.name}</h1>
+                            <p className="text-gray-500 text-sm mt-1">{companySettings.address}</p>
+                            <p className="text-gray-500 text-sm">CNPJ: {companySettings.cnpj}</p>
+                            <p className="text-gray-500 text-sm">Tel: {companySettings.phone1}</p>
                         </div>
                         <div className="text-right">
                             <h2 className="text-xl font-bold text-gray-800">Ordem de Serviço</h2>
@@ -583,6 +584,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
         </div>
       )}
 
+      {/* Other modals remain similar... */}
       {isStatusModalOpen && selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-20 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm animate-scale-in">
@@ -675,7 +677,6 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
             {/* Modal Body - Scrollable */}
             <div className="p-6 overflow-y-auto custom-scrollbar">
               <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
-                
                 {/* Section: Dados do Cliente */}
                 <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm space-y-4">
                   <div className="flex justify-between items-center border-b border-gray-100 pb-2">

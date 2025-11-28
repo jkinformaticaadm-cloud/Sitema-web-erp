@@ -10,7 +10,7 @@ import { Financial } from './components/Financial';
 import { Settings } from './components/Settings';
 import { Team } from './components/Team';
 import { Login } from './components/Login';
-import { View, CashierTransaction, Customer, User, Goals } from './types';
+import { View, CashierTransaction, Customer, User, Goals, CompanySettings } from './types';
 import { Menu, Bell, Search, LogOut } from 'lucide-react';
 
 const INITIAL_CUSTOMERS: Customer[] = [
@@ -70,8 +70,20 @@ const INITIAL_TRANSACTIONS: CashierTransaction[] = [
 
 const INITIAL_GOALS: Goals = {
   globalRevenue: 40000,
-  productRevenue: 15000, // Alterado para valor monetário
+  productRevenue: 15000, 
   serviceRevenue: 25000
+};
+
+const INITIAL_COMPANY_SETTINGS: CompanySettings = {
+  name: 'TechFix Assistência',
+  legalName: 'TechFix Soluções LTDA',
+  cnpj: '00.000.000/0001-00',
+  ie: '',
+  address: 'Rua da Tecnologia, 123 - Centro, São Paulo - SP',
+  phone1: '(11) 99999-9999',
+  phone2: '(11) 3333-3333',
+  email: 'contato@techfix.com.br',
+  logo: ''
 };
 
 const App: React.FC = () => {
@@ -96,8 +108,6 @@ const App: React.FC = () => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Validação de migração: Verifica se os dados salvos possuem a nova estrutura (username)
-        // Se não tiverem, ou se a lista estiver vazia, reseta para os usuários iniciais
         if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].username) {
             return parsed;
         }
@@ -105,7 +115,6 @@ const App: React.FC = () => {
         console.error("Erro ao carregar usuários do localStorage", e);
       }
     }
-    // Fallback para usuários iniciais se não houver dados salvos ou se forem incompatíveis
     return INITIAL_USERS;
   });
 
@@ -117,6 +126,11 @@ const App: React.FC = () => {
   const [goals, setGoals] = useState<Goals>(() => {
     const saved = localStorage.getItem('techfix_goals');
     return saved ? JSON.parse(saved) : INITIAL_GOALS;
+  });
+
+  const [companySettings, setCompanySettings] = useState<CompanySettings>(() => {
+    const saved = localStorage.getItem('techfix_company_settings');
+    return saved ? JSON.parse(saved) : INITIAL_COMPANY_SETTINGS;
   });
 
   // Effects to save data whenever it changes
@@ -135,6 +149,10 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('techfix_goals', JSON.stringify(goals));
   }, [goals]);
+
+  useEffect(() => {
+    localStorage.setItem('techfix_company_settings', JSON.stringify(companySettings));
+  }, [companySettings]);
 
   const handleSaveCustomer = (customer: Customer) => {
     setCustomers(prev => {
@@ -160,10 +178,7 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
-    // Login desabilitado, apenas avisa
     alert("O sistema de Login está desabilitado temporariamente para desenvolvimento.");
-    // localStorage.removeItem('rtjk_session_user');
-    // setCurrentUser(null);
   };
 
   const renderView = () => {
@@ -171,13 +186,13 @@ const App: React.FC = () => {
       case View.DASHBOARD:
         return <Dashboard goals={goals} />;
       case View.SALES:
-        return <Sales customers={customers} />;
+        return <Sales customers={customers} companySettings={companySettings} />;
       case View.INVENTORY:
         return <Inventory />;
       case View.CASHIER:
-        return <Cashier transactions={transactions} onAddTransaction={addTransaction} />;
+        return <Cashier transactions={transactions} onAddTransaction={addTransaction} companySettings={companySettings} />;
       case View.ORDERS:
-        return <Orders onAddTransaction={addTransaction} customers={customers} />;
+        return <Orders onAddTransaction={addTransaction} customers={customers} companySettings={companySettings} />;
       case View.CUSTOMERS:
         return <Customers customers={customers} onSave={handleSaveCustomer} onDelete={handleDeleteCustomer} />;
       case View.FINANCIAL:
@@ -185,7 +200,16 @@ const App: React.FC = () => {
       case View.TEAM:
         return <Team users={users} />;
       case View.SETTINGS:
-        return <Settings users={users} setUsers={setUsers} goals={goals} onUpdateGoals={setGoals} />;
+        return (
+          <Settings 
+            users={users} 
+            setUsers={setUsers} 
+            goals={goals} 
+            onUpdateGoals={setGoals}
+            companySettings={companySettings}
+            onUpdateCompanySettings={setCompanySettings}
+          />
+        );
       default:
         return (
           <div className="flex flex-col items-center justify-center h-96 text-gray-400">
@@ -198,11 +222,6 @@ const App: React.FC = () => {
         );
     }
   };
-
-  // OBS: Bloco de verificação de login removido conforme solicitado
-  // if (!currentUser) {
-  //   return <Login onLogin={handleLogin} users={users} />;
-  // }
 
   return (
     <div className="flex min-h-screen bg-[#f3f4f6]">
@@ -243,7 +262,7 @@ const App: React.FC = () => {
             <div className="h-8 w-px bg-gray-200 mx-2"></div>
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-bold text-gray-800">RTJK INFOCELL</p>
+                <p className="text-sm font-bold text-gray-800">{companySettings.name}</p>
                 <p className="text-xs text-green-600 font-medium">
                   {currentUser.name}
                 </p>

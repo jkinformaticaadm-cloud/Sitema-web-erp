@@ -14,7 +14,7 @@ import {
   X,
   Target
 } from 'lucide-react';
-import { User, Goals } from '../types';
+import { User, Goals, CompanySettings } from '../types';
 
 type SettingsTab = 'COMPANY' | 'USERS' | 'BACKUP' | 'GOALS';
 
@@ -23,23 +23,26 @@ interface SettingsProps {
   setUsers: React.Dispatch<React.SetStateAction<User[]>>;
   goals: Goals;
   onUpdateGoals: (goals: Goals) => void;
+  companySettings: CompanySettings;
+  onUpdateCompanySettings: (settings: CompanySettings) => void;
 }
 
-export const Settings: React.FC<SettingsProps> = ({ users, setUsers, goals, onUpdateGoals }) => {
+export const Settings: React.FC<SettingsProps> = ({ 
+    users, setUsers, goals, onUpdateGoals, companySettings, onUpdateCompanySettings 
+}) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('COMPANY');
   
-  // State for Goals Settings with fallback for migration safety
+  // State for Goals Settings
   const [goalsForm, setGoalsForm] = useState<Goals>({
       globalRevenue: 0,
       productRevenue: 0,
       serviceRevenue: 0
   });
 
-  // Update local form when props change, handling potential legacy data
   useEffect(() => {
     setGoalsForm({
         globalRevenue: goals.globalRevenue || 0,
-        productRevenue: goals.productRevenue || 0, // Fallback safe
+        productRevenue: goals.productRevenue || 0,
         serviceRevenue: goals.serviceRevenue || 0
     });
   }, [goals]);
@@ -49,25 +52,17 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers, goals, onUp
     alert('Metas atualizadas com sucesso!');
   };
 
-  // State for Company Settings with Persistence
-  const [companyForm, setCompanyForm] = useState(() => {
-    const saved = localStorage.getItem('techfix_company_settings');
-    return saved ? JSON.parse(saved) : {
-      name: 'TechFix Assistência',
-      legalName: 'TechFix Soluções LTDA',
-      cnpj: '00.000.000/0001-00',
-      ie: '',
-      address: 'Rua da Tecnologia, 123 - Centro, São Paulo - SP',
-      phone1: '(11) 99999-9999',
-      phone2: '(11) 3333-3333',
-      email: 'contato@techfix.com.br',
-      logo: ''
-    };
-  });
+  // State for Company Settings (Local form synced with props)
+  const [companyForm, setCompanyForm] = useState<CompanySettings>(companySettings);
+
+  // Sync local form if parent props change (e.g. initial load)
+  useEffect(() => {
+    setCompanyForm(companySettings);
+  }, [companySettings]);
 
   const handleSaveCompany = () => {
-    localStorage.setItem('techfix_company_settings', JSON.stringify(companyForm));
-    alert('Dados da empresa salvos com sucesso!');
+    onUpdateCompanySettings(companyForm);
+    alert('Dados da empresa atualizados e sincronizados com sucesso!');
   };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,19 +81,8 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers, goals, onUp
 
   // New User Form State
   const [userForm, setUserForm] = useState<Partial<User>>({
-      name: '',
-      username: '',
-      password: '',
-      email: '',
-      role: 'Técnico',
-      permissions: {
-          financial: false,
-          sales: true,
-          stock: true,
-          support: true,
-          settings: false,
-          admin: false
-      }
+      name: '', username: '', password: '', email: '', role: 'Técnico',
+      permissions: { financial: false, sales: true, stock: true, support: true, settings: false, admin: false }
   });
 
   const handleOpenUserModal = (user?: User) => {
@@ -108,39 +92,20 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers, goals, onUp
       } else {
           setEditingUser(null);
           setUserForm({
-            name: '',
-            username: '',
-            password: '',
-            email: '',
-            role: 'Técnico',
-            permissions: {
-                financial: false,
-                sales: true,
-                stock: true,
-                support: true,
-                settings: false,
-                admin: false
-            }
+            name: '', username: '', password: '', email: '', role: 'Técnico',
+            permissions: { financial: false, sales: true, stock: true, support: true, settings: false, admin: false }
           });
       }
       setIsUserModalOpen(true);
   };
 
   const handleSaveUser = () => {
-      // Validação final antes de salvar
       if (!userForm.name?.trim() || !userForm.username?.trim() || !userForm.password?.trim()) {
           alert("Preencha Nome, Usuário e Senha.");
           return;
       }
 
-      const defaultPermissions = {
-        financial: false,
-        sales: false,
-        stock: false,
-        support: false,
-        settings: false,
-        admin: false
-      };
+      const defaultPermissions = { financial: false, sales: false, stock: false, support: false, settings: false, admin: false };
 
       const newUser: User = {
           id: editingUser ? editingUser.id : Date.now().toString(),
@@ -177,55 +142,22 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers, goals, onUp
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-blue-50 p-6 rounded-xl border border-blue-100">
                 <label className="block text-sm font-bold text-blue-800 mb-2">Meta de Faturamento Global (R$)</label>
-                <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500 font-bold">R$</span>
-                    <input 
-                        type="number"
-                        className="w-full pl-10 pr-4 py-3 border border-blue-200 rounded-lg text-lg font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500"
-                        value={goalsForm.globalRevenue}
-                        onFocus={(e) => e.target.select()}
-                        onChange={(e) => setGoalsForm({...goalsForm, globalRevenue: parseFloat(e.target.value) || 0})}
-                    />
-                </div>
-                <p className="text-xs text-blue-600 mt-2">Soma total esperada (Vendas + Serviços).</p>
+                <input type="number" className="w-full pl-3 pr-4 py-3 border border-blue-200 rounded-lg font-bold text-gray-800 outline-none"
+                    value={goalsForm.globalRevenue} onChange={(e) => setGoalsForm({...goalsForm, globalRevenue: parseFloat(e.target.value) || 0})} />
             </div>
-
             <div className="bg-purple-50 p-6 rounded-xl border border-purple-100">
                 <label className="block text-sm font-bold text-purple-800 mb-2">Meta de Vendas de Produtos (R$)</label>
-                <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-purple-500 font-bold">R$</span>
-                    <input 
-                        type="number"
-                        className="w-full pl-10 pr-4 py-3 border border-purple-200 rounded-lg text-lg font-bold text-gray-800 outline-none focus:ring-2 focus:ring-purple-500"
-                        value={goalsForm.productRevenue}
-                        onFocus={(e) => e.target.select()}
-                        onChange={(e) => setGoalsForm({...goalsForm, productRevenue: parseFloat(e.target.value) || 0})}
-                    />
-                </div>
-                <p className="text-xs text-purple-600 mt-2">Faturamento esperado com venda de acessórios e peças.</p>
+                <input type="number" className="w-full pl-3 pr-4 py-3 border border-purple-200 rounded-lg font-bold text-gray-800 outline-none"
+                    value={goalsForm.productRevenue} onChange={(e) => setGoalsForm({...goalsForm, productRevenue: parseFloat(e.target.value) || 0})} />
             </div>
-
             <div className="bg-green-50 p-6 rounded-xl border border-green-100">
                 <label className="block text-sm font-bold text-green-800 mb-2">Meta de Serviços Técnicos (R$)</label>
-                <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-green-500 font-bold">R$</span>
-                    <input 
-                        type="number"
-                        className="w-full pl-10 pr-4 py-3 border border-green-200 rounded-lg text-lg font-bold text-gray-800 outline-none focus:ring-2 focus:ring-green-500"
-                        value={goalsForm.serviceRevenue}
-                        onFocus={(e) => e.target.select()}
-                        onChange={(e) => setGoalsForm({...goalsForm, serviceRevenue: parseFloat(e.target.value) || 0})}
-                    />
-                </div>
-                <p className="text-xs text-green-600 mt-2">Faturamento esperado com mão de obra de reparos.</p>
+                <input type="number" className="w-full pl-3 pr-4 py-3 border border-green-200 rounded-lg font-bold text-gray-800 outline-none"
+                    value={goalsForm.serviceRevenue} onChange={(e) => setGoalsForm({...goalsForm, serviceRevenue: parseFloat(e.target.value) || 0})} />
             </div>
         </div>
-
         <div className="mt-8 flex justify-end pt-6 border-t border-gray-100">
-            <button 
-                onClick={handleSaveGoals}
-                className="bg-blue-600 text-white px-8 py-3 rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg shadow-blue-900/20 font-bold"
-            >
+            <button onClick={handleSaveGoals} className="bg-blue-600 text-white px-8 py-3 rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg shadow-blue-900/20 font-bold">
                 <Save size={20} /> Salvar Metas
             </button>
         </div>
@@ -233,7 +165,6 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers, goals, onUp
     </div>
   );
 
-  // Helper for rendering tabs
   const renderCompanySettings = () => (
     <div className="space-y-6 animate-fade-in max-w-4xl">
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -252,110 +183,57 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers, goals, onUp
                         <span className="text-xs">Logo</span>
                       </>
                   )}
-                  <input 
-                    type="file" 
-                    className="absolute inset-0 opacity-0 cursor-pointer" 
-                    onChange={handleLogoUpload}
-                    accept="image/*"
-                  />
+                  <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleLogoUpload} accept="image/*" />
               </div>
               <div>
                   <h4 className="font-medium text-gray-700">Logotipo da Empresa</h4>
                   <p className="text-sm text-gray-500">Recomendado: PNG ou JPG, fundo transparente.</p>
-                  <p className="text-xs text-blue-600 mt-1">Clique na caixa para fazer upload.</p>
               </div>
            </div>
 
            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Nome Fantasia</label>
-              <input 
-                type="text" 
-                value={companyForm.name}
-                onChange={(e) => setCompanyForm({...companyForm, name: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
-              />
+              <input type="text" value={companyForm.name} onChange={(e) => setCompanyForm({...companyForm, name: e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
            </div>
            
            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Razão Social</label>
-              <input 
-                type="text" 
-                value={companyForm.legalName}
-                onChange={(e) => setCompanyForm({...companyForm, legalName: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
-              />
+              <input type="text" value={companyForm.legalName} onChange={(e) => setCompanyForm({...companyForm, legalName: e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
            </div>
 
            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">CNPJ</label>
-              <input 
-                type="text" 
-                value={companyForm.cnpj}
-                onChange={(e) => setCompanyForm({...companyForm, cnpj: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
-              />
+              <input type="text" value={companyForm.cnpj} onChange={(e) => setCompanyForm({...companyForm, cnpj: e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
            </div>
 
            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Inscrição Estadual 
-                  <span className="text-xs font-normal text-gray-400 ml-2">(Opcional - Não aparece na OS)</span>
-              </label>
-              <input 
-                type="text" 
-                value={companyForm.ie}
-                onChange={(e) => setCompanyForm({...companyForm, ie: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
-                placeholder="Isento ou Número"
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Inscrição Estadual</label>
+              <input type="text" value={companyForm.ie} onChange={(e) => setCompanyForm({...companyForm, ie: e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Isento ou Número" />
            </div>
 
            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Endereço Completo</label>
-              <input 
-                type="text" 
-                value={companyForm.address}
-                onChange={(e) => setCompanyForm({...companyForm, address: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
-              />
+              <input type="text" value={companyForm.address} onChange={(e) => setCompanyForm({...companyForm, address: e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
            </div>
 
            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Telefone Principal / WhatsApp</label>
-              <input 
-                type="text" 
-                value={companyForm.phone1}
-                onChange={(e) => setCompanyForm({...companyForm, phone1: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
-              />
+              <input type="text" value={companyForm.phone1} onChange={(e) => setCompanyForm({...companyForm, phone1: e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
            </div>
 
            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Telefone Secundário</label>
-              <input 
-                type="text" 
-                value={companyForm.phone2}
-                onChange={(e) => setCompanyForm({...companyForm, phone2: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
-              />
+              <input type="text" value={companyForm.phone2} onChange={(e) => setCompanyForm({...companyForm, phone2: e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
            </div>
            
            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">E-mail de Contato</label>
-              <input 
-                type="email" 
-                value={companyForm.email}
-                onChange={(e) => setCompanyForm({...companyForm, email: e.target.value})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900"
-              />
+              <input type="email" value={companyForm.email} onChange={(e) => setCompanyForm({...companyForm, email: e.target.value})} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
            </div>
         </div>
         
         <div className="mt-8 flex justify-end">
-            <button 
-                onClick={handleSaveCompany}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg shadow-blue-900/20"
-            >
+            <button onClick={handleSaveCompany} className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg shadow-blue-900/20">
                 <Save size={18} /> Salvar Alterações
             </button>
         </div>
@@ -367,14 +245,10 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers, goals, onUp
     <div className="space-y-6 animate-fade-in max-w-5xl">
        <div className="flex justify-between items-center">
             <h3 className="text-lg font-bold text-gray-800">Gerenciamento de Usuários</h3>
-            <button 
-                onClick={() => handleOpenUserModal()}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-            >
+            <button onClick={() => handleOpenUserModal()} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
                 <Plus size={18} /> Novo Usuário
             </button>
        </div>
-
        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             <table className="w-full text-left text-sm">
                 <thead className="bg-gray-50 text-gray-500 uppercase font-semibold">
@@ -425,7 +299,6 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers, goals, onUp
             </table>
        </div>
 
-       {/* User Modal */}
        {isUserModalOpen && (
            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-0 md:p-4">
                <div className="bg-white w-full h-full md:h-auto md:max-h-[90vh] md:max-w-lg flex flex-col md:rounded-xl shadow-2xl animate-scale-in">

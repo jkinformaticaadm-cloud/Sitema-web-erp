@@ -155,3 +155,15 @@ export interface Goals {
   productRevenue: number; // Alterado de accessoryUnits para Revenue (R$)
   serviceRevenue: number;
 }
+
+export interface CompanySettings {
+  name: string;
+  legalName: string;
+  cnpj: string;
+  ie: string;
+  address: string;
+  phone1: string;
+  phone2: string;
+  email: string;
+  logo: string;
+}
