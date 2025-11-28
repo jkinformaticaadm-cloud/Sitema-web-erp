@@ -1,3 +1,4 @@
+
 export enum View {
   DASHBOARD = 'DASHBOARD',
   SALES = 'SALES',
@@ -114,6 +115,8 @@ export interface CardMachine {
 export interface User {
   id: string;
   name: string;
+  username: string; // Usuário de acesso
+  password?: string; // Senha
   email: string;
   role: string;
   permissions: {

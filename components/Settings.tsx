@@ -19,7 +19,8 @@ import {
   Check, 
   Globe,
   Database,
-  Lock
+  Lock,
+  User as UserIcon
 } from 'lucide-react';
 import { User } from '../types';
 
@@ -52,6 +53,8 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
   // New User Form State
   const [userForm, setUserForm] = useState<Partial<User>>({
       name: '',
+      username: '',
+      password: '',
       email: '',
       role: 'Técnico',
       permissions: {
@@ -72,6 +75,8 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
           setEditingUser(null);
           setUserForm({
             name: '',
+            username: '',
+            password: '',
             email: '',
             role: 'Técnico',
             permissions: {
@@ -88,15 +93,17 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
   };
 
   const handleSaveUser = () => {
-      if (!userForm.name || !userForm.email) {
-          alert("Preencha nome e email");
+      if (!userForm.name || !userForm.username || !userForm.password) {
+          alert("Preencha Nome, Usuário e Senha.");
           return;
       }
 
       const newUser: User = {
           id: editingUser ? editingUser.id : Date.now().toString(),
           name: userForm.name!,
-          email: userForm.email!,
+          username: userForm.username!,
+          password: userForm.password!,
+          email: userForm.email || '',
           role: userForm.permissions?.admin ? 'Administrador' : 'Técnico',
           permissions: userForm.permissions || {
             financial: false,
@@ -260,7 +267,7 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
                 <thead className="bg-gray-50 text-gray-500 uppercase font-semibold">
                     <tr>
                         <th className="px-6 py-3">Nome</th>
-                        <th className="px-6 py-3">Usuário/Email</th>
+                        <th className="px-6 py-3">Usuário</th>
                         <th className="px-6 py-3">Cargo</th>
                         <th className="px-6 py-3">Permissões</th>
                         <th className="px-6 py-3 text-right">Ações</th>
@@ -270,7 +277,12 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
                     {users.map(user => (
                         <tr key={user.id} className="hover:bg-gray-50">
                             <td className="px-6 py-4 font-medium text-gray-900">{user.name}</td>
-                            <td className="px-6 py-4 text-gray-600">{user.email}</td>
+                            <td className="px-6 py-4 text-gray-600">
+                              <div className="flex items-center gap-1">
+                                <UserIcon size={14} className="text-gray-400"/>
+                                {user.username}
+                              </div>
+                            </td>
                             <td className="px-6 py-4">
                                 <span className={`px-2 py-1 rounded-full text-xs font-bold ${user.role === 'Administrador' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
                                     {user.role}
@@ -300,34 +312,56 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
             </table>
        </div>
 
-       <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg flex items-start gap-3">
-           <Lock size={20} className="text-yellow-600 mt-0.5" />
-           <div>
-               <h4 className="font-bold text-yellow-800 text-sm">Nota de Segurança</h4>
-               <p className="text-sm text-yellow-700">A senha padrão para novos Administradores é <code className="bg-yellow-100 px-1 rounded font-bold">admin1234</code>. Solicite a alteração no primeiro acesso.</p>
-           </div>
-       </div>
-
        {/* User Modal */}
        {isUserModalOpen && (
            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-               <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6">
+               <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 animate-scale-in">
                    <h3 className="text-lg font-bold text-gray-800 mb-4">{editingUser ? 'Editar Usuário' : 'Novo Usuário'}</h3>
                    <div className="space-y-4">
-                       <input 
-                            type="text" 
-                            placeholder="Nome Completo" 
-                            className="w-full px-3 py-2 border rounded-lg bg-white text-gray-900" 
-                            value={userForm.name}
-                            onChange={(e) => setUserForm({...userForm, name: e.target.value})}
-                       />
-                       <input 
-                            type="text" 
-                            placeholder="Usuário de Acesso" 
-                            className="w-full px-3 py-2 border rounded-lg bg-white text-gray-900" 
-                            value={userForm.email}
-                            onChange={(e) => setUserForm({...userForm, email: e.target.value})}
-                       />
+                       <div>
+                           <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                           <input 
+                                type="text" 
+                                placeholder="Ex: João da Silva" 
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 outline-none focus:border-blue-500" 
+                                value={userForm.name}
+                                onChange={(e) => setUserForm({...userForm, name: e.target.value})}
+                           />
+                       </div>
+
+                       <div className="grid grid-cols-2 gap-4">
+                           <div>
+                               <label className="block text-sm font-medium text-gray-700 mb-1">Usuário de Acesso</label>
+                               <input 
+                                    type="text" 
+                                    placeholder="Ex: joao.silva" 
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 outline-none focus:border-blue-500" 
+                                    value={userForm.username}
+                                    onChange={(e) => setUserForm({...userForm, username: e.target.value})}
+                               />
+                           </div>
+                           <div>
+                               <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                               <input 
+                                    type="text" 
+                                    placeholder="••••••" 
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 outline-none focus:border-blue-500" 
+                                    value={userForm.password}
+                                    onChange={(e) => setUserForm({...userForm, password: e.target.value})}
+                               />
+                           </div>
+                       </div>
+                       
+                       <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Email (Opcional)</label>
+                            <input 
+                                    type="email" 
+                                    placeholder="email@empresa.com" 
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 outline-none focus:border-blue-500" 
+                                    value={userForm.email}
+                                    onChange={(e) => setUserForm({...userForm, email: e.target.value})}
+                            />
+                       </div>
                        
                        <div>
                            <label className="block text-sm font-bold text-gray-700 mb-2">Permissões de Acesso</label>

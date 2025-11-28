@@ -30,7 +30,9 @@ const INITIAL_USERS: User[] = [
   {
     id: '1',
     name: 'Administrador',
-    email: 'admin',
+    username: 'admin',
+    password: 'admin1234', // Senha padrão solicitada
+    email: 'admin@rtjk.com',
     role: 'Administrador',
     permissions: {
       financial: true,
@@ -44,6 +46,8 @@ const INITIAL_USERS: User[] = [
   {
     id: '2',
     name: 'Técnico Padrão',
+    username: 'tecnico',
+    password: '123',
     email: 'tecnico@rtjk.com',
     role: 'Técnico',
     permissions: {
@@ -65,9 +69,10 @@ const INITIAL_TRANSACTIONS: CashierTransaction[] = [
 ];
 
 const App: React.FC = () => {
-  // Auth State - Inicializa verificando localStorage se o usuário já fez login anteriormente (opcional, para manter sessão)
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return localStorage.getItem('rtjk_auth_session') === 'true';
+  // Auth State - Armazena o objeto do usuário logado
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('rtjk_session_user');
+    return saved ? JSON.parse(saved) : null;
   });
 
   const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
@@ -121,14 +126,14 @@ const App: React.FC = () => {
     setTransactions(prev => [transaction, ...prev]);
   };
 
-  const handleLogin = () => {
-    localStorage.setItem('rtjk_auth_session', 'true');
-    setIsAuthenticated(true);
+  const handleLogin = (user: User) => {
+    localStorage.setItem('rtjk_session_user', JSON.stringify(user));
+    setCurrentUser(user);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('rtjk_auth_session');
-    setIsAuthenticated(false);
+    localStorage.removeItem('rtjk_session_user');
+    setCurrentUser(null);
   };
 
   const renderView = () => {
@@ -165,8 +170,8 @@ const App: React.FC = () => {
   };
 
   // Se não estiver autenticado, exibe apenas a tela de Login
-  if (!isAuthenticated) {
-    return <Login onLogin={handleLogin} />;
+  if (!currentUser) {
+    return <Login onLogin={handleLogin} users={users} />;
   }
 
   return (
@@ -176,6 +181,7 @@ const App: React.FC = () => {
         onChangeView={setCurrentView} 
         isMobileOpen={isMobileSidebarOpen}
         setIsMobileOpen={setIsMobileSidebarOpen}
+        currentUser={currentUser}
       />
 
       {/* Main Content */}
@@ -208,7 +214,9 @@ const App: React.FC = () => {
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-bold text-gray-800">RTJK INFOCELL</p>
-                <p className="text-xs text-green-600 font-medium">Administrador</p>
+                <p className="text-xs text-green-600 font-medium">
+                  {currentUser.name}
+                </p>
               </div>
               <button 
                 onClick={handleLogout}

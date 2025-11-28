@@ -1,20 +1,28 @@
 import React, { useState } from 'react';
 import { Lock, User, ArrowRight, ShieldCheck, Smartphone } from 'lucide-react';
+import { User as UserType } from '../types';
 
 interface LoginProps {
-  onLogin: () => void;
+  onLogin: (user: UserType) => void;
+  users: UserType[];
 }
 
-export const Login: React.FC<LoginProps> = ({ onLogin }) => {
+export const Login: React.FC<LoginProps> = ({ onLogin, users }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Credenciais solicitadas: admin / admin1234
-    if (username.toLowerCase() === 'admin' && password === 'admin1234') {
-      onLogin();
+    
+    // Procura o usuário na lista
+    const foundUser = users.find(u => 
+      u.username.toLowerCase() === username.toLowerCase() && 
+      u.password === password
+    );
+
+    if (foundUser) {
+      onLogin(foundUser);
     } else {
       setError('Credenciais inválidas. Verifique usuário e senha.');
     }
@@ -36,7 +44,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
         <div className="p-8 bg-white">
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Usuário</label>
+              <label className="block text-sm font-bold text-gray-700 mb-1">Usuário de Acesso</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <User className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
@@ -46,7 +54,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50 text-gray-900 transition-all font-medium"
-                  placeholder="admin"
+                  placeholder="Digite seu usuário"
                   required
                 />
               </div>
@@ -88,7 +96,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <p className="text-xs text-gray-400">
               © {new Date().getFullYear()} RTJK INFOCELL. Todos os direitos reservados.
             </p>
-            <p className="text-[10px] text-gray-300 mt-1">v2.5.1 Admin Access</p>
+            <p className="text-[10px] text-gray-300 mt-1">Acesso Restrito</p>
           </div>
         </div>
       </div>

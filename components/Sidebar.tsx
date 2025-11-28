@@ -13,16 +13,17 @@ import {
   X,
   PieChart
 } from 'lucide-react';
-import { View } from '../types';
+import { View, User } from '../types';
 
 interface SidebarProps {
   currentView: View;
   onChangeView: (view: View) => void;
   isMobileOpen: boolean;
   setIsMobileOpen: (isOpen: boolean) => void;
+  currentUser: User;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, isMobileOpen, setIsMobileOpen }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, isMobileOpen, setIsMobileOpen, currentUser }) => {
   
   const menuItems = [
     { id: View.DASHBOARD, label: 'Dashboard', icon: LayoutDashboard },
@@ -67,11 +68,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, isM
           {/* User Profile Summary */}
           <div className="p-6 flex items-center gap-3 border-b border-slate-800/50">
             <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
-              A
+              {currentUser.name.charAt(0).toUpperCase()}
             </div>
-            <div>
-              <p className="text-sm font-semibold text-white">Administrador</p>
-              <p className="text-xs text-gray-500">Loja Matriz</p>
+            <div className="overflow-hidden">
+              <p className="text-sm font-semibold text-white truncate">{currentUser.name}</p>
+              <p className="text-xs text-gray-500 truncate">{currentUser.role}</p>
             </div>
           </div>
 
@@ -102,7 +103,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, isM
           </nav>
           
           <div className="p-4 text-xs text-center text-slate-600">
-            v2.5.0 Build 2024
+            v2.5.1 Build 2024
           </div>
         </div>
       </aside>
