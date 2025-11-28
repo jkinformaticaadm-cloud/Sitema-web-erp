@@ -1,0 +1,107 @@
+import React, { useState } from 'react';
+import { Sidebar } from './components/Sidebar';
+import { Dashboard } from './components/Dashboard';
+import { Inventory } from './components/Inventory';
+import { Cashier } from './components/Cashier';
+import { Orders } from './components/Orders';
+import { Sales } from './components/Sales';
+import { View, CashierTransaction } from './types';
+import { Menu, Bell, Search } from 'lucide-react';
+
+const App: React.FC = () => {
+  const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // Shared state for Financial Transactions (Cashier)
+  // This allows Orders to add transactions automatically when finalized
+  const [transactions, setTransactions] = useState<CashierTransaction[]>([
+    { id: '1', type: 'ENTRY', category: 'Venda #1024', amount: 1200, description: 'Venda de Tela iPhone', date: '14:30' },
+    { id: '2', type: 'EXIT', category: 'Alimentação', amount: 45, description: 'Almoço Equipe', date: '12:00' },
+    { id: '3', type: 'ENTRY', category: 'Serviço #552', amount: 250, description: 'Troca de Bateria', date: '10:15' },
+    { id: '4', type: 'EXIT', category: 'Fornecedor', amount: 600, description: 'Peças Reposição', date: '09:00' },
+  ]);
+
+  const addTransaction = (transaction: CashierTransaction) => {
+    setTransactions(prev => [transaction, ...prev]);
+  };
+
+  const renderView = () => {
+    switch (currentView) {
+      case View.DASHBOARD:
+        return <Dashboard />;
+      case View.SALES:
+        return <Sales />;
+      case View.INVENTORY:
+        return <Inventory />;
+      case View.CASHIER:
+        return <Cashier transactions={transactions} onAddTransaction={addTransaction} />;
+      case View.ORDERS:
+        return <Orders onAddTransaction={addTransaction} />;
+      default:
+        return (
+          <div className="flex flex-col items-center justify-center h-96 text-gray-400">
+            <div className="bg-gray-100 p-6 rounded-full mb-4">
+              <span className="text-4xl">🚧</span>
+            </div>
+            <h2 className="text-xl font-bold text-gray-600">Módulo em Desenvolvimento</h2>
+            <p>A funcionalidade {currentView} será implementada em breve.</p>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen bg-[#f3f4f6]">
+      <Sidebar 
+        currentView={currentView} 
+        onChangeView={setCurrentView} 
+        isMobileOpen={isMobileSidebarOpen}
+        setIsMobileOpen={setIsMobileSidebarOpen}
+      />
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+        {/* Top Header */}
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-10 shadow-sm">
+          <div className="flex items-center gap-4">
+            <button 
+              className="md:hidden text-gray-600 hover:bg-gray-100 p-2 rounded-lg"
+              onClick={() => setIsMobileSidebarOpen(true)}
+            >
+              <Menu size={24} />
+            </button>
+            <div className="hidden md:flex items-center bg-gray-100 rounded-lg px-3 py-2 w-64">
+              <Search size={18} className="text-gray-400 mr-2" />
+              <input 
+                type="text" 
+                placeholder="Buscar no sistema..." 
+                className="bg-transparent border-none outline-none text-sm w-full text-gray-600"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
+              <Bell size={20} />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+            </button>
+            <div className="h-8 w-px bg-gray-200 mx-2"></div>
+            <div className="flex items-center gap-3">
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-semibold text-gray-800">Loja Matriz</p>
+                <p className="text-xs text-green-600 font-medium">Online</p>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* View Content */}
+        <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8">
+          {renderView()}
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default App;
