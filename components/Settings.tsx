@@ -260,7 +260,7 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
                 <thead className="bg-gray-50 text-gray-500 uppercase font-semibold">
                     <tr>
                         <th className="px-6 py-3">Nome</th>
-                        <th className="px-6 py-3">Email</th>
+                        <th className="px-6 py-3">Usuário/Email</th>
                         <th className="px-6 py-3">Cargo</th>
                         <th className="px-6 py-3">Permissões</th>
                         <th className="px-6 py-3 text-right">Ações</th>
@@ -304,7 +304,7 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
            <Lock size={20} className="text-yellow-600 mt-0.5" />
            <div>
                <h4 className="font-bold text-yellow-800 text-sm">Nota de Segurança</h4>
-               <p className="text-sm text-yellow-700">A senha padrão para novos Administradores é <code className="bg-yellow-100 px-1 rounded font-bold">Rtjkcelulares2024</code>. Solicite a alteração no primeiro acesso.</p>
+               <p className="text-sm text-yellow-700">A senha padrão para novos Administradores é <code className="bg-yellow-100 px-1 rounded font-bold">admin1234</code>. Solicite a alteração no primeiro acesso.</p>
            </div>
        </div>
 
@@ -322,8 +322,8 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
                             onChange={(e) => setUserForm({...userForm, name: e.target.value})}
                        />
                        <input 
-                            type="email" 
-                            placeholder="Email" 
+                            type="text" 
+                            placeholder="Usuário de Acesso" 
                             className="w-full px-3 py-2 border rounded-lg bg-white text-gray-900" 
                             value={userForm.email}
                             onChange={(e) => setUserForm({...userForm, email: e.target.value})}

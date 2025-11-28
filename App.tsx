@@ -30,7 +30,7 @@ const INITIAL_USERS: User[] = [
   {
     id: '1',
     name: 'Administrador',
-    email: 'admin@rtjk.com',
+    email: 'admin',
     role: 'Administrador',
     permissions: {
       financial: true,

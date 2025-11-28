@@ -1,20 +1,19 @@
 import React, { useState } from 'react';
-import { Lock, Mail, ArrowRight, ShieldCheck, Smartphone } from 'lucide-react';
+import { Lock, User, ArrowRight, ShieldCheck, Smartphone } from 'lucide-react';
 
 interface LoginProps {
   onLogin: () => void;
 }
 
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Credenciais solicitadas: Admim@admin / Juca@5501
-    // Adicionando .toLowerCase() no email para evitar erros de digitação de caixa
-    if (email.toLowerCase() === 'admim@admin' && password === 'Juca@5501') {
+    // Credenciais solicitadas: admin / admin1234
+    if (username.toLowerCase() === 'admin' && password === 'admin1234') {
       onLogin();
     } else {
       setError('Credenciais inválidas. Verifique usuário e senha.');
@@ -37,17 +36,17 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
         <div className="p-8 bg-white">
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-1">Usuário de Acesso</label>
+              <label className="block text-sm font-bold text-gray-700 mb-1">Usuário</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
+                  <User className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
                 </div>
                 <input 
-                  type="text" // Mudado para text para aceitar "Admim" se não for validado como email estrito
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50 text-gray-900 transition-all font-medium"
-                  placeholder="Ex: Admim@admin"
+                  placeholder="admin"
                   required
                 />
               </div>
@@ -89,7 +88,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             <p className="text-xs text-gray-400">
               © {new Date().getFullYear()} RTJK INFOCELL. Todos os direitos reservados.
             </p>
-            <p className="text-[10px] text-gray-300 mt-1">v2.5.0 Security Build</p>
+            <p className="text-[10px] text-gray-300 mt-1">v2.5.1 Admin Access</p>
           </div>
         </div>
       </div>
