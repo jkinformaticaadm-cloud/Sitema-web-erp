@@ -110,3 +110,18 @@ export interface CardMachine {
   creditSightRate: number;
   installmentRates: number[]; // Index 0 = 1x, Index 1 = 2x, etc.
 }
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  permissions: {
+    financial: boolean;
+    sales: boolean;
+    stock: boolean;
+    support: boolean;
+    settings: boolean;
+    admin: boolean;
+  };
+}

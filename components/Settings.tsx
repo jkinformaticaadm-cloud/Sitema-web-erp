@@ -21,56 +21,16 @@ import {
   Database,
   Lock
 } from 'lucide-react';
+import { User } from '../types';
 
 type SettingsTab = 'COMPANY' | 'USERS' | 'BACKUP' | 'INTEGRATIONS';
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  permissions: {
-    financial: boolean;
-    sales: boolean;
-    stock: boolean;
-    support: boolean;
-    settings: boolean;
-    admin: boolean;
-  };
+interface SettingsProps {
+  users: User[];
+  setUsers: React.Dispatch<React.SetStateAction<User[]>>;
 }
 
-const INITIAL_USERS: User[] = [
-  {
-    id: '1',
-    name: 'Administrador',
-    email: 'admin@rtjk.com',
-    role: 'Administrador',
-    permissions: {
-      financial: true,
-      sales: true,
-      stock: true,
-      support: true,
-      settings: true,
-      admin: true
-    }
-  },
-  {
-    id: '2',
-    name: 'Técnico Padrão',
-    email: 'tecnico@rtjk.com',
-    role: 'Técnico',
-    permissions: {
-      financial: false,
-      sales: true,
-      stock: true,
-      support: true,
-      settings: false,
-      admin: false
-    }
-  }
-];
-
-export const Settings: React.FC = () => {
+export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('COMPANY');
   
   // State for Company Settings
@@ -86,10 +46,81 @@ export const Settings: React.FC = () => {
     logo: ''
   });
 
-  // State for Users
-  const [users, setUsers] = useState<User[]>(INITIAL_USERS);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+
+  // New User Form State
+  const [userForm, setUserForm] = useState<Partial<User>>({
+      name: '',
+      email: '',
+      role: 'Técnico',
+      permissions: {
+          financial: false,
+          sales: true,
+          stock: true,
+          support: true,
+          settings: false,
+          admin: false
+      }
+  });
+
+  const handleOpenUserModal = (user?: User) => {
+      if (user) {
+          setEditingUser(user);
+          setUserForm({ ...user });
+      } else {
+          setEditingUser(null);
+          setUserForm({
+            name: '',
+            email: '',
+            role: 'Técnico',
+            permissions: {
+                financial: false,
+                sales: true,
+                stock: true,
+                support: true,
+                settings: false,
+                admin: false
+            }
+          });
+      }
+      setIsUserModalOpen(true);
+  };
+
+  const handleSaveUser = () => {
+      if (!userForm.name || !userForm.email) {
+          alert("Preencha nome e email");
+          return;
+      }
+
+      const newUser: User = {
+          id: editingUser ? editingUser.id : Date.now().toString(),
+          name: userForm.name!,
+          email: userForm.email!,
+          role: userForm.permissions?.admin ? 'Administrador' : 'Técnico',
+          permissions: userForm.permissions || {
+            financial: false,
+            sales: false,
+            stock: false,
+            support: false,
+            settings: false,
+            admin: false
+          }
+      };
+
+      if (editingUser) {
+          setUsers(users.map(u => u.id === editingUser.id ? newUser : u));
+      } else {
+          setUsers([...users, newUser]);
+      }
+      setIsUserModalOpen(false);
+  };
+
+  const handleDeleteUser = (id: string) => {
+      if(window.confirm("Deseja excluir este usuário?")) {
+          setUsers(users.filter(u => u.id !== id));
+      }
+  };
 
   // Helper for rendering tabs
   const renderCompanySettings = () => (
@@ -217,7 +248,7 @@ export const Settings: React.FC = () => {
        <div className="flex justify-between items-center">
             <h3 className="text-lg font-bold text-gray-800">Gerenciamento de Usuários</h3>
             <button 
-                onClick={() => { setEditingUser(null); setIsUserModalOpen(true); }}
+                onClick={() => handleOpenUserModal()}
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
             >
                 <Plus size={18} /> Novo Usuário
@@ -255,10 +286,10 @@ export const Settings: React.FC = () => {
                             </td>
                             <td className="px-6 py-4 text-right">
                                 <div className="flex justify-end gap-2">
-                                    <button onClick={() => { setEditingUser(user); setIsUserModalOpen(true); }} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
+                                    <button onClick={() => handleOpenUserModal(user)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
                                         <Edit size={16} />
                                     </button>
-                                    <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg">
+                                    <button onClick={() => handleDeleteUser(user.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg">
                                         <Trash2 size={16} />
                                     </button>
                                 </div>
@@ -277,42 +308,78 @@ export const Settings: React.FC = () => {
            </div>
        </div>
 
-       {/* Simple User Modal for Demo */}
+       {/* User Modal */}
        {isUserModalOpen && (
            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
                <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6">
                    <h3 className="text-lg font-bold text-gray-800 mb-4">{editingUser ? 'Editar Usuário' : 'Novo Usuário'}</h3>
                    <div className="space-y-4">
-                       <input type="text" placeholder="Nome Completo" className="w-full px-3 py-2 border rounded-lg bg-white text-gray-900" defaultValue={editingUser?.name} />
-                       <input type="email" placeholder="Email" className="w-full px-3 py-2 border rounded-lg bg-white text-gray-900" defaultValue={editingUser?.email} />
+                       <input 
+                            type="text" 
+                            placeholder="Nome Completo" 
+                            className="w-full px-3 py-2 border rounded-lg bg-white text-gray-900" 
+                            value={userForm.name}
+                            onChange={(e) => setUserForm({...userForm, name: e.target.value})}
+                       />
+                       <input 
+                            type="email" 
+                            placeholder="Email" 
+                            className="w-full px-3 py-2 border rounded-lg bg-white text-gray-900" 
+                            value={userForm.email}
+                            onChange={(e) => setUserForm({...userForm, email: e.target.value})}
+                       />
                        
                        <div>
                            <label className="block text-sm font-bold text-gray-700 mb-2">Permissões de Acesso</label>
                            <div className="grid grid-cols-2 gap-3">
                                 <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                                    <input type="checkbox" defaultChecked={editingUser?.permissions.financial} /> Financeiro
+                                    <input 
+                                        type="checkbox" 
+                                        checked={userForm.permissions?.financial} 
+                                        onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, financial: e.target.checked}})}
+                                    /> Financeiro
                                 </label>
                                 <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                                    <input type="checkbox" defaultChecked={editingUser?.permissions.sales} /> Vendas
+                                    <input 
+                                        type="checkbox" 
+                                        checked={userForm.permissions?.sales} 
+                                        onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, sales: e.target.checked}})}
+                                    /> Vendas
                                 </label>
                                 <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                                    <input type="checkbox" defaultChecked={editingUser?.permissions.stock} /> Estoque
+                                    <input 
+                                        type="checkbox" 
+                                        checked={userForm.permissions?.stock} 
+                                        onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, stock: e.target.checked}})}
+                                    /> Estoque
                                 </label>
                                 <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                                    <input type="checkbox" defaultChecked={editingUser?.permissions.support} /> Suporte
+                                    <input 
+                                        type="checkbox" 
+                                        checked={userForm.permissions?.support} 
+                                        onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, support: e.target.checked}})}
+                                    /> Suporte
                                 </label>
                                 <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                                    <input type="checkbox" defaultChecked={editingUser?.permissions.settings} /> Configurações
+                                    <input 
+                                        type="checkbox" 
+                                        checked={userForm.permissions?.settings} 
+                                        onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, settings: e.target.checked}})}
+                                    /> Configurações
                                 </label>
                                 <label className="flex items-center gap-2 p-2 border rounded cursor-pointer bg-red-50 border-red-100 text-red-800">
-                                    <input type="checkbox" defaultChecked={editingUser?.permissions.admin} /> Administrador
+                                    <input 
+                                        type="checkbox" 
+                                        checked={userForm.permissions?.admin} 
+                                        onChange={(e) => setUserForm({...userForm, permissions: {...userForm.permissions!, admin: e.target.checked}})}
+                                    /> Administrador
                                 </label>
                            </div>
                        </div>
                    </div>
                    <div className="mt-6 flex justify-end gap-3">
                        <button onClick={() => setIsUserModalOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
-                       <button onClick={() => setIsUserModalOpen(false)} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Salvar</button>
+                       <button onClick={handleSaveUser} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Salvar</button>
                    </div>
                </div>
            </div>

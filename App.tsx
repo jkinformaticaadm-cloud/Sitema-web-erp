@@ -8,7 +8,9 @@ import { Sales } from './components/Sales';
 import { Customers } from './components/Customers';
 import { Financial } from './components/Financial';
 import { Settings } from './components/Settings';
-import { View, CashierTransaction, Customer } from './types';
+import { Team } from './components/Team';
+import { Login } from './components/Login';
+import { View, CashierTransaction, Customer, User } from './types';
 import { Menu, Bell, Search, PieChart } from 'lucide-react';
 
 const INITIAL_CUSTOMERS: Customer[] = [
@@ -24,12 +26,45 @@ const INITIAL_CUSTOMERS: Customer[] = [
   },
 ];
 
+const INITIAL_USERS: User[] = [
+  {
+    id: '1',
+    name: 'Administrador',
+    email: 'admin@rtjk.com',
+    role: 'Administrador',
+    permissions: {
+      financial: true,
+      sales: true,
+      stock: true,
+      support: true,
+      settings: true,
+      admin: true
+    }
+  },
+  {
+    id: '2',
+    name: 'Técnico Padrão',
+    email: 'tecnico@rtjk.com',
+    role: 'Técnico',
+    permissions: {
+      financial: false,
+      sales: true,
+      stock: true,
+      support: true,
+      settings: false,
+      admin: false
+    }
+  }
+];
+
 const App: React.FC = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  // Global State for Customers
+  // Global State
   const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
+  const [users, setUsers] = useState<User[]>(INITIAL_USERS);
 
   const handleSaveCustomer = (customer: Customer) => {
     setCustomers(prev => {
@@ -57,6 +92,15 @@ const App: React.FC = () => {
     setTransactions(prev => [transaction, ...prev]);
   };
 
+  // Login Handler
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+  };
+
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />;
+  }
+
   const renderView = () => {
     switch (currentView) {
       case View.DASHBOARD:
@@ -73,8 +117,10 @@ const App: React.FC = () => {
         return <Customers customers={customers} onSave={handleSaveCustomer} onDelete={handleDeleteCustomer} />;
       case View.FINANCIAL:
         return <Financial />;
+      case View.TEAM:
+        return <Team users={users} />;
       case View.SETTINGS:
-        return <Settings />;
+        return <Settings users={users} setUsers={setUsers} />;
       default:
         return (
           <div className="flex flex-col items-center justify-center h-96 text-gray-400">
