@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { ShoppingBag, DollarSign, Package, TrendingUp, ChevronRight, Smartphone, Wrench, Shield } from 'lucide-react';
+import { ShoppingBag, DollarSign, Package, TrendingUp, ChevronRight, Smartphone, Wrench, Shield, Eye, EyeOff } from 'lucide-react';
 import { Goals, Order, CompletedSale } from '../types';
 
 // Dados para o Gráfico de Pizza (Categorias)
@@ -18,15 +18,20 @@ const StatCard: React.FC<{
   icon: React.ElementType;
   iconColor: string;
   bgColor: string;
-}> = ({ title, value, subValue, icon: Icon, iconColor, bgColor }) => (
+  visible?: boolean;
+}> = ({ title, value, subValue, icon: Icon, iconColor, bgColor, visible = true }) => (
   <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between h-40 hover:shadow-md transition-shadow">
     <div className={`p-3 rounded-lg w-fit ${bgColor}`}>
       <Icon className={iconColor} size={24} />
     </div>
     <div>
       <p className="text-sm text-gray-500 mb-1">{title}</p>
-      <h3 className="text-2xl font-bold text-gray-800">{value}</h3>
-      <p className="text-xs text-gray-400 mt-1 font-medium">{subValue}</p>
+      <h3 className="text-2xl font-bold text-gray-800 transition-all">
+        {visible ? value : '••••••'}
+      </h3>
+      <p className="text-xs text-gray-400 mt-1 font-medium">
+        {visible ? subValue : '---'}
+      </p>
     </div>
   </div>
 );
@@ -36,6 +41,8 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ goals }) => {
+  const [showValues, setShowValues] = useState(true);
+
   // Read current data from LocalStorage to make dashboard live
   const orders: Order[] = useMemo(() => {
     try {
@@ -80,9 +87,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ goals }) => {
   return (
     <div className="space-y-6 animate-fade-in pb-10">
       <div className="flex justify-between items-end">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">Dashboard</h2>
-          <p className="text-gray-500">Visão geral do desempenho da loja hoje.</p>
+        <div className="flex items-center gap-4">
+          <div>
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-bold text-gray-800">Dashboard</h2>
+              <button 
+                onClick={() => setShowValues(!showValues)}
+                className="text-gray-400 hover:text-blue-600 transition-colors p-1 rounded-lg hover:bg-gray-100"
+                title={showValues ? "Ocultar valores" : "Mostrar valores"}
+              >
+                {showValues ? <Eye size={20} /> : <EyeOff size={20} />}
+              </button>
+            </div>
+            <p className="text-gray-500">Visão geral do desempenho da loja hoje.</p>
+          </div>
         </div>
         <div className="text-sm text-gray-500 bg-white px-3 py-1 rounded-lg border border-gray-200 shadow-sm">
            {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
@@ -98,6 +116,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ goals }) => {
           icon={ShoppingBag} 
           iconColor="text-blue-600"
           bgColor="bg-blue-50"
+          visible={showValues}
         />
         <StatCard 
           title="Faturamento Total" 
@@ -106,6 +125,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ goals }) => {
           icon={DollarSign} 
           iconColor="text-green-600"
           bgColor="bg-green-50"
+          visible={showValues}
         />
         <StatCard 
           title="Ordens em Aberto" 
@@ -114,6 +134,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ goals }) => {
           icon={Wrench} 
           iconColor="text-orange-600"
           bgColor="bg-orange-50"
+          visible={showValues}
         />
         <StatCard 
           title="Produtos Baixo Estoque" 
@@ -122,6 +143,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ goals }) => {
           icon={Package} 
           iconColor="text-purple-600"
           bgColor="bg-purple-50"
+          visible={showValues}
         />
       </div>
 
@@ -150,10 +172,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ goals }) => {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip 
-                  formatter={(value: number) => `R$ ${value.toFixed(2)}`}
-                  contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #f3f4f6', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                />
+                {showValues && (
+                  <Tooltip 
+                    formatter={(value: number) => `R$ ${value.toFixed(2)}`}
+                    contentStyle={{ backgroundColor: '#fff', borderRadius: '8px', border: '1px solid #f3f4f6', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                )}
                 <Legend 
                   verticalAlign="bottom" 
                   height={36} 
@@ -165,7 +189,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ goals }) => {
             {/* Center Label */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center -mt-4">
                <p className="text-xs text-gray-400 font-medium">Total Estimado</p>
-               <p className="text-lg font-bold text-gray-800">R$ 28k</p>
+               <p className="text-lg font-bold text-gray-800">
+                 {showValues ? 'R$ 28k' : '••••••'}
+               </p>
             </div>
           </div>
         </div>
@@ -200,7 +226,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ goals }) => {
                             </div>
                         </div>
                         <div className="text-right">
-                            <p className="font-bold text-gray-900">R$ {sale.value.toFixed(2)}</p>
+                            <p className="font-bold text-gray-900">
+                              {showValues ? `R$ ${sale.value.toFixed(2)}` : '••••••'}
+                            </p>
                             <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Concluído</span>
                         </div>
                     </div>
@@ -234,8 +262,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ goals }) => {
                 <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${globalRevenuePercent}%` }}></div>
               </div>
               <div className="flex justify-between text-xs text-gray-500">
-                 <span>Atual: R$ {currentGlobalRevenue.toLocaleString('pt-BR')}</span>
-                 <span>Meta: R$ {goals.globalRevenue.toLocaleString('pt-BR')}</span>
+                 <span>Atual: {showValues ? `R$ ${currentGlobalRevenue.toLocaleString('pt-BR')}` : '••••••'}</span>
+                 <span>Meta: {showValues ? `R$ ${goals.globalRevenue.toLocaleString('pt-BR')}` : '••••••'}</span>
               </div>
             </div>
 
@@ -248,8 +276,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ goals }) => {
                 <div className="bg-gradient-to-r from-purple-500 to-purple-600 h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${productRevenuePercent}%` }}></div>
               </div>
                <div className="flex justify-between text-xs text-gray-500">
-                 <span>Atual: R$ {currentProductRevenue.toLocaleString('pt-BR')}</span>
-                 <span>Meta: R$ {goals.productRevenue.toLocaleString('pt-BR')}</span>
+                 <span>Atual: {showValues ? `R$ ${currentProductRevenue.toLocaleString('pt-BR')}` : '••••••'}</span>
+                 <span>Meta: {showValues ? `R$ ${goals.productRevenue.toLocaleString('pt-BR')}` : '••••••'}</span>
               </div>
             </div>
 
@@ -262,8 +290,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ goals }) => {
                 <div className="bg-gradient-to-r from-green-500 to-green-600 h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${serviceRevenuePercent}%` }}></div>
               </div>
                <div className="flex justify-between text-xs text-gray-500">
-                 <span>Atual: R$ {currentServiceRevenue.toLocaleString('pt-BR')}</span>
-                 <span>Meta: R$ {goals.serviceRevenue.toLocaleString('pt-BR')}</span>
+                 <span>Atual: {showValues ? `R$ ${currentServiceRevenue.toLocaleString('pt-BR')}` : '••••••'}</span>
+                 <span>Meta: {showValues ? `R$ ${goals.serviceRevenue.toLocaleString('pt-BR')}` : '••••••'}</span>
               </div>
             </div>
           </div>
