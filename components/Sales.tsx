@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ShoppingCart, Zap, FileText, User, Search, Plus, Trash2, ArrowLeft, X, Check, Package, Smartphone, History, RefreshCcw, DollarSign, Wallet, Truck, UserCheck, MapPin, Mail, Barcode, Eye, Printer, Share2, RotateCcw } from 'lucide-react';
+import { ShoppingCart, Zap, FileText, User, Search, Plus, Trash2, ArrowLeft, X, Check, Package, Smartphone, History, RefreshCcw, DollarSign, Wallet, Truck, UserCheck, MapPin, Mail, Barcode, Eye, Printer, Share2, RotateCcw, AlertTriangle } from 'lucide-react';
 import { Product, Customer, CompletedSale, CartItem, CompanySettings } from '../types';
 
 // --- MOCK DATA ---
@@ -210,6 +210,18 @@ export const Sales: React.FC<SalesProps> = ({ customers, companySettings, onUpda
   const cartTotal = cartSubtotal + (mode === 'DETAILED' ? logistics.cost : 0);
 
   const handleFinalizeSale = () => {
+    // Validação de Crédito
+    if (paymentMethod === 'Crédito Loja') {
+        if (!selectedCustomer) {
+            alert('Erro: Nenhum cliente selecionado para usar crédito.');
+            return;
+        }
+        if ((selectedCustomer.storeCredit || 0) < cartTotal) {
+            alert('Saldo insuficiente para realizar esta compra.');
+            return;
+        }
+    }
+
     let finalCustomerName = 'Cliente Balcão';
     let finalCustomerPhone = '';
     let finalCustomerCpf = '';
@@ -248,6 +260,11 @@ export const Sales: React.FC<SalesProps> = ({ customers, companySettings, onUpda
       paymentMethod: paymentMethod,
       status: paymentStatus
     };
+
+    // Deduzir crédito se necessário
+    if (paymentMethod === 'Crédito Loja' && selectedCustomer && onUpdateCustomerCredit) {
+        onUpdateCustomerCredit(selectedCustomer.name, -cartTotal);
+    }
 
     setSalesHistory([newSale, ...salesHistory]);
     
@@ -407,6 +424,8 @@ export const Sales: React.FC<SalesProps> = ({ customers, companySettings, onUpda
           address: c.address || '',
           email: c.email || ''
       });
+      // CRUCIAL: Set the selected customer object so we can access storeCredit
+      setSelectedCustomer(c);
       setCustomerSearchQuery(''); 
   };
   
@@ -552,6 +571,9 @@ export const Sales: React.FC<SalesProps> = ({ customers, companySettings, onUpda
               <div className="flex items-center justify-between bg-blue-50 p-3 rounded-lg border border-blue-100">
                  <div className="overflow-hidden">
                     <p className="font-bold text-blue-900 truncate">{selectedCustomer.name}</p>
+                    {selectedCustomer.storeCredit && selectedCustomer.storeCredit > 0 && (
+                        <p className="text-xs text-blue-700 font-medium">Crédito: R$ {selectedCustomer.storeCredit.toFixed(2)}</p>
+                    )}
                  </div>
                  <button onClick={() => setSelectedCustomer(null)} className="text-blue-400 hover:text-blue-600 p-1 hover:bg-blue-100 rounded">
                     <X size={16} />
@@ -672,7 +694,8 @@ export const Sales: React.FC<SalesProps> = ({ customers, companySettings, onUpda
                             <div className="absolute top-full left-0 w-full bg-white shadow-lg border border-gray-100 mt-1 z-20 max-h-40 overflow-y-auto">
                                 {filteredCustomers.length > 0 ? filteredCustomers.map(c => (
                                     <button key={c.id} onClick={() => selectCustomerForDetailed(c)} className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm">
-                                        {c.name}
+                                        <span className="font-bold">{c.name}</span>
+                                        {c.storeCredit && c.storeCredit > 0 && <span className="text-xs text-red-600 ml-2"> (Crédito: R${c.storeCredit})</span>}
                                     </button>
                                 )) : (
                                     <div className="p-2 text-xs text-gray-500">Nenhum cliente encontrado</div>
@@ -711,7 +734,7 @@ export const Sales: React.FC<SalesProps> = ({ customers, companySettings, onUpda
                   </div>
              </div>
 
-             {/* 2. MANUAL PRODUCT ENTRY (BELOW ADDRESS AS REQUESTED) */}
+             {/* 2. MANUAL PRODUCT ENTRY */}
              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                   <h3 className="font-bold text-gray-700 flex items-center gap-2 mb-4 border-b border-gray-100 pb-2">
                       <Package size={18} className="text-blue-500" /> Adicionar Produto / Serviço
@@ -966,12 +989,41 @@ export const Sales: React.FC<SalesProps> = ({ customers, companySettings, onUpda
                       {['Dinheiro', 'Pix', 'Crédito', 'Débito', 'Crediário', 'Outros'].map(m => (
                           <button key={m} onClick={() => setPaymentMethod(m as any)} className={`py-3 border rounded-lg font-medium ${paymentMethod === m ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200'}`}>{m}</button>
                       ))}
+                      
+                      {/* Botão de Crédito Loja */}
+                      {selectedCustomer && selectedCustomer.storeCredit && selectedCustomer.storeCredit > 0 ? (
+                          <button 
+                            onClick={() => setPaymentMethod('Crédito Loja')} 
+                            disabled={selectedCustomer.storeCredit < cartTotal}
+                            className={`py-3 border rounded-lg font-medium flex flex-col items-center justify-center relative
+                                ${paymentMethod === 'Crédito Loja' ? 'bg-purple-600 text-white border-purple-600' : 
+                                  selectedCustomer.storeCredit < cartTotal ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-purple-700 border-purple-200 hover:bg-purple-50'}`}
+                          >
+                              <span>Crédito Loja</span>
+                              <span className="text-xs font-normal">Saldo: R$ {selectedCustomer.storeCredit.toFixed(2)}</span>
+                              {selectedCustomer.storeCredit < cartTotal && (
+                                  <span className="absolute top-1 right-1 text-red-500"><AlertTriangle size={12}/></span>
+                              )}
+                          </button>
+                      ) : null}
                    </div>
+                   {paymentMethod === 'Crédito Loja' && selectedCustomer && (selectedCustomer.storeCredit || 0) < cartTotal && (
+                       <p className="text-red-500 text-xs mt-2 text-center">O saldo de crédito do cliente é insuficiente para esta compra.</p>
+                   )}
                 </div>
              </div>
              <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 md:rounded-b-xl flex-shrink-0">
                 <button onClick={() => setIsPaymentModalOpen(false)} className="px-6 py-3 text-gray-600 hover:bg-gray-200 rounded-xl">Cancelar</button>
-                <button onClick={handleFinalizeSale} className="px-8 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 flex items-center gap-2"><Check size={20} /> Confirmar</button>
+                <button 
+                    onClick={handleFinalizeSale} 
+                    disabled={paymentMethod === 'Crédito Loja' && (!selectedCustomer || (selectedCustomer.storeCredit || 0) < cartTotal)}
+                    className={`px-8 py-3 font-bold rounded-xl flex items-center gap-2
+                        ${paymentMethod === 'Crédito Loja' && (!selectedCustomer || (selectedCustomer.storeCredit || 0) < cartTotal) 
+                            ? 'bg-gray-400 text-white cursor-not-allowed' 
+                            : 'bg-green-600 text-white hover:bg-green-700'}`}
+                >
+                    <Check size={20} /> Confirmar
+                </button>
              </div>
           </div>
         </div>

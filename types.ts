@@ -66,7 +66,7 @@ export interface CompletedSale {
   shippingCost: number;
   deliveryType: 'RETIRADA' | 'ENTREGA';
   date: string; 
-  paymentMethod: 'Pix' | 'Dinheiro' | 'Débito' | 'Crédito' | 'Crediário' | 'Outros';
+  paymentMethod: 'Pix' | 'Dinheiro' | 'Débito' | 'Crédito' | 'Crediário' | 'Outros' | 'Crédito Loja';
   status: 'Pago' | 'A Receber' | 'Não Pago' | 'Estornado' | 'Estornado (Crédito)' | 'Estornado (Dinheiro)' | 'Encomenda';
   refundType?: 'CREDIT' | 'MONEY';
 }
