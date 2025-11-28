@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Plus, User, Phone, Mail, MapPin, Smartphone, FileText, Edit, Trash2, X, Save, Users, CreditCard, Lock, Unlock, ShoppingBag, Wrench, Clock, ChevronRight } from 'lucide-react';
+import { Search, Plus, User, Phone, Mail, MapPin, Smartphone, FileText, Edit, Trash2, X, Save, Users, CreditCard, Lock, Unlock, ShoppingBag, Wrench, Clock, ChevronRight, RotateCcw } from 'lucide-react';
 import { Customer } from '../types';
 
 // ... (Interface, Mock Data, etc. remain unchanged)
@@ -96,6 +96,12 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleResetCredit = () => {
+      if (confirm('Tem certeza que deseja zerar o crédito deste cliente? Esta ação não pode ser desfeita.')) {
+          setFormData(prev => ({ ...prev, storeCredit: 0 }));
+      }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
@@ -158,7 +164,7 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
                                          <p className="font-medium text-gray-900">{customer.name}</p>
                                          <p className="text-xs text-gray-500">ID: {customer.id} • Desde: {customer.createdAt}</p>
                                          {customer.storeCredit && customer.storeCredit > 0 && (
-                                            <span className="inline-block mt-1 bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full border border-red-200">
+                                            <span className="inline-block mt-1 bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full border border-green-200">
                                                 Crédito: R$ {customer.storeCredit.toFixed(2)}
                                             </span>
                                          )}
@@ -273,12 +279,20 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
                             
                             {/* Saldo de Crédito */}
                             {formData.storeCredit && formData.storeCredit > 0 ? (
-                                <div className="md:col-span-2 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
+                                <div className="md:col-span-2 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center justify-between">
                                     <div>
-                                        <h4 className="text-red-800 font-bold text-sm uppercase">Crédito Disponível</h4>
-                                        <p className="text-xs text-red-600">Este cliente possui saldo de devoluções.</p>
+                                        <h4 className="text-green-800 font-bold text-sm uppercase">Crédito Disponível</h4>
+                                        <p className="text-xs text-green-600">Este cliente possui saldo de devoluções.</p>
                                     </div>
-                                    <div className="text-2xl font-bold text-red-700">R$ {formData.storeCredit.toFixed(2)}</div>
+                                    <div className="flex flex-col items-end gap-1">
+                                        <div className="text-2xl font-bold text-green-700">R$ {formData.storeCredit.toFixed(2)}</div>
+                                        <button 
+                                            onClick={handleResetCredit}
+                                            className="text-xs text-green-700 hover:text-green-900 underline flex items-center gap-1 hover:bg-green-100 px-2 py-1 rounded transition-colors"
+                                        >
+                                            <RotateCcw size={10} /> Zerar Crédito
+                                        </button>
+                                    </div>
                                 </div>
                             ) : null}
 
