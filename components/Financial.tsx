@@ -22,27 +22,11 @@ import {
   Clock,
   X
 } from 'lucide-react';
-import { CardMachine } from '../types';
+import { CardMachine, FinancialRecord, PixConfig } from '../types';
 
 // ... (Types and Initial Data remain unchanged)
 
 type FinancialTab = 'PAYABLES' | 'RECEIVABLES' | 'DRE' | 'CASH_FLOW' | 'PAYMENT_METHODS';
-
-interface PixConfig {
-  id: string;
-  name: string;
-  rate: number;
-}
-
-interface FinancialRecord {
-  id: string;
-  description: string;
-  amount: number;
-  dueDate: string;
-  category: string;
-  status: 'PENDING' | 'PAID' | 'OVERDUE';
-  type: 'PAYABLE' | 'RECEIVABLE';
-}
 
 const INITIAL_MACHINES: CardMachine[] = [
     {
@@ -66,7 +50,7 @@ const INITIAL_RECORDS: FinancialRecord[] = [
   { id: '1', description: 'Aluguel Loja', amount: 2500.00, dueDate: '2024-11-10', category: 'Infraestrutura', status: 'PENDING', type: 'PAYABLE' },
   { id: '2', description: 'Fornecedor Peças', amount: 1200.00, dueDate: '2024-11-05', category: 'Fornecedores', status: 'PAID', type: 'PAYABLE' },
   { id: '3', description: 'Internet Fibra', amount: 150.00, dueDate: '2024-11-15', category: 'Infraestrutura', status: 'PENDING', type: 'PAYABLE' },
-  { id: '4', description: 'Recebimento Cartão (Antecipação)', amount: 3500.00, dueDate: '2024-11-12', category: 'Cartão de Crédito', status: 'PENDING', type: 'RECEIVABLE' },
+  { id: '4', description: 'Recebimento Cartão (Antecipação)', amount: 3500.00, dueDate: '2024-11-12', category: 'Cartão de Crédito', status: 'PENDING', type: 'RECEIVABLE', fee: 111.65, netAmount: 3388.35 },
 ];
 
 export const Financial: React.FC = () => {
@@ -102,7 +86,7 @@ export const Financial: React.FC = () => {
   // --- MODAL STATES ---
   const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
   const [recordForm, setRecordForm] = useState<Partial<FinancialRecord>>({
-    description: '', amount: 0, dueDate: '', category: '', type: 'PAYABLE', status: 'PENDING'
+    description: '', amount: 0, dueDate: '', category: '', type: 'PAYABLE', status: 'PENDING', fee: 0, netAmount: 0
   });
 
   // --- ACTIONS ---
@@ -147,7 +131,7 @@ export const Financial: React.FC = () => {
 
   // --- FINANCIAL RECORDS ACTIONS ---
   const handleNewRecord = (type: 'PAYABLE' | 'RECEIVABLE') => {
-    setRecordForm({ description: '', amount: 0, dueDate: '', category: '', type, status: 'PENDING' });
+    setRecordForm({ description: '', amount: 0, dueDate: '', category: '', type, status: 'PENDING', fee: 0, netAmount: 0 });
     setIsRecordModalOpen(true);
   };
 
@@ -163,7 +147,9 @@ export const Financial: React.FC = () => {
       dueDate: recordForm.dueDate!,
       category: recordForm.category || 'Geral',
       type: recordForm.type || 'PAYABLE',
-      status: recordForm.status || 'PENDING'
+      status: recordForm.status || 'PENDING',
+      fee: recordForm.fee,
+      netAmount: recordForm.netAmount || (Number(recordForm.amount) - (recordForm.fee || 0))
     };
     setRecords([...records, newRecord]);
     setIsRecordModalOpen(false);
@@ -296,7 +282,8 @@ export const Financial: React.FC = () => {
                         <th className="px-6 py-3">Data Prevista</th>
                         <th className="px-6 py-3">Descrição</th>
                         <th className="px-6 py-3">Categoria</th>
-                        <th className="px-6 py-3">Valor</th>
+                        <th className="px-6 py-3">Bruto</th>
+                        <th className="px-6 py-3">Taxa / Líq</th>
                         <th className="px-6 py-3">Status</th>
                         <th className="px-6 py-3 text-right">Ações</th>
                     </tr>
@@ -309,6 +296,16 @@ export const Financial: React.FC = () => {
                             <td className="px-6 py-4 text-gray-500">{r.category}</td>
                             <td className="px-6 py-4 font-bold text-blue-600">R$ {r.amount.toFixed(2)}</td>
                             <td className="px-6 py-4">
+                                {r.fee && r.fee > 0 ? (
+                                    <div className="flex flex-col text-xs">
+                                        <span className="text-red-500">- R$ {r.fee.toFixed(2)}</span>
+                                        <span className="text-green-600 font-bold">Liq: R$ {(r.netAmount || (r.amount - r.fee)).toFixed(2)}</span>
+                                    </div>
+                                ) : (
+                                    <span className="text-gray-400">-</span>
+                                )}
+                            </td>
+                            <td className="px-6 py-4">
                                 <button onClick={() => toggleStatus(r.id)} className={`px-2 py-1 rounded text-xs font-bold border ${r.status === 'PAID' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
                                     {r.status === 'PAID' ? 'RECEBIDO' : 'A RECEBER'}
                                 </button>
@@ -318,7 +315,7 @@ export const Financial: React.FC = () => {
                             </td>
                         </tr>
                     )) : (
-                         <tr><td colSpan={6} className="px-6 py-8 text-center text-gray-400">Nenhum recebimento registrado.</td></tr>
+                         <tr><td colSpan={7} className="px-6 py-8 text-center text-gray-400">Nenhum recebimento registrado.</td></tr>
                     )}
                 </tbody>
             </table>
@@ -570,6 +567,22 @@ export const Financial: React.FC = () => {
                             <option value="Outros">Outros</option>
                         </select>
                     </div>
+                    {/* Optional Fee Input for manual records */}
+                    {recordForm.type === 'RECEIVABLE' && (
+                        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+                            <div>
+                                <label className="block text-xs font-bold text-red-600 mb-1">Taxa (R$)</label>
+                                <input type="number" step="0.01" className="w-full px-3 py-2 border rounded-lg bg-red-50 text-red-800 font-medium" 
+                                    value={recordForm.fee} onChange={e => setRecordForm({...recordForm, fee: parseFloat(e.target.value)})} />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-green-600 mb-1">Líquido (Estimado)</label>
+                                <div className="w-full px-3 py-2 bg-green-50 text-green-800 font-bold rounded-lg border border-green-100">
+                                    R$ {((recordForm.amount || 0) - (recordForm.fee || 0)).toFixed(2)}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
                 <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 flex-shrink-0">
                     <button onClick={() => setIsRecordModalOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>

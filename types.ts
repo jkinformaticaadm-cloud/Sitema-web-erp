@@ -69,6 +69,8 @@ export interface CompletedSale {
   paymentMethod: 'Pix' | 'Dinheiro' | 'Débito' | 'Crédito' | 'Crediário' | 'Outros' | 'Crédito Loja';
   status: 'Pago' | 'A Receber' | 'Não Pago' | 'Estornado' | 'Estornado (Crédito)' | 'Estornado (Dinheiro)' | 'Encomenda';
   refundType?: 'CREDIT' | 'MONEY';
+  fee?: number;      // Valor da taxa descontada
+  netTotal?: number; // Valor líquido recebido
 }
 
 export interface Customer {
@@ -106,6 +108,9 @@ export interface Order {
   status: OrderStatus;
   date: string;
   total: number;
+  fee?: number;      // Valor da taxa
+  netTotal?: number; // Valor líquido
+  paymentMethod?: string;
 }
 
 export interface CashierTransaction {
@@ -132,6 +137,24 @@ export interface CardMachine {
   debitRate: number;
   creditSightRate: number;
   installmentRates: number[]; // Index 0 = 1x, Index 1 = 2x, etc.
+}
+
+export interface PixConfig {
+  id: string;
+  name: string;
+  rate: number;
+}
+
+export interface FinancialRecord {
+  id: string;
+  description: string;
+  amount: number;
+  dueDate: string;
+  category: string;
+  status: 'PENDING' | 'PAID' | 'OVERDUE';
+  type: 'PAYABLE' | 'RECEIVABLE';
+  fee?: number;
+  netAmount?: number;
 }
 
 export interface User {

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, Search, Filter, X, Save, Smartphone, User, Wrench, FileText, Trash2, DollarSign, Edit, RefreshCw, CheckCircle, Wallet, CreditCard, Eye, Printer, Share2, FileCheck } from 'lucide-react';
-import { Order, OrderStatus, CashierTransaction, OrderItem, Customer, CompanySettings } from '../types';
+import { Order, OrderStatus, CashierTransaction, OrderItem, Customer, CompanySettings, CardMachine, PixConfig } from '../types';
 
 interface OrdersProps {
   onAddTransaction: (t: CashierTransaction) => void;
@@ -38,8 +38,8 @@ const STATUS_OPTIONS: OrderStatus[] = [
 const INITIAL_ORDERS: Order[] = [
     { id: '1024', customerName: 'Maria Silva', customerPhone: '(11) 99999-9999', device: 'iPhone 11', status: 'Em Análise', date: '08/11/2024', total: 0, items: [] },
     { id: '1023', customerName: 'João Souza', device: 'Samsung A52', status: 'Aguardando Peça', date: '07/11/2024', total: 450, items: [{id: 'p1', name: 'Tela iPhone 11 Original', price: 450, type: 'PRODUCT'}] },
-    { id: '1022', customerName: 'Pedro Santos', device: 'Xiaomi Note 10', status: 'Finalizado' as OrderStatus, date: '06/11/2024', total: 180, items: [] },
-    { id: '1021', customerName: 'Ana Clara', device: 'Motorola G8', status: 'Entregue' as OrderStatus, date: '05/11/2024', total: 120, items: [] },
+    { id: '1022', customerName: 'Pedro Santos', device: 'Xiaomi Note 10', status: 'Finalizado' as OrderStatus, date: '06/11/2024', total: 180, items: [], fee: 0, netTotal: 180, paymentMethod: 'Dinheiro' },
+    { id: '1021', customerName: 'Ana Clara', device: 'Motorola G8', status: 'Entregue' as OrderStatus, date: '05/11/2024', total: 120, items: [], fee: 5.80, netTotal: 114.20, paymentMethod: 'Crédito' },
 ];
 
 export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers, companySettings }) => {
@@ -49,6 +49,18 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers, com
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  
+  // Settings for Calc
+  const [machines, setMachines] = useState<CardMachine[]>([]);
+  const [pixConfigs, setPixConfigs] = useState<PixConfig[]>([]);
+
+  useEffect(() => {
+      const savedMachines = localStorage.getItem('techfix_machines');
+      if (savedMachines) setMachines(JSON.parse(savedMachines));
+
+      const savedPix = localStorage.getItem('techfix_pix_terminals');
+      if (savedPix) setPixConfigs(JSON.parse(savedPix));
+  }, []);
   
   // Search and Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -265,22 +277,49 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers, com
     setSelectedOrder(null);
   };
 
+  const calculateFees = (total: number, method: string): { fee: number, net: number } => {
+      let rate = 0;
+      
+      if (method === 'Pix') {
+          if (pixConfigs.length > 0) rate = pixConfigs[0].rate;
+      } else if (method === 'Cartão Débito' || method === 'Débito') {
+          if (machines.length > 0) rate = machines[0].debitRate;
+      } else if (method === 'Cartão Crédito' || method === 'Crédito') {
+          if (machines.length > 0) rate = machines[0].creditSightRate;
+      }
+
+      const feeAmount = (total * rate) / 100;
+      return {
+          fee: feeAmount,
+          net: total - feeAmount
+      };
+  };
+
   const finalizeOrder = (paymentMethod: string) => {
     if (!selectedOrder) return;
+
+    const amount = selectedOrder.total > 0 ? selectedOrder.total : 150;
+    const { fee, net } = calculateFees(amount, paymentMethod);
 
     const transaction: CashierTransaction = {
       id: Math.random().toString(36).substr(2, 9),
       type: 'ENTRY',
       category: 'Serviço',
-      amount: selectedOrder.total > 0 ? selectedOrder.total : 150, 
-      description: `Faturamento OS #${selectedOrder.id} - ${selectedOrder.customerName}`,
+      amount: amount, 
+      description: `Faturamento OS #${selectedOrder.id} - ${selectedOrder.customerName} (${paymentMethod})`,
       date: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
     };
     
     onAddTransaction(transaction);
 
     const updatedOrders = orders.map(o => 
-      o.id === selectedOrder.id ? { ...o, status: 'Finalizado' as OrderStatus } : o
+      o.id === selectedOrder.id ? { 
+          ...o, 
+          status: 'Finalizado' as OrderStatus,
+          paymentMethod: paymentMethod,
+          fee: fee,
+          netTotal: net
+      } : o
     );
     setOrders(updatedOrders);
 
@@ -314,7 +353,6 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers, com
 
   const handlePrint = (mode: 'A4' | 'THERMAL') => {
     setPrintMode(mode);
-    // Use setTimeout to ensure the DOM updates with new classes/layout before printing
     setTimeout(() => {
       window.print();
     }, 100);
@@ -405,7 +443,15 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers, com
                       </span>
                     </td>
                     <td className="px-6 py-4 font-medium">
-                      {order.total > 0 ? `R$ ${order.total.toFixed(2)}` : 'A definir'}
+                      <div className="flex flex-col">
+                          <span>{order.total > 0 ? `R$ ${order.total.toFixed(2)}` : 'A definir'}</span>
+                          {order.fee && order.fee > 0 ? (
+                              <div className="text-[10px] mt-0.5">
+                                  <span className="text-red-500 block">- Taxa: R$ {order.fee.toFixed(2)}</span>
+                                  <span className="text-green-600 font-bold block">Liq: R$ {(order.netTotal || 0).toFixed(2)}</span>
+                              </div>
+                          ) : null}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
@@ -450,6 +496,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers, com
       {isViewModalOpen && selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-0 md:p-4">
           <div className="bg-white w-full h-full md:h-auto md:max-h-[90vh] md:max-w-3xl flex flex-col md:rounded-xl shadow-2xl animate-scale-in">
+             {/* ... (View Modal Content - Same as before but can display net value if needed in internal views, kept standard for customer print) ... */}
              <div className="px-4 md:px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 md:rounded-t-xl print:hidden flex-shrink-0">
                 <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                   <FileCheck className="text-blue-600" />
@@ -462,6 +509,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers, com
                className={`p-4 md:p-8 overflow-y-auto bg-white flex-1 ${printMode === 'THERMAL' ? 'print-thermal' : ''}`} 
                id="printable-area"
              >
+                {/* ... (Existing Print Layout) ... */}
                 <div className="border-b-2 border-gray-800 pb-6 mb-6">
                     <div className="flex justify-between items-start">
                         <div>
@@ -584,7 +632,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers, com
         </div>
       )}
 
-      {/* Other modals remain similar... */}
+      {/* Other modals (Status, Payment, Main) ... same as before, just ensured Payment modal calls calculate in handleFinalize */}
       {isStatusModalOpen && selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-20 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm animate-scale-in">
@@ -656,7 +704,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers, com
         </div>
       )}
 
-      {/* Main OS Modal (Create/Edit) */}
+      {/* Main OS Modal remains unchanged */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-scale-in">
@@ -674,7 +722,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers, com
               </button>
             </div>
             
-            {/* Modal Body - Scrollable */}
+            {/* Modal Body */}
             <div className="p-6 overflow-y-auto custom-scrollbar">
               <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
                 {/* Section: Dados do Cliente */}
