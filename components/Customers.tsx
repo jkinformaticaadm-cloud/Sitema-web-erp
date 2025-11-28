@@ -34,7 +34,7 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
     name: '', cpfOrCnpj: '', rg: '',
     phone: '', email: '',
     zipCode: '', address: '', complement: '', neighborhood: '', city: '', state: 'SP',
-    deviceHistory: '', notes: ''
+    deviceHistory: '', notes: '', storeCredit: 0
   });
 
   // Filter Logic
@@ -56,7 +56,7 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
       name: '', cpfOrCnpj: '', rg: '',
       phone: '', email: '',
       zipCode: '', address: '', complement: '', neighborhood: '', city: '', state: 'SP',
-      deviceHistory: '', notes: ''
+      deviceHistory: '', notes: '', storeCredit: 0
     });
     setActiveTab('DETAILS');
     setIsModalOpen(true);
@@ -157,6 +157,11 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
                                      <div>
                                          <p className="font-medium text-gray-900">{customer.name}</p>
                                          <p className="text-xs text-gray-500">ID: {customer.id} • Desde: {customer.createdAt}</p>
+                                         {customer.storeCredit && customer.storeCredit > 0 && (
+                                            <span className="inline-block mt-1 bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full border border-red-200">
+                                                Crédito: R$ {customer.storeCredit.toFixed(2)}
+                                            </span>
+                                         )}
                                      </div>
                                  </div>
                              </td>
@@ -266,6 +271,17 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
                       {activeTab === 'DETAILS' && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
                             
+                            {/* Saldo de Crédito */}
+                            {formData.storeCredit && formData.storeCredit > 0 ? (
+                                <div className="md:col-span-2 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
+                                    <div>
+                                        <h4 className="text-red-800 font-bold text-sm uppercase">Crédito Disponível</h4>
+                                        <p className="text-xs text-red-600">Este cliente possui saldo de devoluções.</p>
+                                    </div>
+                                    <div className="text-2xl font-bold text-red-700">R$ {formData.storeCredit.toFixed(2)}</div>
+                                </div>
+                            ) : null}
+
                             {/* Dados Pessoais */}
                             <div className="md:col-span-2">
                                 <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Dados Pessoais</h4>

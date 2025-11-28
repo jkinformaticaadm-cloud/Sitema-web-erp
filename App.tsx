@@ -17,12 +17,12 @@ const INITIAL_CUSTOMERS: Customer[] = [
   { 
     id: '1', name: 'João da Silva', cpfOrCnpj: '123.456.789-00', phone: '(11) 99999-1234', email: 'joao@email.com', 
     address: 'Rua das Palmeiras, 123', city: 'São Paulo', state: 'SP', zipCode: '12230-000', neighborhood: 'Jardim Satélite',
-    deviceHistory: 'iPhone 11 (IMEI: 3569888...)', createdAt: '2024-01-15' 
+    deviceHistory: 'iPhone 11 (IMEI: 3569888...)', createdAt: '2024-01-15', storeCredit: 0 
   },
   { 
     id: '2', name: 'Maria Oliveira', cpfOrCnpj: '987.654.321-99', phone: '(21) 98888-5678', email: 'maria@email.com', 
     address: 'Av. Brasil, 500', city: 'Rio de Janeiro', state: 'RJ',
-    deviceHistory: 'Samsung S21', createdAt: '2024-02-20' 
+    deviceHistory: 'Samsung S21', createdAt: '2024-02-20', storeCredit: 0
   },
 ];
 
@@ -168,6 +168,20 @@ const App: React.FC = () => {
     setCustomers(prev => prev.filter(c => c.id !== id));
   };
 
+  // Função para adicionar crédito ao cliente (chamada pelo estorno)
+  const handleUpdateCustomerCredit = (customerName: string, amount: number) => {
+    setCustomers(prev => prev.map(c => {
+        // Tenta encontrar pelo nome exato (idealmente seria por ID, mas o histórico de vendas usa Nome)
+        if (c.name.trim().toLowerCase() === customerName.trim().toLowerCase()) {
+            return {
+                ...c,
+                storeCredit: (c.storeCredit || 0) + amount
+            };
+        }
+        return c;
+    }));
+  };
+
   const addTransaction = (transaction: CashierTransaction) => {
     setTransactions(prev => [transaction, ...prev]);
   };
@@ -186,7 +200,13 @@ const App: React.FC = () => {
       case View.DASHBOARD:
         return <Dashboard goals={goals} />;
       case View.SALES:
-        return <Sales customers={customers} companySettings={companySettings} />;
+        return (
+            <Sales 
+                customers={customers} 
+                companySettings={companySettings} 
+                onUpdateCustomerCredit={handleUpdateCustomerCredit} // Passando a função
+            />
+        );
       case View.INVENTORY:
         return <Inventory />;
       case View.CASHIER:

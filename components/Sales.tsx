@@ -31,11 +31,12 @@ const INITIAL_SALES_HISTORY: CompletedSale[] = [
 interface SalesProps {
   customers: Customer[];
   companySettings: CompanySettings;
+  onUpdateCustomerCredit?: (customerName: string, amount: number) => void;
 }
 
 type SalesMode = 'MENU' | 'POS' | 'DETAILED' | 'PREORDER';
 
-export const Sales: React.FC<SalesProps> = ({ customers, companySettings }) => {
+export const Sales: React.FC<SalesProps> = ({ customers, companySettings, onUpdateCustomerCredit }) => {
   const [mode, setMode] = useState<SalesMode>('MENU');
   
   // Data State
@@ -336,6 +337,7 @@ export const Sales: React.FC<SalesProps> = ({ customers, companySettings }) => {
     
     const newStatus: CompletedSale['status'] = type === 'CREDIT' ? 'Estornado (Crédito)' : 'Estornado (Dinheiro)';
     
+    // Update Sales History
     const updatedHistory = salesHistory.map(s => 
         s.id === saleToRefund.id 
         ? { ...s, status: newStatus, refundType: type } 
@@ -343,6 +345,13 @@ export const Sales: React.FC<SalesProps> = ({ customers, companySettings }) => {
     );
     
     setSalesHistory(updatedHistory);
+
+    // Se for estorno em crédito, atualiza o saldo do cliente
+    if (type === 'CREDIT' && onUpdateCustomerCredit) {
+        onUpdateCustomerCredit(saleToRefund.customerName, saleToRefund.total);
+        alert(`Crédito de R$ ${saleToRefund.total.toFixed(2)} adicionado para ${saleToRefund.customerName}`);
+    }
+
     setIsRefundModalOpen(false);
     setSaleToRefund(null);
   };

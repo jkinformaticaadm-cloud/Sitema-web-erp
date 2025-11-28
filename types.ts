@@ -90,6 +90,7 @@ export interface Customer {
   deviceHistory?: string; 
   notes?: string;
   createdAt: string;
+  storeCredit?: number; // Saldo de crédito na loja
 }
 
 export interface Order {
