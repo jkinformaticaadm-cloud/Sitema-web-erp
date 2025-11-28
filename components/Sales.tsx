@@ -62,6 +62,8 @@ export const Sales: React.FC<SalesProps> = ({ customers, companySettings }) => {
     quantity: 1
   });
   
+  const [showManualProductSuggestions, setShowManualProductSuggestions] = useState(false);
+
   // Logistics State (Entrega/Retirada)
   const [logistics, setLogistics] = useState<{type: 'RETIRADA' | 'ENTREGA', cost: number}>({
     type: 'RETIRADA',
@@ -184,6 +186,15 @@ export const Sales: React.FC<SalesProps> = ({ customers, companySettings }) => {
 
     // Reset manual fields
     setManualProduct({ name: '', price: '', imei: '', quantity: 1 });
+  };
+
+  const selectManualProduct = (product: Product) => {
+      setManualProduct({
+          ...manualProduct,
+          name: product.name,
+          price: product.price.toString()
+      });
+      setShowManualProductSuggestions(false);
   };
 
   const removeFromCart = (index: number) => {
@@ -372,6 +383,12 @@ export const Sales: React.FC<SalesProps> = ({ customers, companySettings }) => {
       if(!q) return [];
       return customers.filter(c => c.name.toLowerCase().includes(q));
   }, [preOrderForm.name, customers]);
+
+  const filteredManualProducts = useMemo(() => {
+      const q = manualProduct.name.toLowerCase();
+      if (!q) return [];
+      return availableProducts.filter(p => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q));
+  }, [manualProduct.name, availableProducts]);
 
   const selectCustomerForDetailed = (c: Customer) => {
       setDetailedCustomerForm({
@@ -691,15 +708,37 @@ export const Sales: React.FC<SalesProps> = ({ customers, companySettings }) => {
                       <Package size={18} className="text-blue-500" /> Adicionar Produto / Serviço
                   </h3>
                   <div className="flex flex-col md:flex-row gap-4 items-end">
-                      <div className="flex-1 w-full">
+                      <div className="flex-1 w-full relative">
                           <label className="block text-xs font-semibold text-gray-500 mb-1">Nome do Produto</label>
                           <input 
                               type="text" 
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none bg-white text-gray-900"
                               placeholder="Ex: Troca de Tela iPhone 11"
                               value={manualProduct.name}
-                              onChange={(e) => setManualProduct({...manualProduct, name: e.target.value})}
+                              onChange={(e) => {
+                                  setManualProduct({...manualProduct, name: e.target.value});
+                                  setShowManualProductSuggestions(true);
+                              }}
+                              onFocus={() => setShowManualProductSuggestions(true)}
                           />
+                          {showManualProductSuggestions && manualProduct.name && (
+                            <div className="absolute top-full left-0 w-full bg-white shadow-lg border border-gray-100 mt-1 z-20 max-h-40 overflow-y-auto rounded-lg">
+                                {filteredManualProducts.length > 0 ? filteredManualProducts.map(p => (
+                                    <button 
+                                        key={p.id} 
+                                        onClick={() => selectManualProduct(p)} 
+                                        className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm border-b border-gray-50 last:border-0"
+                                    >
+                                        <div className="flex justify-between">
+                                            <span className="font-medium text-gray-800">{p.name}</span>
+                                            <span className="text-blue-600 font-bold">R$ {p.price.toFixed(2)}</span>
+                                        </div>
+                                    </button>
+                                )) : (
+                                    <div className="p-2 text-xs text-gray-500">Nenhum produto cadastrado encontrado</div>
+                                )}
+                            </div>
+                          )}
                       </div>
                       <div className="w-32">
                           <label className="block text-xs font-semibold text-gray-500 mb-1">Valor (R$)</label>
