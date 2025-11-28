@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ShoppingCart, Zap, FileText, User, Search, Plus, Trash2, ArrowLeft, X, Check, Package, Smartphone, History, RefreshCcw, DollarSign, Wallet, Truck, UserCheck, MapPin, Mail, Barcode, Eye, Printer, Share2, RotateCcw } from 'lucide-react';
-import { Product, Customer } from '../types';
+import { Product, Customer, CompletedSale, CartItem } from '../types';
 
 // --- MOCK DATA ---
 
@@ -30,38 +30,6 @@ const INITIAL_SALES_HISTORY: CompletedSale[] = [
 
 interface SalesProps {
   customers: Customer[];
-}
-
-// Interface for Cart Item with details
-interface CartItem {
-  product: Product;
-  quantity: number;
-  unitPrice: number;
-  discount: number;
-  note: string;
-  // New detailed fields
-  imei?: string;
-  serial?: string;
-  deviceModel?: string;
-}
-
-// Interface for a completed sale
-interface CompletedSale {
-  id: string;
-  customerName: string;
-  customerPhone?: string;
-  customerCpf?: string; 
-  customerAddress?: string;
-  customerEmail?: string;
-  items: CartItem[];
-  total: number;
-  subtotal: number;
-  shippingCost: number;
-  deliveryType: 'RETIRADA' | 'ENTREGA';
-  date: string; 
-  paymentMethod: 'Pix' | 'Dinheiro' | 'Débito' | 'Crédito' | 'Crediário' | 'Outros';
-  status: 'Pago' | 'A Receber' | 'Não Pago' | 'Estornado' | 'Estornado (Crédito)' | 'Estornado (Dinheiro)' | 'Encomenda';
-  refundType?: 'CREDIT' | 'MONEY';
 }
 
 type SalesMode = 'MENU' | 'POS' | 'DETAILED' | 'PREORDER';
@@ -422,11 +390,8 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
       return 'bg-gray-100 text-gray-800';
   };
 
-  // ... (SalesMenu, POSView, DetailedView, PreOrderView remain the same structure/logic, just render output)
-
   const SalesMenu = () => (
      <div className="flex flex-col h-full animate-fade-in p-6 overflow-y-auto">
-      {/* ... Content of SalesMenu ... */}
       <div className="flex items-center justify-between mb-6 max-w-5xl mx-auto w-full">
         <div>
            <h2 className="text-2xl font-bold text-gray-800">Vendas</h2>
@@ -505,7 +470,6 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
   );
 
   const POSView = () => (
-    // ... same as before
     <div className="flex flex-col md:flex-row h-[calc(100vh-140px)] gap-4 animate-fade-in">
       {/* Left: Product Selection */}
       <div className="flex-1 flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -639,9 +603,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
   );
 
   const DetailedView = () => (
-    // ... same as before
     <div className="h-[calc(100vh-140px)] flex flex-col animate-fade-in bg-gray-50 overflow-y-auto custom-scrollbar">
-        {/* ... content of DetailedView ... */}
         {/* Header Bar */}
         <div className="bg-white px-6 py-4 border-b border-gray-200 flex justify-between items-center shadow-sm sticky top-0 z-20">
              <div className="flex items-center gap-4">
@@ -661,10 +623,8 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
         </div>
 
         <div className="max-w-4xl mx-auto w-full p-6 space-y-6">
-             
              {/* 1. CUSTOMER DATA FORM */}
              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                  {/* ... form content ... */}
                   <div className="flex justify-between items-start mb-4 border-b border-gray-100 pb-2">
                       <h3 className="font-bold text-gray-700 flex items-center gap-2">
                           <User size={18} className="text-blue-500" /> Dados do Cliente
@@ -861,14 +821,12 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
   );
 
   const PreOrderView = () => {
-    // ... same as before
     const total = parseFloat(preOrderForm.totalValue) || 0;
     const entry = parseFloat(preOrderForm.entryValue) || 0;
     const remaining = Math.max(0, total - entry);
 
     return (
         <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-fade-in h-[calc(100vh-140px)] flex flex-col mt-4">
-            {/* ... Content of PreOrderView ... */}
             <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50">
                 <div className="flex items-center gap-3">
                     <button onClick={() => setMode('MENU')} className="p-2 hover:bg-white rounded-full border border-transparent hover:border-gray-200 transition-all text-gray-500">

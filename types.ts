@@ -42,13 +42,33 @@ export interface Product {
   compatible?: string;
 }
 
-export interface Sale {
+export interface CartItem {
+  product: Product;
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+  note: string;
+  imei?: string;
+  serial?: string;
+  deviceModel?: string;
+}
+
+export interface CompletedSale {
   id: string;
   customerName: string;
-  date: string;
+  customerPhone?: string;
+  customerCpf?: string; 
+  customerAddress?: string;
+  customerEmail?: string;
+  items: CartItem[];
   total: number;
-  status: 'Completed' | 'Pending';
-  paymentMethod: 'Credit Card' | 'Cash' | 'Pix';
+  subtotal: number;
+  shippingCost: number;
+  deliveryType: 'RETIRADA' | 'ENTREGA';
+  date: string; 
+  paymentMethod: 'Pix' | 'Dinheiro' | 'Débito' | 'Crédito' | 'Crediário' | 'Outros';
+  status: 'Pago' | 'A Receber' | 'Não Pago' | 'Estornado' | 'Estornado (Crédito)' | 'Estornado (Dinheiro)' | 'Encomenda';
+  refundType?: 'CREDIT' | 'MONEY';
 }
 
 export interface Customer {
@@ -128,4 +148,10 @@ export interface User {
     settings: boolean;
     admin: boolean;
   };
+}
+
+export interface Goals {
+  globalRevenue: number;
+  productRevenue: number; // Alterado de accessoryUnits para Revenue (R$)
+  serviceRevenue: number;
 }

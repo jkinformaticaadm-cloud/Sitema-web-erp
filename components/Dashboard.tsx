@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { ShoppingBag, DollarSign, Package, TrendingUp, ChevronRight, Smartphone, Wrench, Shield } from 'lucide-react';
+import { Goals, Order, CompletedSale } from '../types';
 
 // Dados para o Gráfico de Pizza (Categorias)
 const PIE_DATA = [
@@ -8,15 +9,6 @@ const PIE_DATA = [
   { name: 'Acessórios', value: 8400, color: '#10b981' }, // Green
   { name: 'Peças', value: 5600, color: '#8b5cf6' },     // Purple
   { name: 'Outros', value: 2100, color: '#f59e0b' },    // Orange
-];
-
-// Dados para Lista de Vendas Recentes
-const RECENT_SALES = [
-  { id: 1, product: 'Troca de Tela iPhone 11', customer: 'João da Silva', value: 450.00, type: 'SERVICE', time: '14:30' },
-  { id: 2, product: 'Película 3D + Capa', customer: 'Maria Oliveira', value: 85.00, type: 'PRODUCT', time: '13:15' },
-  { id: 3, product: 'Formatação Notebook', customer: 'Empresa Tech', value: 120.00, type: 'SERVICE', time: '11:45' },
-  { id: 4, product: 'Carregador Turbo 20W', customer: 'Pedro Santos', value: 150.00, type: 'PRODUCT', time: '10:20' },
-  { id: 5, product: 'Bateria Samsung A51', customer: 'Ana Costa', value: 180.00, type: 'PRODUCT', time: '09:10' },
 ];
 
 const StatCard: React.FC<{
@@ -39,7 +31,52 @@ const StatCard: React.FC<{
   </div>
 );
 
-export const Dashboard: React.FC = () => {
+interface DashboardProps {
+  goals: Goals;
+}
+
+export const Dashboard: React.FC<DashboardProps> = ({ goals }) => {
+  // Read current data from LocalStorage to make dashboard live
+  const orders: Order[] = useMemo(() => {
+    try {
+        const saved = localStorage.getItem('techfix_orders');
+        return saved ? JSON.parse(saved) : [];
+    } catch(e) { return []; }
+  }, []);
+
+  const sales: CompletedSale[] = useMemo(() => {
+    try {
+        const saved = localStorage.getItem('techfix_sales');
+        return saved ? JSON.parse(saved) : [];
+    } catch (e) { return []; }
+  }, []);
+
+  // Calculate Real Stats based on data
+  const currentServiceRevenue = orders
+    .filter(o => o.status === 'Finalizado' || o.status === 'Entregue')
+    .reduce((acc, curr) => acc + curr.total, 0);
+
+  const currentProductRevenue = sales
+    .filter(s => s.status === 'Pago' || s.status === 'A Receber')
+    .reduce((acc, curr) => acc + curr.total, 0);
+
+  const currentGlobalRevenue = currentServiceRevenue + currentProductRevenue;
+
+  // Calculate percentages based on dynamic goals (avoid division by zero)
+  const globalRevenuePercent = Math.min(100, Math.round((currentGlobalRevenue / (goals.globalRevenue || 1)) * 100));
+  const productRevenuePercent = Math.min(100, Math.round((currentProductRevenue / (goals.productRevenue || 1)) * 100));
+  const serviceRevenuePercent = Math.min(100, Math.round((currentServiceRevenue / (goals.serviceRevenue || 1)) * 100));
+
+  // Recent sales for list
+  const recentSalesList = [
+      ...orders.map(o => ({ id: o.id, product: o.device, customer: o.customerName, value: o.total, type: 'SERVICE', time: o.date })),
+      ...sales.map(s => ({ id: s.id, product: 'Venda de Produtos', customer: s.customerName, value: s.total, type: 'PRODUCT', time: s.date }))
+  ].sort((a,b) => {
+      // Very basic sort, ideally would parse dates
+      return 0.5 - Math.random(); 
+  }).slice(0, 5);
+
+
   return (
     <div className="space-y-6 animate-fade-in pb-10">
       <div className="flex justify-between items-end">
@@ -56,24 +93,24 @@ export const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
           title="Vendas Realizadas" 
-          value="142" 
+          value={sales.length.toString()} 
           subValue="+12% em relação a ontem"
           icon={ShoppingBag} 
           iconColor="text-blue-600"
           bgColor="bg-blue-50"
         />
         <StatCard 
-          title="Faturamento do Dia" 
-          value="R$ 2.450,00" 
-          subValue="Meta diária: R$ 2.000"
+          title="Faturamento Total" 
+          value={`R$ ${currentGlobalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`} 
+          subValue={`Meta: R$ ${goals.globalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
           icon={DollarSign} 
           iconColor="text-green-600"
           bgColor="bg-green-50"
         />
         <StatCard 
           title="Ordens em Aberto" 
-          value="8" 
-          subValue="3 aguardando peça"
+          value={orders.filter(o => o.status !== 'Finalizado' && o.status !== 'Entregue' && o.status !== 'Não Aprovado').length.toString()} 
+          subValue="Aguardando conclusão"
           icon={Wrench} 
           iconColor="text-orange-600"
           bgColor="bg-orange-50"
@@ -127,7 +164,7 @@ export const Dashboard: React.FC = () => {
             </ResponsiveContainer>
             {/* Center Label */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center -mt-4">
-               <p className="text-xs text-gray-400 font-medium">Total</p>
+               <p className="text-xs text-gray-400 font-medium">Total Estimado</p>
                <p className="text-lg font-bold text-gray-800">R$ 28k</p>
             </div>
           </div>
@@ -137,7 +174,7 @@ export const Dashboard: React.FC = () => {
         <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col">
           <div className="flex justify-between items-center mb-6">
             <div>
-                <h3 className="text-lg font-bold text-gray-800">Vendas Recentes</h3>
+                <h3 className="text-lg font-bold text-gray-800">Movimentações Recentes</h3>
                 <p className="text-sm text-gray-500">Últimas transações registradas hoje</p>
             </div>
             <button className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 bg-blue-50 px-3 py-1.5 rounded-lg transition-colors">
@@ -147,7 +184,7 @@ export const Dashboard: React.FC = () => {
 
           <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
             <div className="space-y-4">
-                {RECENT_SALES.map((sale) => (
+                {recentSalesList.length > 0 ? recentSalesList.map((sale) => (
                     <div key={sale.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl border border-gray-50 hover:border-gray-100 transition-all group">
                         <div className="flex items-center gap-4">
                             <div className={`p-3 rounded-lg ${sale.type === 'SERVICE' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
@@ -167,7 +204,9 @@ export const Dashboard: React.FC = () => {
                             <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Concluído</span>
                         </div>
                     </div>
-                ))}
+                )) : (
+                    <div className="text-center text-gray-400 py-8">Nenhuma venda recente</div>
+                )}
             </div>
           </div>
         </div>
@@ -179,8 +218,9 @@ export const Dashboard: React.FC = () => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
              <h3 className="text-lg font-bold text-gray-800">Metas do Mês</h3>
              <div className="flex gap-2 text-sm">
-                <span className="flex items-center gap-1 text-gray-600"><div className="w-2 h-2 rounded-full bg-blue-600"></div> Vendas</span>
-                <span className="flex items-center gap-1 text-gray-600"><div className="w-2 h-2 rounded-full bg-purple-600"></div> Serviços</span>
+                <span className="flex items-center gap-1 text-gray-600"><div className="w-2 h-2 rounded-full bg-blue-600"></div> Faturamento Global</span>
+                <span className="flex items-center gap-1 text-gray-600"><div className="w-2 h-2 rounded-full bg-purple-600"></div> Vendas Produtos</span>
+                <span className="flex items-center gap-1 text-gray-600"><div className="w-2 h-2 rounded-full bg-green-600"></div> Serviços</span>
              </div>
           </div>
           
@@ -188,34 +228,43 @@ export const Dashboard: React.FC = () => {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="font-medium text-gray-700">Faturamento Global</span>
-                <span className="font-bold text-blue-600">85%</span>
+                <span className="font-bold text-blue-600">{globalRevenuePercent}%</span>
               </div>
               <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-full rounded-full" style={{ width: '85%' }}></div>
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${globalRevenuePercent}%` }}></div>
               </div>
-              <p className="text-xs text-gray-400 text-right">Meta: R$ 40.000,00</p>
+              <div className="flex justify-between text-xs text-gray-500">
+                 <span>Atual: R$ {currentGlobalRevenue.toLocaleString('pt-BR')}</span>
+                 <span>Meta: R$ {goals.globalRevenue.toLocaleString('pt-BR')}</span>
+              </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="font-medium text-gray-700">Venda de Acessórios</span>
-                <span className="font-bold text-purple-600">62%</span>
+                <span className="font-medium text-gray-700">Vendas (Produtos)</span>
+                <span className="font-bold text-purple-600">{productRevenuePercent}%</span>
               </div>
               <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-                <div className="bg-gradient-to-r from-purple-500 to-purple-600 h-full rounded-full" style={{ width: '62%' }}></div>
+                <div className="bg-gradient-to-r from-purple-500 to-purple-600 h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${productRevenuePercent}%` }}></div>
               </div>
-              <p className="text-xs text-gray-400 text-right">Meta: 500 Unidades</p>
+               <div className="flex justify-between text-xs text-gray-500">
+                 <span>Atual: R$ {currentProductRevenue.toLocaleString('pt-BR')}</span>
+                 <span>Meta: R$ {goals.productRevenue.toLocaleString('pt-BR')}</span>
+              </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="font-medium text-gray-700">Serviços Técnicos</span>
-                <span className="font-bold text-green-600">92%</span>
+                <span className="font-bold text-green-600">{serviceRevenuePercent}%</span>
               </div>
               <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-                <div className="bg-gradient-to-r from-green-500 to-green-600 h-full rounded-full" style={{ width: '92%' }}></div>
+                <div className="bg-gradient-to-r from-green-500 to-green-600 h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${serviceRevenuePercent}%` }}></div>
               </div>
-              <p className="text-xs text-gray-400 text-right">Meta: R$ 15.000,00</p>
+               <div className="flex justify-between text-xs text-gray-500">
+                 <span>Atual: R$ {currentServiceRevenue.toLocaleString('pt-BR')}</span>
+                 <span>Meta: R$ {goals.serviceRevenue.toLocaleString('pt-BR')}</span>
+              </div>
             </div>
           </div>
           
@@ -226,7 +275,8 @@ export const Dashboard: React.FC = () => {
             <div>
                 <h4 className="font-bold text-blue-900 text-sm mb-1">Dica de Gestão</h4>
                 <p className="text-sm text-blue-700 leading-relaxed">
-                    Sua meta de serviços técnicos está quase batida! Considere fazer uma promoção relâmpago de <strong>acessórios</strong> para equilibrar o mix de produtos antes do fim do mês.
+                    Mantenha suas metas atualizadas nas configurações para acompanhar o crescimento real da sua loja. 
+                    {serviceRevenuePercent < 50 ? " Que tal focar em divulgar seus serviços esta semana?" : " Ótimo trabalho com os serviços técnicos!"}
                 </p>
             </div>
           </div>

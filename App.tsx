@@ -10,7 +10,7 @@ import { Financial } from './components/Financial';
 import { Settings } from './components/Settings';
 import { Team } from './components/Team';
 import { Login } from './components/Login';
-import { View, CashierTransaction, Customer, User } from './types';
+import { View, CashierTransaction, Customer, User, Goals } from './types';
 import { Menu, Bell, Search, LogOut } from 'lucide-react';
 
 const INITIAL_CUSTOMERS: Customer[] = [
@@ -68,6 +68,12 @@ const INITIAL_TRANSACTIONS: CashierTransaction[] = [
     { id: '4', type: 'EXIT', category: 'Fornecedor', amount: 600, description: 'Peças Reposição', date: '08/11/2024 09:00', operator: 'Administrador' },
 ];
 
+const INITIAL_GOALS: Goals = {
+  globalRevenue: 40000,
+  productRevenue: 15000, // Alterado para valor monetário
+  serviceRevenue: 25000
+};
+
 const App: React.FC = () => {
   // Auth State - Inicializa com Admin por padrão (Login desabilitado temporariamente)
   const [currentUser, setCurrentUser] = useState<User>(() => {
@@ -108,6 +114,11 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
   });
 
+  const [goals, setGoals] = useState<Goals>(() => {
+    const saved = localStorage.getItem('techfix_goals');
+    return saved ? JSON.parse(saved) : INITIAL_GOALS;
+  });
+
   // Effects to save data whenever it changes
   useEffect(() => {
     localStorage.setItem('techfix_customers', JSON.stringify(customers));
@@ -121,6 +132,9 @@ const App: React.FC = () => {
     localStorage.setItem('techfix_transactions', JSON.stringify(transactions));
   }, [transactions]);
 
+  useEffect(() => {
+    localStorage.setItem('techfix_goals', JSON.stringify(goals));
+  }, [goals]);
 
   const handleSaveCustomer = (customer: Customer) => {
     setCustomers(prev => {
@@ -155,7 +169,7 @@ const App: React.FC = () => {
   const renderView = () => {
     switch (currentView) {
       case View.DASHBOARD:
-        return <Dashboard />;
+        return <Dashboard goals={goals} />;
       case View.SALES:
         return <Sales customers={customers} />;
       case View.INVENTORY:
@@ -171,7 +185,7 @@ const App: React.FC = () => {
       case View.TEAM:
         return <Team users={users} />;
       case View.SETTINGS:
-        return <Settings users={users} setUsers={setUsers} />;
+        return <Settings users={users} setUsers={setUsers} goals={goals} onUpdateGoals={setGoals} />;
       default:
         return (
           <div className="flex flex-col items-center justify-center h-96 text-gray-400">

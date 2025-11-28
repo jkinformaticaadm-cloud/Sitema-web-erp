@@ -1,40 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Building, 
   Users, 
-  Shield, 
-  Link, 
   Save, 
   Upload, 
   Plus, 
   Edit, 
   Trash2, 
-  RefreshCw, 
-  Download, 
   FileJson, 
   FileSpreadsheet, 
-  Key, 
-  Smartphone, 
-  Mail, 
-  Check, 
-  Globe,
   Database,
-  Lock,
   User as UserIcon,
-  X
+  X,
+  Target
 } from 'lucide-react';
-import { User } from '../types';
+import { User, Goals } from '../types';
 
-type SettingsTab = 'COMPANY' | 'USERS' | 'BACKUP' | 'INTEGRATIONS';
+type SettingsTab = 'COMPANY' | 'USERS' | 'BACKUP' | 'GOALS';
 
 interface SettingsProps {
   users: User[];
   setUsers: React.Dispatch<React.SetStateAction<User[]>>;
+  goals: Goals;
+  onUpdateGoals: (goals: Goals) => void;
 }
 
-export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
+export const Settings: React.FC<SettingsProps> = ({ users, setUsers, goals, onUpdateGoals }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('COMPANY');
   
+  // State for Goals Settings with fallback for migration safety
+  const [goalsForm, setGoalsForm] = useState<Goals>({
+      globalRevenue: 0,
+      productRevenue: 0,
+      serviceRevenue: 0
+  });
+
+  // Update local form when props change, handling potential legacy data
+  useEffect(() => {
+    setGoalsForm({
+        globalRevenue: goals.globalRevenue || 0,
+        productRevenue: goals.productRevenue || 0, // Fallback safe
+        serviceRevenue: goals.serviceRevenue || 0
+    });
+  }, [goals]);
+
+  const handleSaveGoals = () => {
+    onUpdateGoals(goalsForm);
+    alert('Metas atualizadas com sucesso!');
+  };
+
   // State for Company Settings
   const [companyForm, setCompanyForm] = useState({
     name: 'TechFix Assistência',
@@ -47,6 +61,17 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
     email: 'contato@techfix.com.br',
     logo: ''
   });
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCompanyForm(prev => ({ ...prev, logo: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -96,6 +121,7 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
   const handleSaveUser = () => {
       // Validação final antes de salvar
       if (!userForm.name?.trim() || !userForm.username?.trim() || !userForm.password?.trim()) {
+          alert("Preencha Nome, Usuário e Senha.");
           return;
       }
 
@@ -132,6 +158,73 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
       }
   };
 
+  const renderGoalsSettings = () => (
+    <div className="space-y-6 animate-fade-in max-w-4xl">
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
+           <Target className="text-red-600" size={20} /> Metas Mensais da Loja
+        </h3>
+        <p className="text-gray-500 mb-6">Defina os objetivos mensais de faturamento para que o sistema calcule o desempenho da equipe no Dashboard.</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-blue-50 p-6 rounded-xl border border-blue-100">
+                <label className="block text-sm font-bold text-blue-800 mb-2">Meta de Faturamento Global (R$)</label>
+                <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500 font-bold">R$</span>
+                    <input 
+                        type="number"
+                        className="w-full pl-10 pr-4 py-3 border border-blue-200 rounded-lg text-lg font-bold text-gray-800 outline-none focus:ring-2 focus:ring-blue-500"
+                        value={goalsForm.globalRevenue}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => setGoalsForm({...goalsForm, globalRevenue: parseFloat(e.target.value) || 0})}
+                    />
+                </div>
+                <p className="text-xs text-blue-600 mt-2">Soma total esperada (Vendas + Serviços).</p>
+            </div>
+
+            <div className="bg-purple-50 p-6 rounded-xl border border-purple-100">
+                <label className="block text-sm font-bold text-purple-800 mb-2">Meta de Vendas de Produtos (R$)</label>
+                <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-purple-500 font-bold">R$</span>
+                    <input 
+                        type="number"
+                        className="w-full pl-10 pr-4 py-3 border border-purple-200 rounded-lg text-lg font-bold text-gray-800 outline-none focus:ring-2 focus:ring-purple-500"
+                        value={goalsForm.productRevenue}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => setGoalsForm({...goalsForm, productRevenue: parseFloat(e.target.value) || 0})}
+                    />
+                </div>
+                <p className="text-xs text-purple-600 mt-2">Faturamento esperado com venda de acessórios e peças.</p>
+            </div>
+
+            <div className="bg-green-50 p-6 rounded-xl border border-green-100">
+                <label className="block text-sm font-bold text-green-800 mb-2">Meta de Serviços Técnicos (R$)</label>
+                <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-green-500 font-bold">R$</span>
+                    <input 
+                        type="number"
+                        className="w-full pl-10 pr-4 py-3 border border-green-200 rounded-lg text-lg font-bold text-gray-800 outline-none focus:ring-2 focus:ring-green-500"
+                        value={goalsForm.serviceRevenue}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => setGoalsForm({...goalsForm, serviceRevenue: parseFloat(e.target.value) || 0})}
+                    />
+                </div>
+                <p className="text-xs text-green-600 mt-2">Faturamento esperado com mão de obra de reparos.</p>
+            </div>
+        </div>
+
+        <div className="mt-8 flex justify-end pt-6 border-t border-gray-100">
+            <button 
+                onClick={handleSaveGoals}
+                className="bg-blue-600 text-white px-8 py-3 rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg shadow-blue-900/20 font-bold"
+            >
+                <Save size={20} /> Salvar Metas
+            </button>
+        </div>
+      </div>
+    </div>
+  );
+
   // Helper for rendering tabs
   const renderCompanySettings = () => (
     <div className="space-y-6 animate-fade-in max-w-4xl">
@@ -151,11 +244,17 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
                         <span className="text-xs">Logo</span>
                       </>
                   )}
-                  <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" />
+                  <input 
+                    type="file" 
+                    className="absolute inset-0 opacity-0 cursor-pointer" 
+                    onChange={handleLogoUpload}
+                    accept="image/*"
+                  />
               </div>
               <div>
                   <h4 className="font-medium text-gray-700">Logotipo da Empresa</h4>
                   <p className="text-sm text-gray-500">Recomendado: PNG ou JPG, fundo transparente.</p>
+                  <p className="text-xs text-blue-600 mt-1">Clique na caixa para fazer upload.</p>
               </div>
            </div>
 
@@ -414,6 +513,9 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
             <button onClick={() => setActiveTab('COMPANY')} className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'COMPANY' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
                 <Building size={18} /> Dados da Empresa
             </button>
+            <button onClick={() => setActiveTab('GOALS')} className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'GOALS' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
+                <Target size={18} /> Metas
+            </button>
             <button onClick={() => setActiveTab('USERS')} className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'USERS' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
                 <Users size={18} /> Usuários e Permissões
             </button>
@@ -424,6 +526,7 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
 
         <div className="flex-1">
             {activeTab === 'COMPANY' && renderCompanySettings()}
+            {activeTab === 'GOALS' && renderGoalsSettings()}
             {activeTab === 'USERS' && renderUsers()}
             {activeTab === 'BACKUP' && (
                 <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center">
