@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Search, Plus, User, Phone, Mail, MapPin, Smartphone, FileText, Edit, Trash2, X, Save, Users, CreditCard, Lock, Unlock, ShoppingBag, Wrench, Clock, ChevronRight } from 'lucide-react';
 import { Customer } from '../types';
 
+// ... (Interface, Mock Data, etc. remain unchanged)
+
 interface CustomersProps {
     customers: Customer[];
     onSave: (customer: Customer) => void;
@@ -216,11 +218,11 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
 
       {/* Modern Modal */}
       {isModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-scale-in">
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-0 md:p-4">
+              <div className="bg-white w-full h-full md:h-auto md:max-h-[90vh] md:max-w-4xl flex flex-col md:rounded-xl shadow-2xl animate-scale-in">
                   
                   {/* Modal Header */}
-                  <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl">
+                  <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 md:rounded-t-xl flex-shrink-0">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
                             <User size={20} />
@@ -236,22 +238,22 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
                   </div>
 
                   {/* Tabs Navigation */}
-                  <div className="flex px-6 border-b border-gray-100 bg-white">
+                  <div className="flex px-6 border-b border-gray-100 bg-white flex-shrink-0 overflow-x-auto">
                       <button 
                         onClick={() => setActiveTab('DETAILS')}
-                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'DETAILS' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'DETAILS' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                       >
                           <User size={16} /> Dados Cadastrais
                       </button>
                       <button 
                         onClick={() => setActiveTab('SALES')}
-                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'SALES' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'SALES' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                       >
                           <ShoppingBag size={16} /> Histórico de Compras
                       </button>
                       <button 
                         onClick={() => setActiveTab('SERVICES')}
-                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'SERVICES' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'SERVICES' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                       >
                           <Wrench size={16} /> Histórico de Serviços
                       </button>
@@ -515,7 +517,7 @@ export const Customers: React.FC<CustomersProps> = ({ customers, onSave, onDelet
                   </div>
 
                   {/* Footer Actions */}
-                  <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 rounded-b-xl">
+                  <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 md:rounded-b-xl flex-shrink-0">
                       <button 
                         onClick={() => setIsModalOpen(false)} 
                         className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg border border-gray-300 bg-white transition-colors"

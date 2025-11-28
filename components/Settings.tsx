@@ -132,13 +132,6 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
       }
   };
 
-  // Validar formulário (Check robusto)
-  const isUserFormValid = Boolean(
-      userForm.name?.trim() && 
-      userForm.username?.trim() && 
-      userForm.password?.trim()
-  );
-
   // Helper for rendering tabs
   const renderCompanySettings = () => (
     <div className="space-y-6 animate-fade-in max-w-4xl">
@@ -324,121 +317,83 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
 
        {/* User Modal */}
        {isUserModalOpen && (
-           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-               <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col animate-scale-in">
-                   <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 rounded-t-xl flex justify-between items-center">
+           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-0 md:p-4">
+               <div className="bg-white w-full h-full md:h-auto md:max-h-[90vh] md:max-w-lg flex flex-col md:rounded-xl shadow-2xl animate-scale-in">
+                   <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 md:rounded-t-xl flex justify-between items-center flex-shrink-0">
                        <h3 className="text-lg font-bold text-gray-800">{editingUser ? 'Editar Usuário' : 'Novo Usuário'}</h3>
-                       <button onClick={() => setIsUserModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={24}/></button>
+                       <button onClick={() => setIsUserModalOpen(false)}><X size={20} className="text-gray-400" /></button>
                    </div>
-                   
-                   <div className="p-6 overflow-y-auto custom-scrollbar">
-                       <div className="space-y-4">
-                           <div>
-                               <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo *</label>
-                               <input 
-                                    type="text" 
-                                    placeholder="Ex: João da Silva" 
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 outline-none focus:border-blue-500" 
-                                    value={userForm.name || ''}
-                                    onChange={(e) => setUserForm({...userForm, name: e.target.value})}
-                               />
-                           </div>
-
-                           <div className="grid grid-cols-2 gap-4">
-                               <div>
-                                   <label className="block text-sm font-medium text-gray-700 mb-1">Usuário de Acesso *</label>
-                                   <input 
-                                        type="text" 
-                                        placeholder="Ex: joao.silva" 
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 outline-none focus:border-blue-500" 
-                                        value={userForm.username || ''}
-                                        onChange={(e) => setUserForm({...userForm, username: e.target.value})}
-                                   />
-                               </div>
-                               <div>
-                                   <label className="block text-sm font-medium text-gray-700 mb-1">Senha *</label>
-                                   <input 
-                                        type="text" 
-                                        placeholder="••••••" 
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 outline-none focus:border-blue-500" 
-                                        value={userForm.password || ''}
-                                        onChange={(e) => setUserForm({...userForm, password: e.target.value})}
-                                   />
-                               </div>
-                           </div>
-                           
-                           <div>
+                   <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                                <input type="text" className="w-full px-3 py-2 border rounded-lg bg-white text-gray-900" 
+                                    value={userForm.name} onChange={e => setUserForm({...userForm, name: e.target.value})} placeholder="Ex: João Silva" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Usuário (Login)</label>
+                                    <input type="text" className="w-full px-3 py-2 border rounded-lg bg-white text-gray-900" 
+                                        value={userForm.username} onChange={e => setUserForm({...userForm, username: e.target.value})} placeholder="joao.silva" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                                    <input type="password" className="w-full px-3 py-2 border rounded-lg bg-white text-gray-900" 
+                                        value={userForm.password} onChange={e => setUserForm({...userForm, password: e.target.value})} placeholder="******" />
+                                </div>
+                            </div>
+                            <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Email (Opcional)</label>
-                                <input 
-                                        type="email" 
-                                        placeholder="email@empresa.com" 
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 outline-none focus:border-blue-500" 
-                                        value={userForm.email || ''}
-                                        onChange={(e) => setUserForm({...userForm, email: e.target.value})}
-                                />
-                           </div>
-                           
-                           <div>
-                               <label className="block text-sm font-bold text-gray-700 mb-2">Permissões de Acesso</label>
-                               <div className="grid grid-cols-2 gap-3">
-                                    <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={userForm.permissions?.financial || false} 
-                                            onChange={(e) => setUserForm({...userForm, permissions: {...(userForm.permissions || {}), financial: e.target.checked} as any})}
-                                        /> Financeiro
+                                <input type="email" className="w-full px-3 py-2 border rounded-lg bg-white text-gray-900" 
+                                    value={userForm.email} onChange={e => setUserForm({...userForm, email: e.target.value})} />
+                            </div>
+                            
+                            <div className="pt-4 border-t border-gray-100">
+                                <label className="block text-sm font-bold text-gray-800 mb-3">Permissões de Acesso</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <label className="flex items-center gap-2 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="checkbox" checked={userForm.permissions?.admin} 
+                                            onChange={e => setUserForm({...userForm, permissions: {...userForm.permissions!, admin: e.target.checked}})} 
+                                            className="rounded text-blue-600 focus:ring-blue-500" />
+                                        <span className="text-sm">Administrador Total</span>
                                     </label>
-                                    <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={userForm.permissions?.sales || false} 
-                                            onChange={(e) => setUserForm({...userForm, permissions: {...(userForm.permissions || {}), sales: e.target.checked} as any})}
-                                        /> Vendas
+                                    <label className="flex items-center gap-2 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="checkbox" checked={userForm.permissions?.financial} 
+                                            onChange={e => setUserForm({...userForm, permissions: {...userForm.permissions!, financial: e.target.checked}})} 
+                                            className="rounded text-blue-600 focus:ring-blue-500" />
+                                        <span className="text-sm">Financeiro</span>
                                     </label>
-                                    <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={userForm.permissions?.stock || false} 
-                                            onChange={(e) => setUserForm({...userForm, permissions: {...(userForm.permissions || {}), stock: e.target.checked} as any})}
-                                        /> Estoque
+                                    <label className="flex items-center gap-2 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="checkbox" checked={userForm.permissions?.sales} 
+                                            onChange={e => setUserForm({...userForm, permissions: {...userForm.permissions!, sales: e.target.checked}})} 
+                                            className="rounded text-blue-600 focus:ring-blue-500" />
+                                        <span className="text-sm">Vendas</span>
                                     </label>
-                                    <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={userForm.permissions?.support || false} 
-                                            onChange={(e) => setUserForm({...userForm, permissions: {...(userForm.permissions || {}), support: e.target.checked} as any})}
-                                        /> Suporte
+                                    <label className="flex items-center gap-2 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="checkbox" checked={userForm.permissions?.stock} 
+                                            onChange={e => setUserForm({...userForm, permissions: {...userForm.permissions!, stock: e.target.checked}})} 
+                                            className="rounded text-blue-600 focus:ring-blue-500" />
+                                        <span className="text-sm">Estoque</span>
                                     </label>
-                                    <label className="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={userForm.permissions?.settings || false} 
-                                            onChange={(e) => setUserForm({...userForm, permissions: {...(userForm.permissions || {}), settings: e.target.checked} as any})}
-                                        /> Configurações
+                                    <label className="flex items-center gap-2 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="checkbox" checked={userForm.permissions?.support} 
+                                            onChange={e => setUserForm({...userForm, permissions: {...userForm.permissions!, support: e.target.checked}})} 
+                                            className="rounded text-blue-600 focus:ring-blue-500" />
+                                        <span className="text-sm">OS / Suporte</span>
                                     </label>
-                                    <label className="flex items-center gap-2 p-2 border rounded cursor-pointer bg-red-50 border-red-100 text-red-800">
-                                        <input 
-                                            type="checkbox" 
-                                            checked={userForm.permissions?.admin || false} 
-                                            onChange={(e) => setUserForm({...userForm, permissions: {...(userForm.permissions || {}), admin: e.target.checked} as any})}
-                                        /> Administrador
+                                    <label className="flex items-center gap-2 p-2 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="checkbox" checked={userForm.permissions?.settings} 
+                                            onChange={e => setUserForm({...userForm, permissions: {...userForm.permissions!, settings: e.target.checked}})} 
+                                            className="rounded text-blue-600 focus:ring-blue-500" />
+                                        <span className="text-sm">Configurações</span>
                                     </label>
-                               </div>
-                           </div>
-                       </div>
+                                </div>
+                            </div>
+                        </div>
                    </div>
-
-                   <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-end gap-3">
-                       <button onClick={() => setIsUserModalOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
-                       <button 
-                            onClick={handleSaveUser}
-                            disabled={!isUserFormValid}
-                            className={`px-4 py-2 rounded-lg text-white transition-colors shadow-sm flex items-center gap-2 font-medium
-                                ${isUserFormValid ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-300 cursor-not-allowed'}
-                            `}
-                        >
-                            <Save size={18} /> Salvar
-                        </button>
+                   <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 md:rounded-b-xl flex-shrink-0">
+                       <button onClick={() => setIsUserModalOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg">Cancelar</button>
+                       <button onClick={handleSaveUser} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Salvar Usuário</button>
                    </div>
                </div>
            </div>
@@ -446,220 +401,46 @@ export const Settings: React.FC<SettingsProps> = ({ users, setUsers }) => {
     </div>
   );
 
-  const renderBackup = () => (
-    <div className="space-y-6 animate-fade-in max-w-4xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* Data Management */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <Database size={20} className="text-purple-600" /> Dados e Backup
-                </h3>
-                <div className="space-y-3">
-                    <button className="w-full flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors group">
-                        <div className="flex items-center gap-3">
-                            <div className="bg-blue-100 p-2 rounded text-blue-600"><Save size={18} /></div>
-                            <span className="font-medium text-gray-700">Fazer Backup Manual</span>
-                        </div>
-                        <span className="text-xs text-gray-400 group-hover:text-blue-600">Iniciar</span>
-                    </button>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                        <button className="flex items-center justify-center gap-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium text-gray-600">
-                            <Download size={16} /> Exportar CSV
-                        </button>
-                        <button className="flex items-center justify-center gap-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium text-gray-600">
-                            <FileJson size={16} /> Exportar JSON
-                        </button>
-                    </div>
-
-                    <button className="w-full flex items-center justify-center gap-2 p-3 border border-dashed border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm text-gray-500 mt-2">
-                         <Upload size={16} /> Importar Dados
-                    </button>
-
-                    <button className="w-full flex items-center justify-center gap-2 p-3 bg-red-50 border border-red-100 rounded-lg hover:bg-red-100 transition-colors text-sm font-bold text-red-600 mt-4">
-                         <RefreshCw size={16} /> Resetar Configurações de Fábrica
-                    </button>
-                </div>
-            </div>
-
-            {/* Security */}
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <Shield size={20} className="text-green-600" /> Segurança
-                </h3>
-                
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
-                        <div className="flex items-center gap-3">
-                             <div className="bg-white p-2 rounded shadow-sm text-gray-600"><Smartphone size={18}/></div>
-                             <div>
-                                 <p className="font-medium text-sm text-gray-800">Verificação em Duas Etapas</p>
-                                 <p className="text-xs text-gray-500">Proteção extra no login</p>
-                             </div>
-                        </div>
-                        <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                            <input type="checkbox" name="toggle" id="toggle" className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-gray-300"/>
-                            <label htmlFor="toggle" className="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer"></label>
-                        </div>
-                    </div>
-
-                    <button className="w-full flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                        <div className="flex items-center gap-3">
-                            <div className="bg-orange-100 p-2 rounded text-orange-600"><Key size={18} /></div>
-                            <span className="font-medium text-gray-700">Alterar Senha do Usuário</span>
-                        </div>
-                    </button>
-
-                    <div className="mt-6">
-                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Sessões Ativas</h4>
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between text-sm">
-                                <div className="flex items-center gap-2 text-gray-600">
-                                    <Globe size={14} /> Chrome - Windows (Atual)
-                                </div>
-                                <span className="text-xs text-green-600 font-medium">Online</span>
-                            </div>
-                            <div className="flex items-center justify-between text-sm">
-                                <div className="flex items-center gap-2 text-gray-600">
-                                    <Smartphone size={14} /> App Mobile - iPhone 13
-                                </div>
-                                <span className="text-xs text-gray-400">Há 2h</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-  );
-
-  const renderIntegrations = () => (
-    <div className="space-y-6 animate-fade-in max-w-3xl">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                <Link size={20} className="text-indigo-600" /> Integrações de Sistema
-            </h3>
-
-            <div className="space-y-6">
-                
-                {/* API Key */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Chave de API (API Key)</label>
-                    <div className="flex gap-2">
-                        <input 
-                            type="text" 
-                            readOnly 
-                            value="sk_live_51M...x89s" 
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 font-mono text-sm"
-                        />
-                        <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-600 text-sm font-medium">
-                            Gerar Nova
-                        </button>
-                    </div>
-                </div>
-
-                {/* Webhooks */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Webhooks (URL de Eventos)</label>
-                    <input 
-                        type="url" 
-                        placeholder="https://seu-sistema.com/api/webhook" 
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white text-gray-900"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Eventos: venda.criada, os.atualizada, cliente.novo</p>
-                </div>
-
-                <div className="border-t border-gray-100 my-4"></div>
-
-                {/* External Services */}
-                <div className="grid grid-cols-1 gap-4">
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                        <div className="flex items-center gap-3">
-                             <div className="bg-green-100 p-2 rounded-lg text-green-600"><Smartphone size={24} /></div>
-                             <div>
-                                 <h4 className="font-bold text-gray-800">WhatsApp API</h4>
-                                 <p className="text-xs text-gray-500">Envio automático de mensagens</p>
-                             </div>
-                        </div>
-                        <button className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded text-sm font-medium hover:bg-gray-200">Configurar</button>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                        <div className="flex items-center gap-3">
-                             <div className="bg-blue-100 p-2 rounded-lg text-blue-600"><Database size={24} /></div>
-                             <div>
-                                 <h4 className="font-bold text-gray-800">ERP Externo</h4>
-                                 <p className="text-xs text-gray-500">Sincronização Fiscal/NFe</p>
-                             </div>
-                        </div>
-                        <button className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded text-sm font-medium hover:bg-gray-200">Conectar</button>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                        <div className="flex items-center gap-3">
-                             <div className="bg-yellow-100 p-2 rounded-lg text-yellow-600"><Mail size={24} /></div>
-                             <div>
-                                 <h4 className="font-bold text-gray-800">SMTP Email</h4>
-                                 <p className="text-xs text-gray-500">Servidor de disparo de emails</p>
-                             </div>
-                        </div>
-                        <button className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded text-sm font-medium">Ativo</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-  );
-
   return (
-    <div className="space-y-6 h-full flex flex-col">
-       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">Configurações</h2>
-          <p className="text-gray-500">Gerencie preferências, usuários e sistema.</p>
+    <div className="space-y-6 animate-fade-in">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+            <h2 className="text-2xl font-bold text-gray-800">Configurações</h2>
+            <p className="text-gray-500">Ajustes do sistema, usuários e dados da empresa.</p>
+            </div>
         </div>
-      </div>
 
-      {/* Tabs */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-1 flex overflow-x-auto">
-        <button
-            onClick={() => setActiveTab('COMPANY')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap
-                ${activeTab === 'COMPANY' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}
-        >
-            <Building size={18} /> Empresa
-        </button>
-        <button
-            onClick={() => setActiveTab('USERS')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap
-                ${activeTab === 'USERS' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}
-        >
-            <Users size={18} /> Usuários
-        </button>
-        <button
-            onClick={() => setActiveTab('BACKUP')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap
-                ${activeTab === 'BACKUP' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}
-        >
-            <Shield size={18} /> Backup & Segurança
-        </button>
-        <button
-            onClick={() => setActiveTab('INTEGRATIONS')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap
-                ${activeTab === 'INTEGRATIONS' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}
-        >
-            <Link size={18} /> Integrações
-        </button>
-      </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-1 flex overflow-x-auto">
+            <button onClick={() => setActiveTab('COMPANY')} className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'COMPANY' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
+                <Building size={18} /> Dados da Empresa
+            </button>
+            <button onClick={() => setActiveTab('USERS')} className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'USERS' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
+                <Users size={18} /> Usuários e Permissões
+            </button>
+            <button onClick={() => setActiveTab('BACKUP')} className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'BACKUP' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
+                <Database size={18} /> Backup e Dados
+            </button>
+        </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto pb-6 custom-scrollbar">
-          {activeTab === 'COMPANY' && renderCompanySettings()}
-          {activeTab === 'USERS' && renderUsers()}
-          {activeTab === 'BACKUP' && renderBackup()}
-          {activeTab === 'INTEGRATIONS' && renderIntegrations()}
-      </div>
+        <div className="flex-1">
+            {activeTab === 'COMPANY' && renderCompanySettings()}
+            {activeTab === 'USERS' && renderUsers()}
+            {activeTab === 'BACKUP' && (
+                <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center">
+                    <Database size={48} className="mx-auto text-blue-200 mb-4" />
+                    <h3 className="text-lg font-bold text-gray-800 mb-2">Backup de Dados</h3>
+                    <p className="text-gray-500 mb-6 max-w-md mx-auto">Faça o download de todos os seus dados (Clientes, Vendas, Estoque) em formato JSON ou Planilha para segurança.</p>
+                    <div className="flex justify-center gap-4">
+                        <button className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium">
+                            <FileJson size={20} /> Exportar JSON
+                        </button>
+                        <button className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium shadow-lg shadow-green-900/20">
+                            <FileSpreadsheet size={20} /> Exportar Excel
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
     </div>
   );
 };

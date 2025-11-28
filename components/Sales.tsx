@@ -422,10 +422,11 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
       return 'bg-gray-100 text-gray-800';
   };
 
-  // --- VIEWS ---
+  // ... (SalesMenu, POSView, DetailedView, PreOrderView remain the same structure/logic, just render output)
 
   const SalesMenu = () => (
      <div className="flex flex-col h-full animate-fade-in p-6 overflow-y-auto">
+      {/* ... Content of SalesMenu ... */}
       <div className="flex items-center justify-between mb-6 max-w-5xl mx-auto w-full">
         <div>
            <h2 className="text-2xl font-bold text-gray-800">Vendas</h2>
@@ -504,7 +505,8 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
   );
 
   const POSView = () => (
-    <div className="flex h-[calc(100vh-140px)] gap-4 animate-fade-in">
+    // ... same as before
+    <div className="flex flex-col md:flex-row h-[calc(100vh-140px)] gap-4 animate-fade-in">
       {/* Left: Product Selection */}
       <div className="flex-1 flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-4 border-b border-gray-100 flex gap-3 items-center">
@@ -547,7 +549,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
       </div>
 
       {/* Right: Cart */}
-      <div className="w-96 flex flex-col gap-4">
+      <div className="w-full md:w-96 flex flex-col gap-4">
         {/* Customer Quick Search */}
         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 shrink-0">
            <div className="flex items-center gap-2 mb-2">
@@ -637,7 +639,9 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
   );
 
   const DetailedView = () => (
+    // ... same as before
     <div className="h-[calc(100vh-140px)] flex flex-col animate-fade-in bg-gray-50 overflow-y-auto custom-scrollbar">
+        {/* ... content of DetailedView ... */}
         {/* Header Bar */}
         <div className="bg-white px-6 py-4 border-b border-gray-200 flex justify-between items-center shadow-sm sticky top-0 z-20">
              <div className="flex items-center gap-4">
@@ -660,6 +664,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
              
              {/* 1. CUSTOMER DATA FORM */}
              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                  {/* ... form content ... */}
                   <div className="flex justify-between items-start mb-4 border-b border-gray-100 pb-2">
                       <h3 className="font-bold text-gray-700 flex items-center gap-2">
                           <User size={18} className="text-blue-500" /> Dados do Cliente
@@ -856,13 +861,14 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
   );
 
   const PreOrderView = () => {
-    // Calculated field
+    // ... same as before
     const total = parseFloat(preOrderForm.totalValue) || 0;
     const entry = parseFloat(preOrderForm.entryValue) || 0;
     const remaining = Math.max(0, total - entry);
 
     return (
         <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden animate-fade-in h-[calc(100vh-140px)] flex flex-col mt-4">
+            {/* ... Content of PreOrderView ... */}
             <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50">
                 <div className="flex items-center gap-3">
                     <button onClick={() => setMode('MENU')} className="p-2 hover:bg-white rounded-full border border-transparent hover:border-gray-200 transition-all text-gray-500">
@@ -1072,29 +1078,29 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
       {mode === 'DETAILED' && <DetailedView />}
       {mode === 'PREORDER' && <PreOrderView />}
 
-      {/* PAYMENT MODAL and VIEW MODAL components remain unchanged */}
+      {/* PAYMENT MODAL */}
       {isPaymentModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 z-[70] flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-scale-in">
-             <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl flex-shrink-0">
+        <div className="fixed inset-0 bg-black bg-opacity-60 z-[70] flex items-center justify-center p-0 md:p-4">
+          <div className="bg-white w-full h-full md:h-auto md:max-h-[90vh] md:max-w-2xl flex flex-col md:rounded-xl shadow-2xl animate-scale-in">
+             <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50 md:rounded-t-xl flex-shrink-0">
                <h3 className="text-xl font-bold text-gray-800">Pagamento</h3>
                <button onClick={() => setIsPaymentModalOpen(false)}><X size={24} className="text-gray-400" /></button>
              </div>
-             <div className="p-6 overflow-y-auto custom-scrollbar">
+             <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
                 <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100 text-center mb-6">
                    <p className="text-gray-500 text-sm mb-1 uppercase tracking-wide">Valor Total a Pagar</p>
                    <p className="text-4xl font-bold text-blue-700">R$ {cartTotal.toFixed(2)}</p>
                 </div>
                 <div>
                    <label className="block text-sm font-bold text-gray-700 mb-2">Forma de Pagamento</label>
-                   <div className="grid grid-cols-3 gap-3">
+                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                       {['Dinheiro', 'Pix', 'Crédito', 'Débito', 'Crediário', 'Outros'].map(m => (
                           <button key={m} onClick={() => setPaymentMethod(m as any)} className={`py-3 border rounded-lg font-medium ${paymentMethod === m ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200'}`}>{m}</button>
                       ))}
                    </div>
                 </div>
              </div>
-             <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 rounded-b-xl flex-shrink-0">
+             <div className="p-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 md:rounded-b-xl flex-shrink-0">
                 <button onClick={() => setIsPaymentModalOpen(false)} className="px-6 py-3 text-gray-600 hover:bg-gray-200 rounded-xl">Cancelar</button>
                 <button onClick={handleFinalizeSale} className="px-8 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 flex items-center gap-2"><Check size={20} /> Confirmar</button>
              </div>
@@ -1102,10 +1108,11 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
         </div>
       )}
       
+      {/* VIEW SALE MODAL */}
       {isViewModalOpen && selectedSale && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] animate-scale-in">
-             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl print:hidden">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-0 md:p-4">
+          <div className="bg-white w-full h-full md:h-auto md:max-h-[90vh] md:max-w-2xl flex flex-col md:rounded-xl shadow-2xl animate-scale-in">
+             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 md:rounded-t-xl print:hidden flex-shrink-0">
                 <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                   <FileText className="text-blue-600" />
                   Detalhes da Venda #{selectedSale.id}
@@ -1113,7 +1120,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
                 <button onClick={() => setIsViewModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={24}/></button>
              </div>
              <div 
-               className={`p-6 overflow-y-auto bg-white flex-1 ${printMode === 'THERMAL' ? 'print-thermal' : ''}`} 
+               className={`p-6 overflow-y-auto bg-white flex-1 custom-scrollbar ${printMode === 'THERMAL' ? 'print-thermal' : ''}`} 
                id="printable-area"
              >
                 <div className="mb-6 text-center border-b border-gray-100 pb-4">
@@ -1186,7 +1193,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
                     <p>Documento sem valor fiscal.</p>
                 </div>
              </div>
-             <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-xl flex justify-end gap-2 print:hidden">
+             <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 md:rounded-b-xl flex justify-end gap-2 print:hidden flex-shrink-0">
                  <button className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-sm">
                      <Share2 size={18} />
                      <span className="hidden sm:inline">WhatsApp</span>
@@ -1204,17 +1211,18 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
         </div>
       )}
 
+      {/* REFUND MODAL */}
       {isRefundModalOpen && saleToRefund && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 z-[80] flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md animate-scale-in">
-             <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-red-50 rounded-t-xl">
+        <div className="fixed inset-0 bg-black bg-opacity-60 z-[80] flex items-center justify-center p-0 md:p-4">
+          <div className="bg-white w-full h-full md:h-auto md:max-h-[90vh] md:max-w-md md:rounded-xl shadow-2xl flex flex-col animate-scale-in">
+             <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-red-50 md:rounded-t-xl flex-shrink-0">
                <h3 className="text-lg font-bold text-red-800 flex items-center gap-2">
                  <RotateCcw size={20} />
                  Realizar Estorno
                </h3>
                <button onClick={() => setIsRefundModalOpen(false)}><X size={20} className="text-gray-400 hover:text-gray-600" /></button>
              </div>
-             <div className="p-6">
+             <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
                 <p className="text-gray-600 mb-6 text-sm">
                     Você está prestes a estornar a venda <strong>#{saleToRefund.id}</strong> no valor de <strong>R$ {saleToRefund.total.toFixed(2)}</strong>. 
                     Selecione como deseja proceder com a devolução:
@@ -1236,7 +1244,7 @@ export const Sales: React.FC<SalesProps> = ({ customers }) => {
                     </button>
                 </div>
              </div>
-             <div className="p-4 bg-gray-50 border-t border-gray-100 rounded-b-xl flex justify-end">
+             <div className="p-4 bg-gray-50 border-t border-gray-100 md:rounded-b-xl flex justify-end flex-shrink-0">
                  <button onClick={() => setIsRefundModalOpen(false)} className="px-4 py-2 text-gray-500 hover:text-gray-700 font-medium text-sm">Cancelar</button>
              </div>
           </div>

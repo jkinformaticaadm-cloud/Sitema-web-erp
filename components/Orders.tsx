@@ -447,9 +447,9 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
 
       {/* View/Print Modal */}
       {isViewModalOpen && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh] animate-scale-in">
-             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl print:hidden">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center p-0 md:p-4">
+          <div className="bg-white w-full h-full md:h-auto md:max-h-[90vh] md:max-w-3xl flex flex-col md:rounded-xl shadow-2xl animate-scale-in">
+             <div className="px-4 md:px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 md:rounded-t-xl print:hidden flex-shrink-0">
                 <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                   <FileCheck className="text-blue-600" />
                   Visualizar OS #{selectedOrder.id}
@@ -458,7 +458,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
              </div>
              
              <div 
-               className={`p-8 overflow-y-auto bg-white flex-1 ${printMode === 'THERMAL' ? 'print-thermal' : ''}`} 
+               className={`p-4 md:p-8 overflow-y-auto bg-white flex-1 ${printMode === 'THERMAL' ? 'print-thermal' : ''}`} 
                id="printable-area"
              >
                 <div className="border-b-2 border-gray-800 pb-6 mb-6">
@@ -478,7 +478,7 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-8 mb-8">
+                <div className="grid grid-cols-2 gap-4 md:gap-8 mb-8">
                     <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
                         <h3 className="font-bold text-gray-800 mb-2 border-b border-gray-200 pb-1">Cliente</h3>
                         <p className="text-gray-700"><span className="font-medium">Nome:</span> {selectedOrder.customerName}</p>
@@ -502,38 +502,40 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
 
                 <div className="mb-8">
                     <h3 className="font-bold text-gray-800 mb-2">Serviços e Peças</h3>
-                    <table className="w-full text-left border border-gray-200 rounded-lg overflow-hidden">
-                        <thead className="bg-gray-100 text-gray-600 text-sm uppercase">
-                            <tr>
-                                <th className="px-4 py-2">Descrição</th>
-                                <th className="px-4 py-2 text-right">Qtd</th>
-                                <th className="px-4 py-2 text-right">Unitário</th>
-                                <th className="px-4 py-2 text-right">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                           {selectedOrder.items && selectedOrder.items.length > 0 ? (
-                             selectedOrder.items.map(item => (
-                               <tr key={item.id}>
-                                  <td className="px-4 py-2">{item.name} <span className="text-xs text-gray-400">({item.type === 'SERVICE' ? 'Serviço' : 'Produto'})</span></td>
-                                  <td className="px-4 py-2 text-right">1</td>
-                                  <td className="px-4 py-2 text-right">R$ {item.price.toFixed(2)}</td>
-                                  <td className="px-4 py-2 text-right">R$ {item.price.toFixed(2)}</td>
-                               </tr>
-                             ))
-                           ) : (
-                             <tr>
-                               <td colSpan={4} className="px-4 py-4 text-center text-gray-500 italic">Nenhum item adicionado ainda.</td>
-                             </tr>
-                           )}
-                        </tbody>
-                        <tfoot className="bg-gray-50 font-bold text-gray-900">
-                             <tr>
-                                <td colSpan={3} className="px-4 py-3 text-right">TOTAL</td>
-                                <td className="px-4 py-3 text-right text-lg">R$ {selectedOrder.total.toFixed(2)}</td>
-                            </tr>
-                        </tfoot>
-                    </table>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border border-gray-200 rounded-lg overflow-hidden min-w-[500px]">
+                          <thead className="bg-gray-100 text-gray-600 text-sm uppercase">
+                              <tr>
+                                  <th className="px-4 py-2">Descrição</th>
+                                  <th className="px-4 py-2 text-right">Qtd</th>
+                                  <th className="px-4 py-2 text-right">Unitário</th>
+                                  <th className="px-4 py-2 text-right">Total</th>
+                              </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100">
+                            {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                              selectedOrder.items.map(item => (
+                                <tr key={item.id}>
+                                    <td className="px-4 py-2">{item.name} <span className="text-xs text-gray-400">({item.type === 'SERVICE' ? 'Serviço' : 'Produto'})</span></td>
+                                    <td className="px-4 py-2 text-right">1</td>
+                                    <td className="px-4 py-2 text-right">R$ {item.price.toFixed(2)}</td>
+                                    <td className="px-4 py-2 text-right">R$ {item.price.toFixed(2)}</td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={4} className="px-4 py-4 text-center text-gray-500 italic">Nenhum item adicionado ainda.</td>
+                              </tr>
+                            )}
+                          </tbody>
+                          <tfoot className="bg-gray-50 font-bold text-gray-900">
+                              <tr>
+                                  <td colSpan={3} className="px-4 py-3 text-right">TOTAL</td>
+                                  <td className="px-4 py-3 text-right text-lg">R$ {selectedOrder.total.toFixed(2)}</td>
+                              </tr>
+                          </tfoot>
+                      </table>
+                    </div>
                 </div>
 
                 <div className="mt-12 pt-6 border-t border-gray-200 text-center">
@@ -541,32 +543,39 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers }) =
                         Garantia de 90 dias para peças substituídas e mão de obra, não cobrindo danos causados por mau uso, líquidos ou quedas.
                         A não retirada do aparelho em até 90 dias implicará na venda do mesmo para custear despesas.
                     </p>
-                    <div className="flex justify-between items-end mt-12 px-12">
-                         <div className="text-center w-64 border-t border-gray-400 pt-2">
+                    <div className="flex flex-col sm:flex-row justify-between items-end mt-12 px-0 sm:px-12 gap-8">
+                         <div className="text-center w-full sm:w-64 border-t border-gray-400 pt-2">
                              <p className="text-sm font-medium">Assinatura do Técnico</p>
                          </div>
-                         <div className="text-center w-64 border-t border-gray-400 pt-2">
+                         <div className="text-center w-full sm:w-64 border-t border-gray-400 pt-2">
                              <p className="text-sm font-medium">Assinatura do Cliente</p>
                          </div>
                     </div>
                 </div>
              </div>
 
-             <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-xl flex justify-between items-center print:hidden">
-                 <div className="flex gap-2">
-                     <button onClick={handleWhatsApp} className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-sm">
+             <div className="px-4 md:px-6 py-4 bg-gray-50 border-t border-gray-100 md:rounded-b-xl flex flex-col md:flex-row justify-between items-center gap-4 print:hidden flex-shrink-0">
+                 <div className="flex gap-2 w-full md:w-auto">
+                     <button onClick={handleWhatsApp} className="flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-sm w-full md:w-auto">
                          <Share2 size={18} />
                          <span>WhatsApp (PDF)</span>
                      </button>
                  </div>
-                 <div className="flex gap-2">
-                    <button onClick={() => handlePrint('THERMAL')} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                        <Printer size={18} />
-                        <span>Imprimir Térmica</span>
+                 <div className="flex gap-2 w-full md:w-auto justify-end">
+                    <button 
+                        onClick={() => setIsViewModalOpen(false)}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                        <X size={18} />
+                        <span>Fechar</span>
                     </button>
-                    <button onClick={() => handlePrint('A4')} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-900/20">
+                    <button onClick={() => handlePrint('THERMAL')} className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
                         <Printer size={18} />
-                        <span>Imprimir A4</span>
+                        <span className="hidden sm:inline">Térmica</span>
+                    </button>
+                    <button onClick={() => handlePrint('A4')} className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-blue-900/20">
+                        <Printer size={18} />
+                        <span className="hidden sm:inline">A4</span>
                     </button>
                  </div>
              </div>

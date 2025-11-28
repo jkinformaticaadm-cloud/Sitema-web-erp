@@ -24,6 +24,8 @@ import {
 } from 'lucide-react';
 import { CardMachine } from '../types';
 
+// ... (Types and Initial Data remain unchanged)
+
 type FinancialTab = 'PAYABLES' | 'RECEIVABLES' | 'DRE' | 'CASH_FLOW' | 'PAYMENT_METHODS';
 
 interface PixConfig {
@@ -184,10 +186,11 @@ export const Financial: React.FC = () => {
   const totalPaid = payables.filter(r => r.status === 'PAID').reduce((acc, r) => acc + r.amount, 0);
   const totalReceived = receivables.filter(r => r.status === 'PAID').reduce((acc, r) => acc + r.amount, 0);
 
-  // --- RENDERERS ---
+  // ... (renderPayables, renderReceivables, renderPaymentMethods remain the same structure logic) ...
 
   const renderPayables = () => (
     <div className="space-y-6 animate-fade-in">
+        {/* ... (Cards and Table) ... */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-5 rounded-xl border border-red-100 shadow-sm flex items-center justify-between">
                 <div>
@@ -257,6 +260,7 @@ export const Financial: React.FC = () => {
 
   const renderReceivables = () => (
     <div className="space-y-6 animate-fade-in">
+        {/* ... (Cards and Table) ... */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-5 rounded-xl border border-blue-100 shadow-sm flex items-center justify-between">
                 <div>
@@ -319,7 +323,7 @@ export const Financial: React.FC = () => {
 
   const renderPaymentMethods = () => (
     <div className="space-y-8 animate-fade-in max-w-5xl">
-       {/* Card Machines Section */}
+       {/* ... Content of PaymentMethods ... */}
        <div className="space-y-4">
           <div className="flex justify-between items-center">
              <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
@@ -508,15 +512,15 @@ export const Financial: React.FC = () => {
 
       {/* Record Modal */}
       {isRecordModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 animate-scale-in">
-                <div className="flex justify-between items-center mb-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-0 md:p-4">
+            <div className="bg-white w-full h-full md:h-auto md:max-w-md md:rounded-xl shadow-2xl flex flex-col animate-scale-in">
+                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center flex-shrink-0">
                     <h3 className="text-lg font-bold text-gray-800">
                         {recordForm.type === 'PAYABLE' ? 'Nova Conta a Pagar' : 'Novo Recebimento'}
                     </h3>
                     <button onClick={() => setIsRecordModalOpen(false)}><X size={24} className="text-gray-400"/></button>
                 </div>
-                <div className="space-y-4">
+                <div className="p-6 space-y-4 flex-1 overflow-y-auto custom-scrollbar">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
                         <input type="text" className="w-full px-3 py-2 border rounded-lg bg-white text-gray-900" 
@@ -548,7 +552,7 @@ export const Financial: React.FC = () => {
                         </select>
                     </div>
                 </div>
-                <div className="mt-6 flex justify-end gap-3">
+                <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 flex-shrink-0">
                     <button onClick={() => setIsRecordModalOpen(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
                     <button onClick={handleSaveRecord} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Salvar</button>
                 </div>

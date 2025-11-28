@@ -76,6 +76,7 @@ export const Cashier: React.FC<CashierProps> = ({ transactions, onAddTransaction
 
   return (
     <div className="space-y-6 animate-fade-in relative">
+      {/* ... (Header, Summary Cards, Form, List remain the same) ... */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Controle de Caixa</h2>
@@ -304,9 +305,9 @@ export const Cashier: React.FC<CashierProps> = ({ transactions, onAddTransaction
 
       {/* REPORT MODAL */}
       {isReportOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col animate-scale-in">
-             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl print:hidden">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-0 md:p-4">
+          <div className="bg-white w-full h-full md:h-full md:max-h-[90vh] md:max-w-4xl flex flex-col md:rounded-xl shadow-2xl animate-scale-in">
+             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 md:rounded-t-xl print:hidden flex-shrink-0">
                 <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                   <Printer className="text-blue-600" />
                   Relatório de Fechamento de Caixa
@@ -314,7 +315,7 @@ export const Cashier: React.FC<CashierProps> = ({ transactions, onAddTransaction
                 <button onClick={() => setIsReportOpen(false)} className="text-gray-400 hover:text-gray-600"><X size={24}/></button>
              </div>
 
-             <div className="flex-1 overflow-y-auto p-8 bg-white" id="printable-area">
+             <div className="flex-1 overflow-y-auto p-8 bg-white custom-scrollbar" id="printable-area">
                  {/* Report Header */}
                  <div className="text-center border-b-2 border-gray-800 pb-6 mb-8">
                      <h1 className="text-3xl font-bold text-gray-900 uppercase">TechFix Assistência</h1>
@@ -383,7 +384,7 @@ export const Cashier: React.FC<CashierProps> = ({ transactions, onAddTransaction
                  </div>
              </div>
 
-             <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 rounded-b-xl flex justify-end gap-3 print:hidden">
+             <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 md:rounded-b-xl flex justify-end gap-3 print:hidden flex-shrink-0">
                  <button 
                     onClick={() => setIsReportOpen(false)}
                     className="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"

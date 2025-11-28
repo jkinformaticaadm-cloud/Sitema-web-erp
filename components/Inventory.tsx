@@ -137,6 +137,7 @@ export const Inventory: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* ... (Header, Filter Bar, Stock Alerts, Table) remain the same ... */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Produtos / Serviços</h2>
@@ -307,9 +308,9 @@ export const Inventory: React.FC = () => {
 
       {/* Edit/Add Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-scale-in">
-            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl flex-shrink-0">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-0 md:p-4">
+          <div className="bg-white w-full h-full md:h-auto md:max-h-[90vh] md:max-w-2xl flex flex-col md:rounded-xl shadow-2xl animate-scale-in">
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 md:rounded-t-xl flex-shrink-0">
               <h3 className="text-lg font-bold text-gray-800">
                 {editingProduct ? 'Editar Item' : 'Novo Item'}
               </h3>
@@ -321,7 +322,7 @@ export const Inventory: React.FC = () => {
               </button>
             </div>
             
-            <div className="p-6 overflow-y-auto custom-scrollbar">
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
               
               {/* Type Selection */}
               <div className="mb-6 flex justify-center">
@@ -438,7 +439,7 @@ export const Inventory: React.FC = () => {
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 rounded-b-xl flex-shrink-0">
+            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 md:rounded-b-xl flex-shrink-0">
               <button 
                 onClick={() => setIsModalOpen(false)}
                 className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg border border-gray-300 bg-white transition-colors"

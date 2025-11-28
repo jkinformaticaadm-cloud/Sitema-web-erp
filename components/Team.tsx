@@ -84,9 +84,9 @@ export const Team: React.FC<TeamProps> = ({ users }) => {
 
       {/* Detail Modal */}
       {selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg animate-scale-in">
-            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-0 md:p-4">
+          <div className="bg-white w-full h-full md:h-auto md:max-h-[90vh] md:max-w-lg flex flex-col md:rounded-xl shadow-2xl animate-scale-in">
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 md:rounded-t-xl flex-shrink-0">
               <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                 <UserIcon className="text-blue-600" size={20} />
                 Detalhes do Colaborador
@@ -96,7 +96,7 @@ export const Team: React.FC<TeamProps> = ({ users }) => {
               </button>
             </div>
             
-            <div className="p-6">
+            <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
               <div className="text-center mb-6">
                  <div className={`w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold text-white mx-auto mb-3 ${selectedUser.role === 'Administrador' ? 'bg-purple-600' : 'bg-blue-500'}`}>
                     {selectedUser.name.charAt(0).toUpperCase()}
@@ -123,7 +123,7 @@ export const Team: React.FC<TeamProps> = ({ users }) => {
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-xl flex justify-end">
+            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 md:rounded-b-xl flex justify-end flex-shrink-0">
               <button 
                 onClick={() => setSelectedUser(null)}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
