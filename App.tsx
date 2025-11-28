@@ -9,8 +9,9 @@ import { Customers } from './components/Customers';
 import { Financial } from './components/Financial';
 import { Settings } from './components/Settings';
 import { Team } from './components/Team';
+import { Login } from './components/Login';
 import { View, CashierTransaction, Customer, User } from './types';
-import { Menu, Bell, Search } from 'lucide-react';
+import { Menu, Bell, Search, LogOut } from 'lucide-react';
 
 const INITIAL_CUSTOMERS: Customer[] = [
   { 
@@ -64,6 +65,11 @@ const INITIAL_TRANSACTIONS: CashierTransaction[] = [
 ];
 
 const App: React.FC = () => {
+  // Auth State - Inicializa verificando localStorage se o usuário já fez login anteriormente (opcional, para manter sessão)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return localStorage.getItem('rtjk_auth_session') === 'true';
+  });
+
   const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
@@ -115,6 +121,16 @@ const App: React.FC = () => {
     setTransactions(prev => [transaction, ...prev]);
   };
 
+  const handleLogin = () => {
+    localStorage.setItem('rtjk_auth_session', 'true');
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('rtjk_auth_session');
+    setIsAuthenticated(false);
+  };
+
   const renderView = () => {
     switch (currentView) {
       case View.DASHBOARD:
@@ -147,6 +163,11 @@ const App: React.FC = () => {
         );
     }
   };
+
+  // Se não estiver autenticado, exibe apenas a tela de Login
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />;
+  }
 
   return (
     <div className="flex min-h-screen bg-[#f3f4f6]">
@@ -186,9 +207,16 @@ const App: React.FC = () => {
             <div className="h-8 w-px bg-gray-200 mx-2"></div>
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-semibold text-gray-800">Loja Matriz</p>
-                <p className="text-xs text-green-600 font-medium">Online</p>
+                <p className="text-sm font-bold text-gray-800">RTJK INFOCELL</p>
+                <p className="text-xs text-green-600 font-medium">Administrador</p>
               </div>
+              <button 
+                onClick={handleLogout}
+                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors ml-2"
+                title="Sair do Sistema"
+              >
+                <LogOut size={20} />
+              </button>
             </div>
           </div>
         </header>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, Mail, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Lock, Mail, ArrowRight, ShieldCheck, Smartphone } from 'lucide-react';
 
 interface LoginProps {
   onLogin: () => void;
@@ -12,50 +12,58 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === 'admin@admin' && password === 'Rtjkcelulares2024') {
+    // Credenciais solicitadas: Admim@admin / Juca@5501
+    // Adicionando .toLowerCase() no email para evitar erros de digitação de caixa
+    if (email.toLowerCase() === 'admim@admin' && password === 'Juca@5501') {
       onLogin();
     } else {
-      setError('Credenciais inválidas. Tente novamente.');
+      setError('Credenciais inválidas. Verifique usuário e senha.');
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-blue-900 flex items-center justify-center p-4">
       <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-scale-in">
-        <div className="p-8 bg-blue-600 text-center">
-          <div className="mx-auto w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mb-4">
-            <ShieldCheck size={32} className="text-white" />
+        
+        {/* Header da Tela de Login */}
+        <div className="p-8 bg-[#0f172a] text-center border-b-4 border-blue-600">
+          <div className="mx-auto w-20 h-20 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center mb-4 border border-white/20 shadow-inner">
+            <Smartphone size={40} className="text-blue-400" />
           </div>
-          <h1 className="text-2xl font-bold text-white">TechFix ERP</h1>
-          <p className="text-blue-100 text-sm mt-1">Acesso Administrativo Seguro</p>
+          <h1 className="text-3xl font-bold text-white tracking-wide">RTJK INFOCELL</h1>
+          <p className="text-blue-200 text-sm mt-2 font-medium">Gestão Completa & Assistência Técnica</p>
         </div>
 
-        <div className="p-8">
+        <div className="p-8 bg-white">
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">E-mail de Acesso</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <label className="block text-sm font-bold text-gray-700 mb-1">Usuário de Acesso</label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
+                </div>
                 <input 
-                  type="email" 
+                  type="text" // Mudado para text para aceitar "Admim" se não for validado como email estrito
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900 transition-all"
-                  placeholder="admin@admin"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50 text-gray-900 transition-all font-medium"
+                  placeholder="Ex: Admim@admin"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <label className="block text-sm font-bold text-gray-700 mb-1">Senha</label>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
+                </div>
                 <input 
                   type="password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-900 transition-all"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50 text-gray-900 transition-all font-medium"
                   placeholder="••••••••"
                   required
                 />
@@ -63,15 +71,15 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </div>
 
             {error && (
-              <div className="p-3 rounded-lg bg-red-50 border border-red-100 text-red-600 text-sm flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                {error}
+              <div className="p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm flex items-center gap-3 animate-fade-in">
+                <ShieldCheck className="h-5 w-5 shrink-0" />
+                <span className="font-medium">{error}</span>
               </div>
             )}
 
             <button 
               type="submit"
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-all transform active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20"
+              className="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold text-lg hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-900/20 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
             >
               Entrar no Sistema <ArrowRight size={20} />
             </button>
@@ -79,8 +87,9 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
           <div className="mt-8 text-center">
             <p className="text-xs text-gray-400">
-              © 2024 TechFix Sistemas. Todos os direitos reservados.
+              © {new Date().getFullYear()} RTJK INFOCELL. Todos os direitos reservados.
             </p>
+            <p className="text-[10px] text-gray-300 mt-1">v2.5.0 Security Build</p>
           </div>
         </div>
       </div>
