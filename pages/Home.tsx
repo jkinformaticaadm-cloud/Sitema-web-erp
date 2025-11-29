@@ -15,7 +15,10 @@ import {
   Globe,
   Star,
   Send,
-  Loader2
+  Loader2,
+  Wrench,
+  ShoppingCart,
+  Package
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -215,6 +218,95 @@ export const Home: React.FC = () => {
                     <p className="text-gray-600 leading-relaxed">{feature.desc}</p>
                 </div>
             ))}
+          </div>
+
+          {/* Detailed Feature Showcase */}
+          <div className="mt-32 space-y-32">
+            
+            {/* Feature 1: OS */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+              <div className="order-2 lg:order-1 relative group">
+                <div className="absolute -inset-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                <img 
+                  src="https://images.unsplash.com/photo-1581092921461-eab62e97a783?q=80&w=2670&auto=format&fit=crop" 
+                  alt="Gestão de Ordens de Serviço" 
+                  className="relative rounded-2xl shadow-2xl border border-gray-100 transform transition-transform group-hover:scale-[1.02] aspect-[4/3] object-cover"
+                />
+              </div>
+              <div className="order-1 lg:order-2">
+                <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-6">
+                  <Wrench size={24} />
+                </div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-4">Ordens de Serviço Organizadas</h3>
+                <p className="text-lg text-gray-600 leading-relaxed mb-6">
+                  Chega de papéis perdidos. Tenha controle total sobre cada aparelho que entra na sua loja, com fotos, senhas e defeitos relatados.
+                </p>
+                <ul className="space-y-3">
+                  {['Status personalizados (Em análise, Aguardando peça, etc)', 'Comunicação automática via WhatsApp', 'Impressão de via do cliente com QR Code'].map(item => (
+                    <li key={item} className="flex items-center gap-3 text-gray-700 font-medium">
+                      <CheckCircle size={20} className="text-green-500 flex-shrink-0" /> {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Feature 2: Sales (Inverted layout) */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+              <div className="order-1">
+                <div className="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center mb-6">
+                  <ShoppingCart size={24} />
+                </div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-4">Vendas e Frente de Caixa</h3>
+                <p className="text-lg text-gray-600 leading-relaxed mb-6">
+                  Realize vendas em segundos. Um PDV pensado para a agilidade que o balcão exige, com cálculo automático de taxas.
+                </p>
+                <ul className="space-y-3">
+                  {['Carrinho de compras rápido e intuitivo', 'Cálculo de taxas de cartão (Débito/Crédito)', 'Histórico completo de compras do cliente'].map(item => (
+                    <li key={item} className="flex items-center gap-3 text-gray-700 font-medium">
+                      <CheckCircle size={20} className="text-green-500 flex-shrink-0" /> {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="order-2 relative group">
+                <div className="absolute -inset-4 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                <img 
+                  src="https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?q=80&w=2670&auto=format&fit=crop" 
+                  alt="PDV e Vendas" 
+                  className="relative rounded-2xl shadow-2xl border border-gray-100 transform transition-transform group-hover:scale-[1.02] aspect-[4/3] object-cover"
+                />
+              </div>
+            </div>
+
+            {/* Feature 3: Inventory */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+              <div className="order-2 lg:order-1 relative group">
+                <div className="absolute -inset-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
+                <img 
+                  src="https://images.unsplash.com/photo-1553413077-190dd305871c?q=80&w=2670&auto=format&fit=crop" 
+                  alt="Controle de Estoque" 
+                  className="relative rounded-2xl shadow-2xl border border-gray-100 transform transition-transform group-hover:scale-[1.02] aspect-[4/3] object-cover"
+                />
+              </div>
+              <div className="order-1 lg:order-2">
+                <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center mb-6">
+                  <Package size={24} />
+                </div>
+                <h3 className="text-3xl font-bold text-gray-900 mb-4">Estoque Sob Controle</h3>
+                <p className="text-lg text-gray-600 leading-relaxed mb-6">
+                  Evite prejuízos e saiba exatamente o que repor. Gestão inteligente de peças, acessórios e serviços.
+                </p>
+                <ul className="space-y-3">
+                  {['Alertas de estoque mínimo', 'Separação por categorias e modelos compatíveis', 'Inventário rápido e fácil de atualizar'].map(item => (
+                    <li key={item} className="flex items-center gap-3 text-gray-700 font-medium">
+                      <CheckCircle size={20} className="text-green-500 flex-shrink-0" /> {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
