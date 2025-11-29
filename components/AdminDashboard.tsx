@@ -20,7 +20,10 @@ import {
   Mail,
   Smartphone,
   Database,
-  Activity
+  Activity,
+  Server,
+  Download,
+  FileText
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -35,11 +38,29 @@ const MOCK_TENANTS: Tenant[] = [
     { id: '5', companyName: 'Global Tech', ownerName: 'Ana Costa', ownerEmail: 'ana@global.com', plan: 'anual', status: 'active', usersCount: 8, createdAt: '2023-08-12', lastLogin: '2024-03-21' },
 ];
 
+// Helper to generate stable mock stats based on ID
+const getTenantStats = (id: string) => {
+    let hash = 0;
+    for (let i = 0; i < id.length; i++) {
+        hash = ((hash << 5) - hash) + id.charCodeAt(i);
+        hash |= 0;
+    }
+    const seed = Math.abs(hash);
+    
+    return {
+        customers: (seed % 200) + 45,
+        sales: (seed % 1000) + 120,
+        products: (seed % 500) + 80,
+        revenue: ((seed % 50000) / 100) * 100 + 2500,
+        storage: (seed % 20) + 2, // GB
+        lastBackup: new Date(Date.now() - (seed % 86400000)).toLocaleString()
+    };
+};
+
 export const AdminDashboard: React.FC = () => {
     const { signOut } = useAuth();
     const navigate = useNavigate();
     
-    // State with LocalStorage Persistence
     const [tenants, setTenants] = useState<Tenant[]>(() => {
         try {
             const saved = localStorage.getItem('assistech_admin_tenants');
@@ -52,11 +73,11 @@ export const AdminDashboard: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
     
-    // Modal View State
+    // Modal State
     const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+    const [modalTab, setModalTab] = useState<'OVERVIEW' | 'USAGE' | 'LOGS'>('OVERVIEW');
 
-    // Save changes to LocalStorage
     useEffect(() => {
         localStorage.setItem('assistech_admin_tenants', JSON.stringify(tenants));
     }, [tenants]);
@@ -64,7 +85,7 @@ export const AdminDashboard: React.FC = () => {
     // Stats Logic
     const totalRevenue = tenants.reduce((acc, t) => {
         if(t.status !== 'active') return acc;
-        if(t.plan === 'anual') return acc + 29.90;
+        if(t.plan === 'anual') return acc + 29.90; // MRR aproximado
         if(t.plan === 'mensal') return acc + 49.90;
         return acc;
     }, 0); 
@@ -72,7 +93,6 @@ export const AdminDashboard: React.FC = () => {
     const activeTenants = tenants.filter(t => t.status === 'active').length;
     const totalUsers = tenants.reduce((acc, t) => acc + t.usersCount, 0);
 
-    // Actions
     const handleLogout = async () => {
         await signOut();
         navigate('/');
@@ -95,9 +115,9 @@ export const AdminDashboard: React.FC = () => {
     };
 
     const handleDeleteTenant = (id: string) => {
-        if(confirm("ATENÇÃO: Tem certeza que deseja excluir esta empresa e todos os seus dados?")) {
+        if(confirm("ATENÇÃO: Tem certeza que deseja excluir esta empresa e todos os seus dados? Esta ação é irreversível.")) {
             setTenants(prev => prev.filter(t => t.id !== id));
-            setIsViewModalOpen(false); // Fecha modal se estiver aberto
+            setIsViewModalOpen(false);
         }
     };
 
@@ -115,10 +135,10 @@ export const AdminDashboard: React.FC = () => {
 
     const handleViewTenant = (tenant: Tenant) => {
         setSelectedTenant(tenant);
+        setModalTab('OVERVIEW');
         setIsViewModalOpen(true);
     };
 
-    // Filtering
     const filteredTenants = tenants.filter(t => {
         const matchesSearch = t.companyName.toLowerCase().includes(searchQuery.toLowerCase()) || 
                               t.ownerEmail.toLowerCase().includes(searchQuery.toLowerCase());
@@ -135,9 +155,11 @@ export const AdminDashboard: React.FC = () => {
         }
     };
 
+    // Render logic for the modal stats
+    const tenantStats = selectedTenant ? getTenantStats(selectedTenant.id) : null;
+
     return (
         <div className="min-h-screen bg-slate-50 font-sans">
-            {/* Top Bar */}
             <header className="bg-[#0f172a] text-white shadow-lg sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
                     <div className="flex items-center gap-3">
@@ -230,7 +252,7 @@ export const AdminDashboard: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Filters & Actions */}
+                {/* Filters */}
                 <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div className="relative w-full sm:w-96">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -321,22 +343,18 @@ export const AdminDashboard: React.FC = () => {
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex justify-end gap-2 opacity-100 sm:opacity-60 group-hover:opacity-100 transition-opacity">
-                                                
-                                                {/* Visualizar */}
                                                 <button 
                                                     onClick={() => handleViewTenant(tenant)}
                                                     className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-200"
-                                                    title="Ver Detalhes"
+                                                    title="Ver Detalhes e Estatísticas"
                                                 >
                                                     <Eye size={18} />
                                                 </button>
-
-                                                {/* Bloquear/Desbloquear */}
                                                 {tenant.status === 'blocked' ? (
                                                     <button 
                                                         onClick={() => toggleTenantStatus(tenant.id)}
                                                         className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-transparent hover:border-green-200"
-                                                        title="Desbloquear Acesso"
+                                                        title="Desbloquear"
                                                     >
                                                         <Unlock size={18} />
                                                     </button>
@@ -344,17 +362,15 @@ export const AdminDashboard: React.FC = () => {
                                                     <button 
                                                         onClick={() => toggleTenantStatus(tenant.id)}
                                                         className="p-2 text-orange-500 hover:bg-orange-50 rounded-lg transition-colors border border-transparent hover:border-orange-200"
-                                                        title="Bloquear Acesso"
+                                                        title="Bloquear"
                                                     >
                                                         <Ban size={18} />
                                                     </button>
                                                 )}
-
-                                                {/* Excluir */}
                                                 <button 
                                                     onClick={() => handleDeleteTenant(tenant.id)}
                                                     className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200"
-                                                    title="Excluir Empresa"
+                                                    title="Excluir"
                                                 >
                                                     <Trash2 size={18} />
                                                 </button>
@@ -364,143 +380,219 @@ export const AdminDashboard: React.FC = () => {
                                 ))}
                             </tbody>
                         </table>
-                        {filteredTenants.length === 0 && (
-                            <div className="p-12 text-center text-gray-500 bg-gray-50">
-                                <Search size={48} className="mx-auto text-gray-300 mb-4"/>
-                                <p className="font-medium">Nenhuma empresa encontrada com os filtros atuais.</p>
-                            </div>
-                        )}
                     </div>
                 </div>
             </main>
 
             {/* View Details Modal */}
-            {isViewModalOpen && selectedTenant && (
+            {isViewModalOpen && selectedTenant && tenantStats && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-0 md:p-4">
                     <div className="bg-white w-full h-full md:h-auto md:max-h-[90vh] md:max-w-3xl flex flex-col md:rounded-xl shadow-2xl animate-scale-in">
                         {/* Header */}
                         <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 md:rounded-t-xl flex justify-between items-center flex-shrink-0">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-lg">
+                                <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xl shadow-sm border border-blue-200">
                                     {selectedTenant.companyName.charAt(0)}
                                 </div>
                                 <div>
                                     <h3 className="text-xl font-bold text-gray-800">{selectedTenant.companyName}</h3>
-                                    <p className="text-xs text-gray-500">ID: {selectedTenant.id} • Criado em: {selectedTenant.createdAt}</p>
+                                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                                        <span>ID: {selectedTenant.id}</span>
+                                        <span>•</span>
+                                        <span>Criado em: {selectedTenant.createdAt}</span>
+                                    </div>
                                 </div>
                             </div>
-                            <button onClick={() => setIsViewModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-200">
+                            <button onClick={() => setIsViewModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-200 transition-colors">
                                 <X size={24} />
+                            </button>
+                        </div>
+
+                        {/* Tabs */}
+                        <div className="flex border-b border-gray-200 bg-white">
+                            <button 
+                                onClick={() => setModalTab('OVERVIEW')}
+                                className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${modalTab === 'OVERVIEW' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                            >
+                                Visão Geral
+                            </button>
+                            <button 
+                                onClick={() => setModalTab('USAGE')}
+                                className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${modalTab === 'USAGE' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                            >
+                                Uso & Sistema
+                            </button>
+                            <button 
+                                onClick={() => setModalTab('LOGS')}
+                                className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${modalTab === 'LOGS' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                            >
+                                Logs e Segurança
                             </button>
                         </div>
 
                         {/* Content */}
                         <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50/50">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                
-                                {/* Info Cards */}
-                                <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                                    <h4 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
-                                        <Building size={16} className="text-blue-500"/> Dados da Empresa
-                                    </h4>
-                                    <div className="space-y-3">
-                                        <div>
-                                            <p className="text-xs text-gray-500">Status da Conta</p>
-                                            <div className="mt-1">{getStatusBadge(selectedTenant.status)}</div>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-gray-500">Plano Atual</p>
-                                            <p className="font-medium text-gray-800 uppercase flex items-center gap-1">
-                                                {selectedTenant.plan} 
-                                                {selectedTenant.plan === 'trial' && <span className="text-xs bg-yellow-100 text-yellow-800 px-1 rounded ml-1">Grátis</span>}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                                    <h4 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
-                                        <Users size={16} className="text-purple-500"/> Responsável
-                                    </h4>
-                                    <div className="space-y-3">
-                                        <div className="flex items-center gap-2">
-                                            <div className="bg-gray-100 p-1.5 rounded text-gray-500"><Users size={14}/></div>
+                            
+                            {modalTab === 'OVERVIEW' && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                                        <h4 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+                                            <Building size={16} className="text-blue-500"/> Status da Conta
+                                        </h4>
+                                        <div className="space-y-4">
                                             <div>
-                                                <p className="text-xs text-gray-500">Nome</p>
-                                                <p className="font-medium text-gray-800">{selectedTenant.ownerName}</p>
+                                                <p className="text-xs text-gray-500 uppercase font-semibold">Situação Atual</p>
+                                                <div className="mt-1">{getStatusBadge(selectedTenant.status)}</div>
                                             </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="bg-gray-100 p-1.5 rounded text-gray-500"><Mail size={14}/></div>
-                                            <div>
-                                                <p className="text-xs text-gray-500">Email</p>
-                                                <p className="font-medium text-gray-800 break-all">{selectedTenant.ownerEmail}</p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="bg-gray-100 p-1.5 rounded text-gray-500"><Calendar size={14}/></div>
-                                            <div>
-                                                <p className="text-xs text-gray-500">Último Acesso</p>
-                                                <p className="font-medium text-gray-800">{selectedTenant.lastLogin}</p>
+                                            <div className="flex justify-between items-center border-t border-gray-100 pt-3">
+                                                <div>
+                                                    <p className="text-xs text-gray-500 uppercase font-semibold">Plano Contratado</p>
+                                                    <p className="font-bold text-gray-800 uppercase flex items-center gap-1">
+                                                        {selectedTenant.plan}
+                                                    </p>
+                                                </div>
+                                                {selectedTenant.plan === 'anual' && <div className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-bold">PRO</div>}
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* System Data Mockup */}
-                                <div className="md:col-span-2 bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                                    <h4 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
-                                        <Database size={16} className="text-green-500"/> Dados do Sistema (Simulação)
-                                    </h4>
+                                    <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                                        <h4 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+                                            <Users size={16} className="text-purple-500"/> Contato Principal
+                                        </h4>
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500"><Users size={14}/></div>
+                                                <div>
+                                                    <p className="text-xs text-gray-500">Responsável</p>
+                                                    <p className="font-medium text-gray-800 text-sm">{selectedTenant.ownerName}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500"><Mail size={14}/></div>
+                                                <div>
+                                                    <p className="text-xs text-gray-500">Email de Acesso</p>
+                                                    <p className="font-medium text-gray-800 text-sm">{selectedTenant.ownerEmail}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Action Danger Zone */}
+                                    <div className="md:col-span-2 bg-red-50 p-5 rounded-xl border border-red-100">
+                                        <h4 className="text-sm font-bold text-red-800 mb-3 flex items-center gap-2">
+                                            <ShieldAlert size={16}/> Zona de Perigo
+                                        </h4>
+                                        <div className="flex flex-wrap gap-3">
+                                            <button 
+                                                onClick={() => toggleTenantStatus(selectedTenant.id)}
+                                                className="px-4 py-2 bg-white border border-red-200 text-red-700 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors shadow-sm"
+                                            >
+                                                {selectedTenant.status === 'blocked' ? 'Desbloquear Empresa' : 'Bloquear Acesso da Empresa'}
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDeleteTenant(selectedTenant.id)}
+                                                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors shadow-sm"
+                                            >
+                                                Excluir Empresa Definitivamente
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {modalTab === 'USAGE' && (
+                                <div className="space-y-6">
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 text-center">
-                                            <p className="text-xs text-blue-600 font-bold uppercase mb-1">Clientes</p>
-                                            <p className="text-2xl font-bold text-blue-800">{Math.floor(Math.random() * 150) + 20}</p>
+                                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                                            <p className="text-xs text-gray-500 uppercase font-bold mb-1">Clientes</p>
+                                            <p className="text-2xl font-bold text-blue-600">{tenantStats.customers}</p>
                                         </div>
-                                        <div className="bg-green-50 p-3 rounded-lg border border-green-100 text-center">
-                                            <p className="text-xs text-green-600 font-bold uppercase mb-1">Vendas</p>
-                                            <p className="text-2xl font-bold text-green-800">{Math.floor(Math.random() * 500) + 50}</p>
+                                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                                            <p className="text-xs text-gray-500 uppercase font-bold mb-1">Vendas Totais</p>
+                                            <p className="text-2xl font-bold text-green-600">{tenantStats.sales}</p>
                                         </div>
-                                        <div className="bg-orange-50 p-3 rounded-lg border border-orange-100 text-center">
-                                            <p className="text-xs text-orange-600 font-bold uppercase mb-1">Produtos</p>
-                                            <p className="text-2xl font-bold text-orange-800">{Math.floor(Math.random() * 200) + 10}</p>
+                                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                                            <p className="text-xs text-gray-500 uppercase font-bold mb-1">Produtos</p>
+                                            <p className="text-2xl font-bold text-purple-600">{tenantStats.products}</p>
                                         </div>
-                                        <div className="bg-purple-50 p-3 rounded-lg border border-purple-100 text-center">
-                                            <p className="text-xs text-purple-600 font-bold uppercase mb-1">Usuários</p>
-                                            <p className="text-2xl font-bold text-purple-800">{selectedTenant.usersCount}</p>
+                                        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm text-center">
+                                            <p className="text-xs text-gray-500 uppercase font-bold mb-1">Usuários</p>
+                                            <p className="text-2xl font-bold text-orange-600">{selectedTenant.usersCount}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                                        <h4 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                            <Database size={16} /> Uso de Armazenamento
+                                        </h4>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <div className="flex justify-between text-sm mb-1">
+                                                    <span className="text-gray-600">Espaço em Disco</span>
+                                                    <span className="font-bold text-gray-800">{tenantStats.storage} GB / 50 GB</span>
+                                                </div>
+                                                <div className="w-full bg-gray-100 rounded-full h-2">
+                                                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${(tenantStats.storage / 50) * 100}%` }}></div>
+                                                </div>
+                                            </div>
+                                            <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                                                <div className="text-xs text-gray-500">
+                                                    Último Backup: <span className="font-medium text-gray-700">{tenantStats.lastBackup}</span>
+                                                </div>
+                                                <button className="text-blue-600 hover:text-blue-800 text-xs font-bold flex items-center gap-1">
+                                                    <Download size={14} /> Baixar Dump
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                            )}
 
-                                {/* Danger Zone */}
-                                <div className="md:col-span-2 bg-red-50 p-5 rounded-xl border border-red-100">
-                                    <h4 className="text-sm font-bold text-red-800 mb-2 flex items-center gap-2">
-                                        <ShieldAlert size={16}/> Zona de Perigo
-                                    </h4>
-                                    <div className="flex flex-wrap gap-3">
-                                        <button 
-                                            onClick={() => toggleTenantStatus(selectedTenant.id)}
-                                            className="px-4 py-2 bg-white border border-red-200 text-red-700 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors"
-                                        >
-                                            {selectedTenant.status === 'blocked' ? 'Desbloquear Empresa' : 'Bloquear Acesso da Empresa'}
-                                        </button>
-                                        <button 
-                                            onClick={() => handleDeleteTenant(selectedTenant.id)}
-                                            className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
-                                        >
-                                            Excluir Empresa Definitivamente
-                                        </button>
-                                    </div>
+                            {modalTab === 'LOGS' && (
+                                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                                    <table className="w-full text-left text-xs">
+                                        <thead className="bg-gray-50 text-gray-500 uppercase">
+                                            <tr>
+                                                <th className="px-4 py-3">Evento</th>
+                                                <th className="px-4 py-3">Data/Hora</th>
+                                                <th className="px-4 py-3 text-right">IP</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-100">
+                                            <tr>
+                                                <td className="px-4 py-3 font-medium text-gray-800 flex items-center gap-2">
+                                                    <Activity size={14} className="text-green-500"/> Login Sucesso
+                                                </td>
+                                                <td className="px-4 py-3 text-gray-500">{selectedTenant.lastLogin}</td>
+                                                <td className="px-4 py-3 text-right font-mono text-gray-400">192.168.1.10</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="px-4 py-3 font-medium text-gray-800 flex items-center gap-2">
+                                                    <Server size={14} className="text-blue-500"/> Backup Automático
+                                                </td>
+                                                <td className="px-4 py-3 text-gray-500">{tenantStats.lastBackup}</td>
+                                                <td className="px-4 py-3 text-right font-mono text-gray-400">System</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="px-4 py-3 font-medium text-gray-800 flex items-center gap-2">
+                                                    <FileText size={14} className="text-orange-500"/> Atualização de Plano
+                                                </td>
+                                                <td className="px-4 py-3 text-gray-500">2024-02-15 10:30</td>
+                                                <td className="px-4 py-3 text-right font-mono text-gray-400">192.168.1.10</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
+                            )}
 
-                            </div>
                         </div>
 
                         {/* Footer */}
                         <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 md:rounded-b-xl flex justify-end">
                             <button 
                                 onClick={() => setIsViewModalOpen(false)}
-                                className="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium transition-colors"
+                                className="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium transition-colors shadow-sm"
                             >
                                 Fechar
                             </button>

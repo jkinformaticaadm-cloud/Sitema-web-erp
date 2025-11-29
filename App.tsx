@@ -1,4 +1,4 @@
-import React, { useEffect, useState, ErrorInfo, ReactNode } from 'react';
+import React, { useEffect, useState, ErrorInfo, ReactNode, Component } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Sidebar } from './components/Sidebar';
@@ -11,14 +11,14 @@ import { Customers } from './components/Customers';
 import { Financial } from './components/Financial';
 import { Settings } from './components/Settings';
 import { Team } from './components/Team';
-import { AdminDashboard } from './components/AdminDashboard'; // Import Admin Dashboard
+import { AdminDashboard } from './components/AdminDashboard'; 
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Plans } from './pages/Plans';
 import { Payment } from './pages/Payment';
 import { Expired } from './pages/Expired';
 import { Home } from './pages/Home';
-import { View, CashierTransaction, Customer, Goals, CompanySettings, Product } from './types';
+import { View, CashierTransaction, Customer, Goals, CompanySettings, Product, User } from './types';
 import { Menu, Search, LogOut, Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { supabase } from './lib/supabase';
 
@@ -36,11 +36,14 @@ interface ErrorBoundaryState {
   error: any;
 }
 
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  public state: ErrorBoundaryState = {
-    hasError: false,
-    error: null
-  };
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: null
+    };
+  }
 
   static getDerivedStateFromError(error: any): ErrorBoundaryState {
     return { hasError: true, error };
@@ -100,10 +103,25 @@ const MainLayout: React.FC = () => {
   const [transactions, setTransactions] = React.useState<CashierTransaction[]>(INITIAL_TRANSACTIONS);
   const [goals, setGoals] = React.useState<Goals>(INITIAL_GOALS);
   const [companySettings, setCompanySettings] = React.useState<CompanySettings>(INITIAL_COMPANY_SETTINGS);
-  const [users, setUsers] = React.useState<any[]>([]);
+  const [users, setUsers] = React.useState<User[]>([]);
 
   // Verifica se é modo Mock (Admin Local)
   const isMockMode = profile?.id === 'mock-admin-id';
+
+  // Initialize current user in users list if empty
+  useEffect(() => {
+      if (profile && users.length === 0) {
+          const initialUser: User = {
+              id: profile.id,
+              name: profile.nome,
+              email: profile.email,
+              role: 'Administrador',
+              username: profile.email.split('@')[0],
+              permissions: { admin: true, financial: true, sales: true, stock: true, support: true, settings: true }
+          };
+          setUsers([initialUser]);
+      }
+  }, [profile, users.length]);
 
   // --- FETCH DATA ---
 
@@ -417,7 +435,7 @@ const App: React.FC = () => {
               <Route path="/payment/:planId" element={<Payment />} />
               <Route path="/expired" element={<Expired />} />
               <Route path="/app" element={<MainLayout />} />
-              <Route path="/admin" element={<AdminDashboard />} /> {/* Nova Rota Admin */}
+              <Route path="/admin" element={<AdminDashboard />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />
