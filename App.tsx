@@ -27,17 +27,26 @@ const INITIAL_TRANSACTIONS: CashierTransaction[] = [];
 const INITIAL_GOALS: Goals = { globalRevenue: 40000, productRevenue: 15000, serviceRevenue: 25000 };
 const INITIAL_COMPANY_SETTINGS: CompanySettings = { name: 'AssisTech', legalName: '', cnpj: '', ie: '', address: '', phone1: '', phone2: '', email: '', logo: '' };
 
-class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean, error: any }> {
-  constructor(props: any) {
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: any;
+}
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError(error: any) {
+  static getDerivedStateFromError(error: any): ErrorBoundaryState {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: any, errorInfo: any) {
+  componentDidCatch(error: any, errorInfo: React.ErrorInfo) {
     console.error("Erro crítico na aplicação:", error, errorInfo);
   }
 
