@@ -11,6 +11,7 @@ import { Customers } from './components/Customers';
 import { Financial } from './components/Financial';
 import { Settings } from './components/Settings';
 import { Team } from './components/Team';
+import { AdminDashboard } from './components/AdminDashboard'; // Import Admin Dashboard
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Plans } from './pages/Plans';
@@ -400,12 +401,16 @@ const App: React.FC = () => {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            
+            {/* Protected Routes (App and Admin) */}
             <Route element={<ProtectedRoute />}>
               <Route path="/plans" element={<Plans />} />
               <Route path="/payment/:planId" element={<Payment />} />
               <Route path="/expired" element={<Expired />} />
               <Route path="/app" element={<MainLayout />} />
+              <Route path="/admin" element={<AdminDashboard />} /> {/* Nova Rota Admin */}
             </Route>
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AuthProvider>

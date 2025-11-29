@@ -37,7 +37,8 @@ export const Login: React.FC = () => {
                 // Tenta logar de novo
                 const { error: retryError } = await login(email, password);
                 if (!retryError) {
-                    navigate('/app');
+                    // SE FOR ADMIN, VAI PARA O PAINEL DE ADMIN
+                    navigate('/admin');
                     return;
                 }
             } catch (regError) {
@@ -47,20 +48,26 @@ export const Login: React.FC = () => {
             // 🚨 ULTIMO RECURSO: Se tudo falhar (banco quebrado), entra no modo MOCK (Local)
             console.warn("Ativando modo Admin Mock (Sem Banco de Dados)");
             loginAsAdminMock();
-            navigate('/app');
+            navigate('/admin'); // Admin Mock sempre vai pro painel Admin
             return;
         }
         throw loginError;
       }
       
-      navigate('/app'); 
+      // Sucesso normal: verifica se é admin para redirecionar corretamente
+      if (email === 'admin@assistech.com') {
+          navigate('/admin');
+      } else {
+          navigate('/app'); 
+      }
+
     } catch (err: any) {
       console.error(err);
       
       // Se for admin, forçamos a entrada mesmo com erro genérico
       if (email === 'admin@assistech.com' && password === 'admin123') {
           loginAsAdminMock();
-          navigate('/app');
+          navigate('/admin');
           return;
       }
 

@@ -1,4 +1,5 @@
 
+
 export enum View {
   DASHBOARD = 'DASHBOARD',
   SALES = 'SALES',
@@ -214,4 +215,18 @@ export interface CompanySettings {
   phone2: string;
   email: string;
   logo: string;
+}
+
+// --- ADMIN TYPES ---
+
+export interface Tenant {
+  id: string;
+  companyName: string;
+  ownerName: string;
+  ownerEmail: string;
+  plan: 'trial' | 'mensal' | 'anual';
+  status: 'active' | 'blocked' | 'expired';
+  usersCount: number;
+  createdAt: string;
+  lastLogin: string;
 }
