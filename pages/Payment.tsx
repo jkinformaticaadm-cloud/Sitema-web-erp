@@ -5,7 +5,7 @@ import { checkPaymentStatus, generatePixPayment, PLANS } from '../services/payme
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { addDays } from 'date-fns';
-import { Copy, CheckCircle, Loader2, ArrowLeft } from 'lucide-react';
+import { Copy, CheckCircle, Loader2, ArrowLeft, Zap } from 'lucide-react';
 
 export const Payment: React.FC = () => {
   const { planId } = useParams<{ planId: string }>();
@@ -27,13 +27,16 @@ export const Payment: React.FC = () => {
   useEffect(() => {
     let interval: any;
     if (pixData && status === 'pending') {
+      // Se for gratuito, a verificação será instantânea
+      const checkInterval = plan?.price === 0 ? 1000 : 5000;
+      
       interval = setInterval(async () => {
         const res = await checkPaymentStatus(pixData.txid);
         if (res.status === 'paid') {
           handlePaymentSuccess();
           clearInterval(interval);
         }
-      }, 5000);
+      }, checkInterval);
     }
     return () => clearInterval(interval);
   }, [pixData, status]);
@@ -43,7 +46,7 @@ export const Payment: React.FC = () => {
     try {
       const data = await generatePixPayment(plan.id, session.user.id);
       
-      // Salvar na tabela de assinaturas como pendente
+      // Salvar na tabela de assinaturas
       const { data: profile } = await supabase.from('perfis').select('empresa_id').eq('id', session.user.id).single();
       
       await supabase.from('assinaturas').insert([{
@@ -52,23 +55,24 @@ export const Payment: React.FC = () => {
         plano: plan.id,
         valor: data.value,
         pix_txid: data.txid,
-        pix_qr: data.copiaCola,
-        status: 'pendente'
+        pix_qr: data.copiaCola || 'free_trial',
+        status: data.value === 0 ? 'pago' : 'pendente' // Se for grátis, já insere como pago ou deixa pendente pro checker aprovar
       }]);
 
       setPixData({ qr: data.copiaCola, code: data.copiaCola, txid: data.txid });
     } catch (e) {
       console.error(e);
-      alert("Erro ao gerar Pix");
+      alert("Erro ao processar plano");
     } finally {
-      setLoading(false);
+      // Se for pago, remove o loading pra mostrar o QR. Se for grátis, mantém loading até o sucesso.
+      if (plan.price > 0) setLoading(false);
     }
   };
 
   const handlePaymentSuccess = async () => {
     setStatus('paid');
+    setLoading(false);
     
-    // Atualizar no banco (Em produção isso seria via Webhook)
     const vencimento = addDays(new Date(), plan!.days).toISOString();
     
     await supabase.from('perfis').update({
@@ -77,20 +81,21 @@ export const Payment: React.FC = () => {
       plano: plan!.id
     }).eq('id', session?.user.id);
 
-    await supabase.from('assinaturas').update({
-        status: 'pago',
-        vencimento: vencimento
-    }).eq('pix_txid', pixData?.txid);
+    if (pixData?.txid) {
+        await supabase.from('assinaturas').update({
+            status: 'pago',
+            vencimento: vencimento
+        }).eq('pix_txid', pixData.txid);
+    }
 
-    // Refresh context
     await refreshProfile();
 
     setTimeout(() => {
         navigate('/app');
-    }, 2000);
+    }, 2500);
   };
 
-  // Função para simular pagamento manualmente (apenas dev)
+  // Função para simular pagamento manualmente (apenas dev/admin)
   const simulatePayment = async () => {
       setLoading(true);
       await handlePaymentSuccess();
@@ -103,31 +108,37 @@ export const Payment: React.FC = () => {
       <div className="bg-white max-w-md w-full rounded-2xl shadow-xl p-8 text-center animate-scale-in">
         
         {status === 'paid' ? (
-            <div className="py-12">
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600">
-                    <CheckCircle size={48} />
+            <div className="py-8">
+                <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 text-green-600 animate-bounce-slow">
+                    {plan.price === 0 ? <Zap size={48} /> : <CheckCircle size={48} />}
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800">Pagamento Confirmado!</h2>
-                <p className="text-gray-500 mt-2">Redirecionando para o sistema...</p>
+                <h2 className="text-2xl font-bold text-gray-800">
+                    {plan.price === 0 ? 'Período de Teste Ativado!' : 'Pagamento Confirmado!'}
+                </h2>
+                <p className="text-gray-500 mt-2">Configurando seu ambiente...</p>
             </div>
         ) : (
             <>
                 <div className="mb-6 flex justify-between items-center">
                     <button onClick={() => navigate('/plans')} className="text-gray-400 hover:text-gray-600"><ArrowLeft /></button>
-                    <h2 className="text-xl font-bold text-gray-800">Pagamento via Pix</h2>
+                    <h2 className="text-xl font-bold text-gray-800">
+                        {plan.price === 0 ? 'Ativando Teste' : 'Pagamento via Pix'}
+                    </h2>
                     <div className="w-6"></div>
                 </div>
 
-                <p className="text-gray-500 mb-6">Escaneie o QR Code abaixo para pagar e liberar seu acesso ao <strong>{plan.name}</strong>.</p>
-
-                {loading ? (
-                    <div className="h-64 flex items-center justify-center">
-                        <Loader2 className="animate-spin text-blue-600" size={40} />
+                {loading || plan.price === 0 ? (
+                    <div className="py-12 flex flex-col items-center justify-center">
+                        <Loader2 className="animate-spin text-blue-600 mb-4" size={48} />
+                        <p className="text-gray-600 font-medium">Estamos liberando seu acesso...</p>
+                        <p className="text-gray-400 text-sm mt-2">Isso levará apenas alguns segundos.</p>
                     </div>
                 ) : (
                     <>
+                        <p className="text-gray-500 mb-6">Escaneie o QR Code abaixo para pagar e liberar seu acesso ao <strong>{plan.name}</strong>.</p>
+                        
                         <div className="bg-gray-100 p-4 rounded-xl inline-block mb-6 border-2 border-blue-100">
-                            {pixData && <QRCodeSVG value={pixData.qr} size={200} />}
+                            {pixData && pixData.qr && <QRCodeSVG value={pixData.qr} size={200} />}
                         </div>
 
                         <div className="mb-6">
@@ -156,7 +167,7 @@ export const Payment: React.FC = () => {
                             Aguardando confirmação automática...
                         </div>
 
-                        {/* Botão de DEV para pular pagamento */}
+                        {/* Botão de DEV */}
                         <button onClick={simulatePayment} className="text-xs text-gray-300 underline hover:text-gray-500">
                             (DEV) Simular Pagamento Recebido
                         </button>

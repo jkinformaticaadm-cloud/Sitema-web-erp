@@ -1,16 +1,28 @@
 // Simulação de integração com API de Pagamento (ex: Asaas, Mercado Pago)
 
 interface Plan {
-  id: 'mensal' | 'trimestral' | 'anual';
+  id: 'trial' | 'anual';
   name: string;
   price: number;
   days: number;
+  description: string;
 }
 
 export const PLANS: Plan[] = [
-  { id: 'mensal', name: 'Plano Mensal', price: 49.90, days: 30 },
-  { id: 'trimestral', name: 'Plano Trimestral', price: 129.90, days: 90 },
-  { id: 'anual', name: 'Plano Anual', price: 449.90, days: 365 },
+  { 
+    id: 'trial', 
+    name: 'Teste Grátis', 
+    price: 0, 
+    days: 3, 
+    description: 'Experimente todas as funcionalidades sem custo.' 
+  },
+  { 
+    id: 'anual', 
+    name: 'Plano Anual PRO', 
+    price: 29.90, 
+    days: 365, 
+    description: 'Acesso completo por 1 ano com preço promocional.' 
+  },
 ];
 
 export const generatePixPayment = async (planId: string, userId: string) => {
@@ -19,6 +31,17 @@ export const generatePixPayment = async (planId: string, userId: string) => {
   
   const plan = PLANS.find(p => p.id === planId);
   if (!plan) throw new Error("Plano inválido");
+
+  // Se for gratuito, não gera Pix
+  if (plan.price === 0) {
+      return {
+          success: true,
+          txid: `free_${Math.random().toString(36).substr(2, 9)}`,
+          copiaCola: "",
+          expirationMinutes: 0,
+          value: 0
+      };
+  }
 
   console.log(`Gerando Pix para ${plan.name} - R$ ${plan.price}`);
 
@@ -34,12 +57,16 @@ export const generatePixPayment = async (planId: string, userId: string) => {
 
 export const checkPaymentStatus = async (txid: string) => {
   // Simula verificação de status no banco ou API
-  // Em produção, você usaria Webhooks para atualizar o banco e o front faria polling no banco
   
   return new Promise<{ status: 'pending' | 'paid' }>((resolve) => {
+    // Se for um ID de trial gratuito, aprova imediatamente
+    if (txid.startsWith('free_')) {
+        resolve({ status: 'paid' });
+        return;
+    }
+
     setTimeout(() => {
       // Randomly approve for demo purposes after some checks
-      // Em uma demo real, forçamos 'pending' até o usuário clicar em "Simular Pagamento"
       resolve({ status: 'pending' });
     }, 500);
   });
