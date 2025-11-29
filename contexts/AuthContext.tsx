@@ -11,6 +11,7 @@ interface AuthContextType {
   subscriptionStatus: 'active' | 'inactive' | 'expired' | 'loading';
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  loginAsAdminMock: () => void; // Nova função
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -25,8 +26,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let mounted = true;
 
-    // Timeout de segurança: Se o Supabase não responder em 1.5 segundos, libera o app como deslogado
-    // Isso evita a tela branca se as chaves estiverem erradas
+    // Timeout de segurança
     const safetyTimeout = setTimeout(() => {
         if (mounted && loading) {
             console.warn("Auth check demorou muito. Forçando carregamento da página.");
@@ -36,11 +36,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const initAuth = async () => {
       try {
-        // Tenta obter sessão
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.warn('Sessão não iniciada (provavelmente chaves inválidas ou usuário deslogado):', error.message);
           if (mounted) setLoading(false);
           return;
         }
@@ -54,24 +52,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
       } catch (err) {
-        console.error('Erro fatal na autenticação:', err);
         if (mounted) setLoading(false);
       }
     };
 
     initAuth();
 
-    // Listener de mudanças de estado
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (mounted) {
         setSession(session);
         if (session) {
           await fetchProfile(session.user.id, session.user.email);
         } else {
-          setProfile(null);
-          setCompany(null);
-          setSubscriptionStatus('loading');
-          setLoading(false);
+          // Só limpa se não for mock
+          if (profile?.id !== 'mock-admin-id') {
+             setProfile(null);
+             setCompany(null);
+             setSubscriptionStatus('loading');
+             setLoading(false);
+          }
         }
       }
     });
@@ -103,6 +102,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .single();
           setCompany(companyData);
         }
+      } else {
+        // Fallback: Se não achar perfil mas tiver sessão (erro de trigger), tenta liberar se for admin
+         if (email === 'admin@assistech.com') loginAsAdminMock();
       }
     } catch (error) {
       console.error('Erro ao buscar perfil:', error);
@@ -112,8 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const checkSubscription = (profile: SupabaseProfile, email?: string) => {
-    // 🔥 BACKDOOR ADMIN: Se for o email do admin, libera acesso total sempre
-    if (email === 'admin@assistech.com') {
+    if (email === 'admin@assistech.com' || profile.id === 'mock-admin-id') {
         setSubscriptionStatus('active');
         return;
     }
@@ -132,14 +133,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // 🔥 Função de Bypass para Admin quando o Banco falha
+  const loginAsAdminMock = () => {
+      const mockUser = {
+          id: 'mock-admin-id',
+          email: 'admin@assistech.com',
+          user_metadata: { nome: 'Administrador' }
+      };
+      
+      const mockProfile: SupabaseProfile = {
+          id: 'mock-admin-id',
+          empresa_id: 'mock-company-id',
+          nome: 'Administrador (Local)',
+          email: 'admin@assistech.com',
+          plano: 'anual',
+          assinatura_status: 'ativa',
+          assinatura_vencimento: '2099-12-31',
+          created_at: new Date().toISOString()
+      };
+
+      const mockCompany: SupabaseCompany = {
+          id: 'mock-company-id',
+          nome: 'AssisTech Admin (Local)',
+          cnpj: '00.000.000/0001-00',
+          created_at: new Date().toISOString()
+      };
+
+      setSession({ user: mockUser } as any);
+      setProfile(mockProfile);
+      setCompany(mockCompany);
+      setSubscriptionStatus('active');
+      setLoading(false);
+  };
+
   const refreshProfile = async () => {
-    if (session) {
+    if (session && session.user.id !== 'mock-admin-id') {
         setLoading(true);
         await fetchProfile(session.user.id, session.user.email);
     }
   };
 
   const signOut = async () => {
+    if (profile?.id === 'mock-admin-id') {
+        setSession(null);
+        setProfile(null);
+        setCompany(null);
+        setSubscriptionStatus('loading');
+        return;
+    }
     await supabase.auth.signOut();
     setSession(null);
     setProfile(null);
@@ -148,7 +189,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ session, profile, company, loading, subscriptionStatus, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ session, profile, company, loading, subscriptionStatus, signOut, refreshProfile, loginAsAdminMock }}>
       {children}
     </AuthContext.Provider>
   );

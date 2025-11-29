@@ -21,12 +21,11 @@ import { View, CashierTransaction, Customer, Goals, CompanySettings, Product } f
 import { Menu, Search, LogOut, Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { supabase } from './lib/supabase';
 
-// Mocks iniciais para garantir funcionamento das telas (apenas Fallback)
+// Mocks iniciais
 const INITIAL_TRANSACTIONS: CashierTransaction[] = [];
 const INITIAL_GOALS: Goals = { globalRevenue: 40000, productRevenue: 15000, serviceRevenue: 25000 };
 const INITIAL_COMPANY_SETTINGS: CompanySettings = { name: 'AssisTech', legalName: '', cnpj: '', ie: '', address: '', phone1: '', phone2: '', email: '', logo: '' };
 
-// Componente para capturar erros e evitar tela branca total
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean, error: any }> {
   constructor(props: any) {
     super(props);
@@ -42,7 +41,6 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
   }
 
   handleReset = () => {
-    // Limpa dados locais que podem estar corrompidos
     localStorage.clear();
     window.location.href = '/';
   };
@@ -94,11 +92,26 @@ const MainLayout: React.FC = () => {
   const [companySettings, setCompanySettings] = React.useState<CompanySettings>(INITIAL_COMPANY_SETTINGS);
   const [users, setUsers] = React.useState<any[]>([]);
 
+  // Verifica se é modo Mock (Admin Local)
+  const isMockMode = profile?.id === 'mock-admin-id';
+
   // --- FETCH DATA ---
 
   const fetchCustomers = async () => {
     if (!profile?.empresa_id) return;
     setLoadingCustomers(true);
+    
+    // MOCK MODE: Usa LocalStorage
+    if (isMockMode) {
+        try {
+            const saved = localStorage.getItem('techfix_mock_customers');
+            if (saved) setCustomers(JSON.parse(saved));
+        } catch (e) { console.error(e); }
+        setLoadingCustomers(false);
+        return;
+    }
+
+    // REAL MODE: Usa Supabase
     try {
       const { data, error } = await supabase.from('clientes').select('*').eq('empresa_id', profile.empresa_id).order('nome');
       if (error) throw error;
@@ -129,6 +142,18 @@ const MainLayout: React.FC = () => {
   const fetchProducts = async () => {
     if (!profile?.empresa_id) return;
     setLoadingProducts(true);
+
+    // MOCK MODE: Usa LocalStorage
+    if (isMockMode) {
+        try {
+            const saved = localStorage.getItem('techfix_mock_products');
+            if (saved) setProducts(JSON.parse(saved));
+        } catch (e) { console.error(e); }
+        setLoadingProducts(false);
+        return;
+    }
+
+    // REAL MODE
     try {
         const { data, error } = await supabase.from('produtos').select('*').eq('empresa_id', profile.empresa_id).order('nome');
         if (error) throw error;
@@ -160,7 +185,6 @@ const MainLayout: React.FC = () => {
 
   if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={40} /></div>;
 
-  // Bloqueio de Assinatura
   if (subscriptionStatus === 'expired') return <Navigate to="/expired" replace />;
   if (subscriptionStatus === 'inactive') return <Navigate to="/plans" replace />;
 
@@ -170,6 +194,14 @@ const MainLayout: React.FC = () => {
      const customer = customers.find(c => c.name === customerName);
      if (customer && profile?.empresa_id) {
          const newCredit = (customer.storeCredit || 0) + amount;
+         
+         if (isMockMode) {
+             const updated = customers.map(c => c.id === customer.id ? { ...c, storeCredit: newCredit } : c);
+             setCustomers(updated);
+             localStorage.setItem('techfix_mock_customers', JSON.stringify(updated));
+             return;
+         }
+
          try {
              await supabase.from('clientes').update({ credito_loja: newCredit }).eq('id', customer.id);
              fetchCustomers();
@@ -179,6 +211,19 @@ const MainLayout: React.FC = () => {
 
   const handleSaveCustomer = async (c: Customer) => {
       if (!profile?.empresa_id) return;
+      
+      if (isMockMode) {
+          let updatedList;
+          if (c.id && customers.some(cust => cust.id === c.id)) {
+              updatedList = customers.map(cust => cust.id === c.id ? c : cust);
+          } else {
+              updatedList = [...customers, { ...c, id: Math.random().toString(36).substr(2, 9), createdAt: new Date().toISOString() }];
+          }
+          setCustomers(updatedList);
+          localStorage.setItem('techfix_mock_customers', JSON.stringify(updatedList));
+          return;
+      }
+
       const dbCustomer = {
         empresa_id: profile.empresa_id,
         nome: c.name, telefone: c.phone, email: c.email, cpf_cnpj: c.cpfOrCnpj, rg: c.rg,
@@ -199,6 +244,14 @@ const MainLayout: React.FC = () => {
 
   const handleDeleteCustomer = async (id: string) => {
       if (!confirm("Tem certeza que deseja excluir?")) return;
+      
+      if (isMockMode) {
+          const updated = customers.filter(c => c.id !== id);
+          setCustomers(updated);
+          localStorage.setItem('techfix_mock_customers', JSON.stringify(updated));
+          return;
+      }
+
       try {
           const { error } = await supabase.from('clientes').delete().eq('id', id);
           if (error) throw error;
@@ -208,6 +261,19 @@ const MainLayout: React.FC = () => {
 
   const handleSaveProduct = async (p: Product) => {
       if (!profile?.empresa_id) return;
+
+      if (isMockMode) {
+          let updatedList;
+          if (p.id && products.some(prod => prod.id === p.id)) {
+              updatedList = products.map(prod => prod.id === p.id ? p : prod);
+          } else {
+              updatedList = [...products, { ...p, id: Math.random().toString(36).substr(2, 9) }];
+          }
+          setProducts(updatedList);
+          localStorage.setItem('techfix_mock_products', JSON.stringify(updatedList));
+          return;
+      }
+
       const dbProduct = {
           empresa_id: profile.empresa_id,
           nome: p.name,
@@ -234,6 +300,14 @@ const MainLayout: React.FC = () => {
 
   const handleDeleteProduct = async (id: string) => {
       if (!confirm("Tem certeza?")) return;
+
+      if (isMockMode) {
+          const updated = products.filter(p => p.id !== id);
+          setProducts(updated);
+          localStorage.setItem('techfix_mock_products', JSON.stringify(updated));
+          return;
+      }
+
       try {
           const { error } = await supabase.from('produtos').delete().eq('id', id);
           if (error) throw error;
@@ -292,7 +366,10 @@ const MainLayout: React.FC = () => {
               <p className="text-sm font-bold text-gray-800">{company?.nome || 'Minha Empresa'}</p>
               <div className="flex items-center justify-end gap-1">
                  {loadingCustomers && <Loader2 size={12} className="animate-spin text-blue-500"/>}
-                 <p className="text-xs text-green-600 font-medium">{profile?.nome}</p>
+                 <p className="text-xs text-green-600 font-medium">
+                    {profile?.nome}
+                    {isMockMode && <span className="ml-2 text-[10px] bg-yellow-100 text-yellow-800 px-1 rounded border border-yellow-200">LOCAL MODE</span>}
+                 </p>
               </div>
             </div>
             <button onClick={() => signOut()} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors ml-2" title="Sair">
