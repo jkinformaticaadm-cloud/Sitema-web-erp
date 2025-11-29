@@ -20,13 +20,14 @@ import {
   CheckCircle,
   AlertCircle,
   Clock,
-  X
+  X,
+  Target
 } from 'lucide-react';
-import { CardMachine, FinancialRecord, PixConfig } from '../types';
+import { CardMachine, FinancialRecord, PixConfig, Goals } from '../types';
 
 // ... (Types and Initial Data remain unchanged)
 
-type FinancialTab = 'PAYABLES' | 'RECEIVABLES' | 'DRE' | 'CASH_FLOW' | 'PAYMENT_METHODS';
+type FinancialTab = 'PAYABLES' | 'RECEIVABLES' | 'DRE' | 'CASH_FLOW' | 'PAYMENT_METHODS' | 'GOALS';
 
 const INITIAL_MACHINES: CardMachine[] = [
     {
@@ -53,8 +54,33 @@ const INITIAL_RECORDS: FinancialRecord[] = [
   { id: '4', description: 'Recebimento Cartão (Antecipação)', amount: 3500.00, dueDate: '2024-11-12', category: 'Cartão de Crédito', status: 'PENDING', type: 'RECEIVABLE', fee: 111.65, netAmount: 3388.35 },
 ];
 
-export const Financial: React.FC = () => {
+interface FinancialProps {
+  goals: Goals;
+  onUpdateGoals: (goals: Goals) => void;
+}
+
+export const Financial: React.FC<FinancialProps> = ({ goals, onUpdateGoals }) => {
   const [activeTab, setActiveTab] = useState<FinancialTab>('PAYMENT_METHODS');
+
+  // --- GOALS STATE ---
+  const [goalsForm, setGoalsForm] = useState<Goals>({
+      globalRevenue: 0,
+      productRevenue: 0,
+      serviceRevenue: 0
+  });
+
+  useEffect(() => {
+    setGoalsForm({
+        globalRevenue: goals.globalRevenue || 0,
+        productRevenue: goals.productRevenue || 0,
+        serviceRevenue: goals.serviceRevenue || 0
+    });
+  }, [goals]);
+
+  const handleSaveGoals = () => {
+    onUpdateGoals(goalsForm);
+    alert('Metas atualizadas com sucesso!');
+  };
 
   // --- PERSISTENCE STATE ---
   const [machines, setMachines] = useState<CardMachine[]>(() => {
@@ -199,6 +225,40 @@ export const Financial: React.FC = () => {
   const totalPaid = payables.filter(r => r.status === 'PAID').reduce((acc, r) => acc + r.amount, 0);
   const totalReceived = receivables.filter(r => r.status === 'PAID').reduce((acc, r) => acc + r.amount, 0);
 
+  const renderGoalsSettings = () => (
+    <div className="space-y-6 animate-fade-in max-w-4xl">
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
+           <Target className="text-red-600" size={20} /> Metas Mensais da Loja
+        </h3>
+        <p className="text-gray-500 mb-6">Defina os objetivos mensais de faturamento para que o sistema calcule o desempenho da equipe no Dashboard.</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-blue-50 p-6 rounded-xl border border-blue-100">
+                <label className="block text-sm font-bold text-blue-800 mb-2">Meta de Faturamento Global (R$)</label>
+                <input type="number" className="w-full pl-3 pr-4 py-3 border border-blue-200 rounded-lg font-bold text-gray-800 outline-none"
+                    value={goalsForm.globalRevenue} onChange={(e) => setGoalsForm({...goalsForm, globalRevenue: parseFloat(e.target.value) || 0})} />
+            </div>
+            <div className="bg-purple-50 p-6 rounded-xl border border-purple-100">
+                <label className="block text-sm font-bold text-purple-800 mb-2">Meta de Vendas de Produtos (R$)</label>
+                <input type="number" className="w-full pl-3 pr-4 py-3 border border-purple-200 rounded-lg font-bold text-gray-800 outline-none"
+                    value={goalsForm.productRevenue} onChange={(e) => setGoalsForm({...goalsForm, productRevenue: parseFloat(e.target.value) || 0})} />
+            </div>
+            <div className="bg-green-50 p-6 rounded-xl border border-green-100">
+                <label className="block text-sm font-bold text-green-800 mb-2">Meta de Serviços Técnicos (R$)</label>
+                <input type="number" className="w-full pl-3 pr-4 py-3 border border-green-200 rounded-lg font-bold text-gray-800 outline-none"
+                    value={goalsForm.serviceRevenue} onChange={(e) => setGoalsForm({...goalsForm, serviceRevenue: parseFloat(e.target.value) || 0})} />
+            </div>
+        </div>
+        <div className="mt-8 flex justify-end pt-6 border-t border-gray-100">
+            <button onClick={handleSaveGoals} className="bg-blue-600 text-white px-8 py-3 rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg shadow-blue-900/20 font-bold">
+                <Save size={20} /> Salvar Metas
+            </button>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderPayables = () => (
     <div className="space-y-6 animate-fade-in">
         {/* ... (Cards and Table) ... */}
@@ -293,7 +353,7 @@ export const Financial: React.FC = () => {
             <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                 <h3 className="font-bold text-gray-800 flex items-center gap-2"><FileText size={18}/> Contas a Receber</h3>
                 <button onClick={() => handleNewRecord('RECEIVABLE')} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium flex items-center gap-2">
-                    <Plus size={16}/> Novo Recebimento
+                    <Plus size={16}/> Nova Recebimento
                 </button>
             </div>
             <table className="w-full text-left text-sm">
@@ -528,6 +588,9 @@ export const Financial: React.FC = () => {
         <button onClick={() => setActiveTab('RECEIVABLES')} className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'RECEIVABLES' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
             <TrendingUp size={18} /> Contas a Receber
         </button>
+        <button onClick={() => setActiveTab('GOALS')} className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'GOALS' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
+            <Target size={18} /> Metas
+        </button>
         <button onClick={() => setActiveTab('CASH_FLOW')} className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'CASH_FLOW' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
             <Activity size={18} /> Fluxo de Caixa
         </button>
@@ -537,6 +600,7 @@ export const Financial: React.FC = () => {
           {activeTab === 'PAYMENT_METHODS' && renderPaymentMethods()}
           {activeTab === 'PAYABLES' && renderPayables()}
           {activeTab === 'RECEIVABLES' && renderReceivables()}
+          {activeTab === 'GOALS' && renderGoalsSettings()}
           {activeTab === 'CASH_FLOW' && (
               <div className="flex flex-col items-center justify-center h-64 text-gray-400 bg-white rounded-xl border border-gray-100 border-dashed">
                   <Activity size={48} className="mb-4 text-gray-300"/>

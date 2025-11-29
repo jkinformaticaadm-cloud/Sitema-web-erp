@@ -325,9 +325,9 @@ const MainLayout: React.FC = () => {
       case View.CASHIER: return <Cashier transactions={transactions} onAddTransaction={addTransaction} companySettings={companySettings} />;
       case View.ORDERS: return <Orders onAddTransaction={addTransaction} customers={customers} products={products} companySettings={companySettings} />;
       case View.CUSTOMERS: return <Customers customers={customers} onSave={handleSaveCustomer} onDelete={handleDeleteCustomer} />;
-      case View.FINANCIAL: return <Financial />;
+      case View.FINANCIAL: return <Financial goals={goals} onUpdateGoals={setGoals} />;
       case View.TEAM: return <Team users={users} />;
-      case View.SETTINGS: return <Settings users={users} setUsers={setUsers} goals={goals} onUpdateGoals={setGoals} companySettings={companySettings} onUpdateCompanySettings={setCompanySettings} />;
+      case View.SETTINGS: return <Settings users={users} setUsers={setUsers} companySettings={companySettings} onUpdateCompanySettings={setCompanySettings} />;
       default: return <div>Em breve</div>;
     }
   };

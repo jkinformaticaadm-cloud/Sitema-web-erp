@@ -303,7 +303,13 @@ export const Home: React.FC = () => {
             </div>
             
             <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-                <p className="text-sm text-gray-400">© 2024 AssisTech. Todos os direitos reservados.</p>
+                <div className="flex items-center gap-2">
+                    <p className="text-sm text-gray-400">© 2024 AssisTech. Todos os direitos reservados.</p>
+                    {/* Botão de Admin Discreto */}
+                    <Link to="/login" className="text-gray-300 hover:text-red-600 transition-colors opacity-10 hover:opacity-100 p-1" title="Acesso Administrativo">
+                        <ShieldCheck size={12} />
+                    </Link>
+                </div>
                 <div className="flex gap-4">
                     <a href="#" className="text-gray-400 hover:text-blue-600 text-sm">Termos de Uso</a>
                     <a href="#" className="text-gray-400 hover:text-blue-600 text-sm">Privacidade</a>

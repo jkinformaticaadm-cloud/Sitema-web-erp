@@ -12,54 +12,31 @@ import {
   Database,
   User as UserIcon,
   X,
-  Target,
   Crown,
   Calendar,
   CreditCard,
   CheckCircle,
   AlertTriangle
 } from 'lucide-react';
-import { User, Goals, CompanySettings } from '../types';
+import { User, CompanySettings } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 
-type SettingsTab = 'COMPANY' | 'USERS' | 'BACKUP' | 'GOALS' | 'SUBSCRIPTION';
+type SettingsTab = 'COMPANY' | 'USERS' | 'BACKUP' | 'SUBSCRIPTION';
 
 interface SettingsProps {
   users: User[];
   setUsers: React.Dispatch<React.SetStateAction<User[]>>;
-  goals: Goals;
-  onUpdateGoals: (goals: Goals) => void;
   companySettings: CompanySettings;
   onUpdateCompanySettings: (settings: CompanySettings) => void;
 }
 
 export const Settings: React.FC<SettingsProps> = ({ 
-    users, setUsers, goals, onUpdateGoals, companySettings, onUpdateCompanySettings 
+    users, setUsers, companySettings, onUpdateCompanySettings 
 }) => {
   const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState<SettingsTab>('COMPANY');
   
-  // State for Goals Settings
-  const [goalsForm, setGoalsForm] = useState<Goals>({
-      globalRevenue: 0,
-      productRevenue: 0,
-      serviceRevenue: 0
-  });
-
-  useEffect(() => {
-    setGoalsForm({
-        globalRevenue: goals.globalRevenue || 0,
-        productRevenue: goals.productRevenue || 0,
-        serviceRevenue: goals.serviceRevenue || 0
-    });
-  }, [goals]);
-
-  const handleSaveGoals = () => {
-    onUpdateGoals(goalsForm);
-    alert('Metas atualizadas com sucesso!');
-  };
-
   // State for Company Settings (Local form synced with props)
   const [companyForm, setCompanyForm] = useState<CompanySettings>(companySettings);
 
@@ -138,40 +115,6 @@ export const Settings: React.FC<SettingsProps> = ({
           setUsers(users.filter(u => u.id !== id));
       }
   };
-
-  const renderGoalsSettings = () => (
-    <div className="space-y-6 animate-fade-in max-w-4xl">
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-           <Target className="text-red-600" size={20} /> Metas Mensais da Loja
-        </h3>
-        <p className="text-gray-500 mb-6">Defina os objetivos mensais de faturamento para que o sistema calcule o desempenho da equipe no Dashboard.</p>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-blue-50 p-6 rounded-xl border border-blue-100">
-                <label className="block text-sm font-bold text-blue-800 mb-2">Meta de Faturamento Global (R$)</label>
-                <input type="number" className="w-full pl-3 pr-4 py-3 border border-blue-200 rounded-lg font-bold text-gray-800 outline-none"
-                    value={goalsForm.globalRevenue} onChange={(e) => setGoalsForm({...goalsForm, globalRevenue: parseFloat(e.target.value) || 0})} />
-            </div>
-            <div className="bg-purple-50 p-6 rounded-xl border border-purple-100">
-                <label className="block text-sm font-bold text-purple-800 mb-2">Meta de Vendas de Produtos (R$)</label>
-                <input type="number" className="w-full pl-3 pr-4 py-3 border border-purple-200 rounded-lg font-bold text-gray-800 outline-none"
-                    value={goalsForm.productRevenue} onChange={(e) => setGoalsForm({...goalsForm, productRevenue: parseFloat(e.target.value) || 0})} />
-            </div>
-            <div className="bg-green-50 p-6 rounded-xl border border-green-100">
-                <label className="block text-sm font-bold text-green-800 mb-2">Meta de Serviços Técnicos (R$)</label>
-                <input type="number" className="w-full pl-3 pr-4 py-3 border border-green-200 rounded-lg font-bold text-gray-800 outline-none"
-                    value={goalsForm.serviceRevenue} onChange={(e) => setGoalsForm({...goalsForm, serviceRevenue: parseFloat(e.target.value) || 0})} />
-            </div>
-        </div>
-        <div className="mt-8 flex justify-end pt-6 border-t border-gray-100">
-            <button onClick={handleSaveGoals} className="bg-blue-600 text-white px-8 py-3 rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-lg shadow-blue-900/20 font-bold">
-                <Save size={20} /> Salvar Metas
-            </button>
-        </div>
-      </div>
-    </div>
-  );
 
   const renderCompanySettings = () => (
     <div className="space-y-6 animate-fade-in max-w-4xl">
@@ -478,9 +421,6 @@ export const Settings: React.FC<SettingsProps> = ({
             <button onClick={() => setActiveTab('COMPANY')} className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'COMPANY' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
                 <Building size={18} /> Dados da Empresa
             </button>
-            <button onClick={() => setActiveTab('GOALS')} className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'GOALS' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
-                <Target size={18} /> Metas
-            </button>
             <button onClick={() => setActiveTab('USERS')} className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'USERS' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
                 <Users size={18} /> Usuários e Permissões
             </button>
@@ -494,7 +434,6 @@ export const Settings: React.FC<SettingsProps> = ({
 
         <div className="flex-1">
             {activeTab === 'COMPANY' && renderCompanySettings()}
-            {activeTab === 'GOALS' && renderGoalsSettings()}
             {activeTab === 'USERS' && renderUsers()}
             {activeTab === 'SUBSCRIPTION' && renderSubscriptionSettings()}
             {activeTab === 'BACKUP' && (
