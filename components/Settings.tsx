@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Building, 
@@ -13,11 +12,18 @@ import {
   Database,
   User as UserIcon,
   X,
-  Target
+  Target,
+  Crown,
+  Calendar,
+  CreditCard,
+  CheckCircle,
+  AlertTriangle
 } from 'lucide-react';
 import { User, Goals, CompanySettings } from '../types';
+import { useAuth } from '../contexts/AuthContext';
+import { Link } from 'react-router-dom';
 
-type SettingsTab = 'COMPANY' | 'USERS' | 'BACKUP' | 'GOALS';
+type SettingsTab = 'COMPANY' | 'USERS' | 'BACKUP' | 'GOALS' | 'SUBSCRIPTION';
 
 interface SettingsProps {
   users: User[];
@@ -31,6 +37,7 @@ interface SettingsProps {
 export const Settings: React.FC<SettingsProps> = ({ 
     users, setUsers, goals, onUpdateGoals, companySettings, onUpdateCompanySettings 
 }) => {
+  const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState<SettingsTab>('COMPANY');
   
   // State for Goals Settings
@@ -385,6 +392,79 @@ export const Settings: React.FC<SettingsProps> = ({
     </div>
   );
 
+  const renderSubscriptionSettings = () => {
+    if (!profile) return null;
+
+    const planName = profile.plano === 'trial' ? 'Teste Grátis (3 Dias)' : 
+                     profile.plano === 'anual' ? 'Plano Anual PRO' : profile.plano.toUpperCase();
+    
+    const paymentMethod = profile.plano === 'trial' ? 'Sem Custo' : 'Pix';
+
+    const statusColor = profile.assinatura_status === 'ativa' ? 'text-green-700 bg-green-50 border-green-200' : 
+                        profile.assinatura_status === 'vencida' ? 'text-red-700 bg-red-50 border-red-200' : 'text-gray-700 bg-gray-50 border-gray-200';
+
+    return (
+        <div className="space-y-6 animate-fade-in max-w-4xl">
+            <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+                <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                    <Crown className="text-yellow-500" size={24} /> Detalhes da Assinatura
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Card Principal */}
+                    <div className={`p-6 rounded-xl border-2 ${profile.plano === 'anual' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-gray-50'}`}>
+                        <div className="flex justify-between items-start mb-4">
+                            <div>
+                                <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">Plano Atual</p>
+                                <h4 className="text-2xl font-bold text-gray-900 mt-1">{planName}</h4>
+                            </div>
+                            <div className={`px-3 py-1 rounded-full text-xs font-bold border ${statusColor} uppercase`}>
+                                {profile.assinatura_status}
+                            </div>
+                        </div>
+                        
+                        {profile.plano === 'trial' && (
+                             <p className="text-sm text-gray-600 mb-4">Aproveite todas as funcionalidades do sistema durante o período de testes.</p>
+                        )}
+                        {profile.plano === 'anual' && (
+                             <p className="text-sm text-blue-700 mb-4 font-medium flex items-center gap-2"><CheckCircle size={16}/> Plano com melhor custo-benefício ativo.</p>
+                        )}
+
+                        <Link to="/plans" className="inline-flex items-center gap-2 text-sm font-bold text-blue-600 hover:text-blue-800 hover:underline">
+                            Alterar ou Renovar Plano
+                        </Link>
+                    </div>
+
+                    {/* Detalhes Laterais */}
+                    <div className="space-y-6">
+                         <div className="flex items-start gap-4 p-4 bg-white border border-gray-100 rounded-lg shadow-sm">
+                             <div className="bg-gray-100 p-2.5 rounded-lg text-gray-600"><Calendar size={20} /></div>
+                             <div>
+                                 <p className="text-sm font-medium text-gray-500">Próximo Vencimento</p>
+                                 <p className="text-lg font-bold text-gray-900">
+                                     {profile.assinatura_vencimento ? new Date(profile.assinatura_vencimento).toLocaleDateString() : 'Não definido'}
+                                 </p>
+                                 {profile.assinatura_status === 'vencida' && (
+                                     <p className="text-xs text-red-500 flex items-center gap-1 mt-1 font-bold"><AlertTriangle size={12}/> Renovação Necessária</p>
+                                 )}
+                             </div>
+                         </div>
+
+                         <div className="flex items-start gap-4 p-4 bg-white border border-gray-100 rounded-lg shadow-sm">
+                             <div className="bg-gray-100 p-2.5 rounded-lg text-gray-600"><CreditCard size={20} /></div>
+                             <div>
+                                 <p className="text-sm font-medium text-gray-500">Modalidade de Pagamento</p>
+                                 <p className="text-lg font-bold text-gray-900">{paymentMethod}</p>
+                                 <p className="text-xs text-gray-400 mt-1">Processado via Checkout Seguro</p>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -404,6 +484,9 @@ export const Settings: React.FC<SettingsProps> = ({
             <button onClick={() => setActiveTab('USERS')} className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'USERS' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
                 <Users size={18} /> Usuários e Permissões
             </button>
+            <button onClick={() => setActiveTab('SUBSCRIPTION')} className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'SUBSCRIPTION' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
+                <Crown size={18} /> Minha Assinatura
+            </button>
             <button onClick={() => setActiveTab('BACKUP')} className={`flex items-center gap-2 px-6 py-3 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === 'BACKUP' ? 'bg-blue-50 text-blue-700 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'}`}>
                 <Database size={18} /> Backup e Dados
             </button>
@@ -413,6 +496,7 @@ export const Settings: React.FC<SettingsProps> = ({
             {activeTab === 'COMPANY' && renderCompanySettings()}
             {activeTab === 'GOALS' && renderGoalsSettings()}
             {activeTab === 'USERS' && renderUsers()}
+            {activeTab === 'SUBSCRIPTION' && renderSubscriptionSettings()}
             {activeTab === 'BACKUP' && (
                 <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center">
                     <Database size={48} className="mx-auto text-blue-200 mb-4" />
