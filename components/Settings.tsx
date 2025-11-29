@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Building, 
@@ -109,9 +110,9 @@ export const Settings: React.FC<SettingsProps> = ({
 
       const newUser: User = {
           id: editingUser ? editingUser.id : Date.now().toString(),
-          name: userForm.name.trim(),
-          username: userForm.username.trim(),
-          password: userForm.password.trim(),
+          name: (userForm.name || '').trim(),
+          username: (userForm.username || '').trim(),
+          password: (userForm.password || '').trim(),
           email: userForm.email || '',
           role: userForm.permissions?.admin ? 'Administrador' : 'Técnico',
           permissions: userForm.permissions || defaultPermissions

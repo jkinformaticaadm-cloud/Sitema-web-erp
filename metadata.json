@@ -1,5 +1,11 @@
 {
-  "name": "RTJK INFOCELL",
-  "description": "A complete ERP system for cell phone repair shops including sales, inventory, and cashier management.",
-  "requestFramePermissions": []
+  "name": "RTJK INFOCELL SaaS",
+  "description": "A complete ERP system for cell phone repair shops including sales, inventory, and cashier management with SaaS features.",
+  "requestFramePermissions": [],
+  "dependencies": {
+    "react-router-dom": "^6.20.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "qrcode.react": "^3.1.0",
+    "date-fns": "^2.30.0"
+  }
 }

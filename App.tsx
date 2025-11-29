@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
 import { Inventory } from './components/Inventory';
@@ -9,239 +11,78 @@ import { Customers } from './components/Customers';
 import { Financial } from './components/Financial';
 import { Settings } from './components/Settings';
 import { Team } from './components/Team';
-import { Login } from './components/Login';
-import { View, CashierTransaction, Customer, User, Goals, CompanySettings } from './types';
-import { Menu, Bell, Search, LogOut } from 'lucide-react';
+import { Login } from './pages/Login';
+import { Register } from './pages/Register';
+import { Plans } from './pages/Plans';
+import { Payment } from './pages/Payment';
+import { Expired } from './pages/Expired';
+import { Home } from './pages/Home';
+import { View, CashierTransaction, Customer, Goals, CompanySettings } from './types';
+import { Menu, Bell, Search, LogOut, Loader2 } from 'lucide-react';
 
+// Mocks iniciais mantidos para funcionamento das telas internas (dashboard, vendas, etc)
 const INITIAL_CUSTOMERS: Customer[] = [
-  { 
-    id: '1', name: 'João da Silva', cpfOrCnpj: '123.456.789-00', phone: '(11) 99999-1234', email: 'joao@email.com', 
-    address: 'Rua das Palmeiras, 123', city: 'São Paulo', state: 'SP', zipCode: '12230-000', neighborhood: 'Jardim Satélite',
-    deviceHistory: 'iPhone 11 (IMEI: 3569888...)', createdAt: '2024-01-15', storeCredit: 0 
-  },
-  { 
-    id: '2', name: 'Maria Oliveira', cpfOrCnpj: '987.654.321-99', phone: '(21) 98888-5678', email: 'maria@email.com', 
-    address: 'Av. Brasil, 500', city: 'Rio de Janeiro', state: 'RJ',
-    deviceHistory: 'Samsung S21', createdAt: '2024-02-20', storeCredit: 0
-  },
+  { id: '1', name: 'João da Silva', cpfOrCnpj: '123.456.789-00', phone: '(11) 99999-1234', email: 'joao@email.com', address: 'Rua 1', city: 'SP', state: 'SP', createdAt: '2024-01-15', storeCredit: 0 }
 ];
+const INITIAL_TRANSACTIONS: CashierTransaction[] = [];
+const INITIAL_GOALS: Goals = { globalRevenue: 40000, productRevenue: 15000, serviceRevenue: 25000 };
+const INITIAL_COMPANY_SETTINGS: CompanySettings = { name: 'TechFix', legalName: '', cnpj: '', ie: '', address: '', phone1: '', phone2: '', email: '', logo: '' };
 
-const INITIAL_USERS: User[] = [
-  {
-    id: '1',
-    name: 'Administrador',
-    username: 'admin',
-    password: 'admin1234', // Senha padrão solicitada
-    email: 'admin@rtjk.com',
-    role: 'Administrador',
-    permissions: {
-      financial: true,
-      sales: true,
-      stock: true,
-      support: true,
-      settings: true,
-      admin: true
-    }
-  },
-  {
-    id: '2',
-    name: 'Técnico Padrão',
-    username: 'tecnico',
-    password: '123',
-    email: 'tecnico@rtjk.com',
-    role: 'Técnico',
-    permissions: {
-      financial: false,
-      sales: true,
-      stock: true,
-      support: true,
-      settings: false,
-      admin: false
-    }
-  }
-];
+// Layout protegido principal (Sidebar + Header + Conteudo)
+const MainLayout: React.FC = () => {
+  const { signOut, profile, company, subscriptionStatus, loading } = useAuth();
+  const [currentView, setCurrentView] = React.useState<View>(View.DASHBOARD);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
+  
+  // Estados globais locais
+  const [customers, setCustomers] = React.useState<Customer[]>(INITIAL_CUSTOMERS);
+  const [transactions, setTransactions] = React.useState<CashierTransaction[]>(INITIAL_TRANSACTIONS);
+  const [goals, setGoals] = React.useState<Goals>(INITIAL_GOALS);
+  const [companySettings, setCompanySettings] = React.useState<CompanySettings>(INITIAL_COMPANY_SETTINGS);
+  const [users, setUsers] = React.useState<any[]>([]); // Mock users list for Team component
 
-const INITIAL_TRANSACTIONS: CashierTransaction[] = [
-    { id: '1', type: 'ENTRY', category: 'Venda #1024', amount: 1200, description: 'Venda de Tela iPhone', date: '08/11/2024 14:30', operator: 'Administrador' },
-    { id: '2', type: 'EXIT', category: 'Alimentação', amount: 45, description: 'Almoço Equipe', date: '08/11/2024 12:00', operator: 'Administrador' },
-    { id: '3', type: 'ENTRY', category: 'Serviço #552', amount: 250, description: 'Troca de Bateria', date: '08/11/2024 10:15', operator: 'Carlos Técnico' },
-    { id: '4', type: 'EXIT', category: 'Fornecedor', amount: 600, description: 'Peças Reposição', date: '08/11/2024 09:00', operator: 'Administrador' },
-];
+  if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={40} /></div>;
 
-const INITIAL_GOALS: Goals = {
-  globalRevenue: 40000,
-  productRevenue: 15000, 
-  serviceRevenue: 25000
-};
+  // Bloqueio de Assinatura
+  if (subscriptionStatus === 'expired') return <Navigate to="/expired" replace />;
+  if (subscriptionStatus === 'inactive') return <Navigate to="/plans" replace />;
 
-const INITIAL_COMPANY_SETTINGS: CompanySettings = {
-  name: 'TechFix Assistência',
-  legalName: 'TechFix Soluções LTDA',
-  cnpj: '00.000.000/0001-00',
-  ie: '',
-  address: 'Rua da Tecnologia, 123 - Centro, São Paulo - SP',
-  phone1: '(11) 99999-9999',
-  phone2: '(11) 3333-3333',
-  email: 'contato@techfix.com.br',
-  logo: ''
-};
-
-const App: React.FC = () => {
-  // Auth State - Inicializa com Admin por padrão (Login desabilitado temporariamente)
-  const [currentUser, setCurrentUser] = useState<User>(() => {
-    const saved = localStorage.getItem('rtjk_session_user');
-    // Se existir salvo usa, senão usa o primeiro da lista (Admin)
-    return saved ? JSON.parse(saved) : INITIAL_USERS[0];
-  });
-
-  const [currentView, setCurrentView] = useState<View>(View.DASHBOARD);
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-
-  // Global State with LocalStorage Persistence
-  const [customers, setCustomers] = useState<Customer[]>(() => {
-    const saved = localStorage.getItem('techfix_customers');
-    return saved ? JSON.parse(saved) : INITIAL_CUSTOMERS;
-  });
-
-  const [users, setUsers] = useState<User[]>(() => {
-    const saved = localStorage.getItem('techfix_users');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].username) {
-            return parsed;
-        }
-      } catch (e) {
-        console.error("Erro ao carregar usuários do localStorage", e);
-      }
-    }
-    return INITIAL_USERS;
-  });
-
-  const [transactions, setTransactions] = useState<CashierTransaction[]>(() => {
-    const saved = localStorage.getItem('techfix_transactions');
-    return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
-  });
-
-  const [goals, setGoals] = useState<Goals>(() => {
-    const saved = localStorage.getItem('techfix_goals');
-    return saved ? JSON.parse(saved) : INITIAL_GOALS;
-  });
-
-  const [companySettings, setCompanySettings] = useState<CompanySettings>(() => {
-    const saved = localStorage.getItem('techfix_company_settings');
-    return saved ? JSON.parse(saved) : INITIAL_COMPANY_SETTINGS;
-  });
-
-  // Effects to save data whenever it changes
-  useEffect(() => {
-    localStorage.setItem('techfix_customers', JSON.stringify(customers));
-  }, [customers]);
-
-  useEffect(() => {
-    localStorage.setItem('techfix_users', JSON.stringify(users));
-  }, [users]);
-
-  useEffect(() => {
-    localStorage.setItem('techfix_transactions', JSON.stringify(transactions));
-  }, [transactions]);
-
-  useEffect(() => {
-    localStorage.setItem('techfix_goals', JSON.stringify(goals));
-  }, [goals]);
-
-  useEffect(() => {
-    localStorage.setItem('techfix_company_settings', JSON.stringify(companySettings));
-  }, [companySettings]);
-
-  const handleSaveCustomer = (customer: Customer) => {
-    setCustomers(prev => {
-      const exists = prev.find(c => c.id === customer.id);
-      if (exists) {
-        return prev.map(c => c.id === customer.id ? customer : c);
-      }
-      return [customer, ...prev];
-    });
-  };
-
-  const handleDeleteCustomer = (id: string) => {
-    setCustomers(prev => prev.filter(c => c.id !== id));
-  };
-
-  // Função para adicionar crédito ao cliente (chamada pelo estorno)
-  const handleUpdateCustomerCredit = (customerName: string, amount: number) => {
-    setCustomers(prev => prev.map(c => {
-        // Tenta encontrar pelo nome exato (idealmente seria por ID, mas o histórico de vendas usa Nome)
-        if (c.name.trim().toLowerCase() === customerName.trim().toLowerCase()) {
-            return {
-                ...c,
-                storeCredit: (c.storeCredit || 0) + amount
-            };
-        }
-        return c;
-    }));
-  };
-
-  const addTransaction = (transaction: CashierTransaction) => {
-    setTransactions(prev => [transaction, ...prev]);
-  };
-
-  const handleLogin = (user: User) => {
-    localStorage.setItem('rtjk_session_user', JSON.stringify(user));
-    setCurrentUser(user);
-  };
-
-  const handleLogout = () => {
-    alert("O sistema de Login está desabilitado temporariamente para desenvolvimento.");
-  };
+  const handleUpdateCustomerCredit = (name: string, amount: number) => { /* Mock Logic */ };
+  const handleSaveCustomer = (c: Customer) => setCustomers(prev => [...prev, c]);
+  const handleDeleteCustomer = (id: string) => setCustomers(prev => prev.filter(c => c.id !== id));
+  const addTransaction = (t: CashierTransaction) => setTransactions(prev => [t, ...prev]);
 
   const renderView = () => {
     switch (currentView) {
-      case View.DASHBOARD:
-        return <Dashboard goals={goals} />;
-      case View.SALES:
-        return (
-            <Sales 
-                customers={customers} 
-                companySettings={companySettings} 
-                onUpdateCustomerCredit={handleUpdateCustomerCredit} // Passando a função
-            />
-        );
-      case View.INVENTORY:
-        return <Inventory />;
-      case View.CASHIER:
-        return <Cashier transactions={transactions} onAddTransaction={addTransaction} companySettings={companySettings} />;
-      case View.ORDERS:
-        return <Orders onAddTransaction={addTransaction} customers={customers} companySettings={companySettings} />;
-      case View.CUSTOMERS:
-        return <Customers customers={customers} onSave={handleSaveCustomer} onDelete={handleDeleteCustomer} />;
-      case View.FINANCIAL:
-        return <Financial />;
-      case View.TEAM:
-        return <Team users={users} />;
-      case View.SETTINGS:
-        return (
-          <Settings 
-            users={users} 
-            setUsers={setUsers} 
-            goals={goals} 
-            onUpdateGoals={setGoals}
-            companySettings={companySettings}
-            onUpdateCompanySettings={setCompanySettings}
-          />
-        );
-      default:
-        return (
-          <div className="flex flex-col items-center justify-center h-96 text-gray-400">
-            <div className="bg-gray-100 p-6 rounded-full mb-4">
-              <span className="text-4xl">🚧</span>
-            </div>
-            <h2 className="text-xl font-bold text-gray-600">Módulo em Desenvolvimento</h2>
-            <p>A funcionalidade {currentView} será implementada em breve.</p>
-          </div>
-        );
+      case View.DASHBOARD: return <Dashboard goals={goals} />;
+      case View.SALES: return <Sales customers={customers} companySettings={companySettings} onUpdateCustomerCredit={handleUpdateCustomerCredit} />;
+      case View.INVENTORY: return <Inventory />;
+      case View.CASHIER: return <Cashier transactions={transactions} onAddTransaction={addTransaction} companySettings={companySettings} />;
+      case View.ORDERS: return <Orders onAddTransaction={addTransaction} customers={customers} companySettings={companySettings} />;
+      case View.CUSTOMERS: return <Customers customers={customers} onSave={handleSaveCustomer} onDelete={handleDeleteCustomer} />;
+      case View.FINANCIAL: return <Financial />;
+      case View.TEAM: return <Team users={users} />;
+      case View.SETTINGS: return <Settings users={users} setUsers={setUsers} goals={goals} onUpdateGoals={setGoals} companySettings={companySettings} onUpdateCompanySettings={setCompanySettings} />;
+      default: return <div>Em breve</div>;
     }
   };
+
+  // Convert Supabase Profile to the generic User type expected by Sidebar
+  const sidebarUser = {
+    id: profile?.id || '0',
+    name: profile?.nome || 'Usuário',
+    username: profile?.email,
+    email: profile?.email || '',
+    role: 'Admin',
+    permissions: { admin: true, financial: true, sales: true, stock: true, support: true, settings: true }
+  };
+
+  // Sync Supabase Company Name to Settings
+  React.useEffect(() => {
+    if (company) {
+      setCompanySettings(prev => ({ ...prev, name: company.nome, phone1: company.telefone || '' }));
+    }
+  }, [company]);
 
   return (
     <div className="flex min-h-screen bg-[#f3f4f6]">
@@ -250,60 +91,71 @@ const App: React.FC = () => {
         onChangeView={setCurrentView} 
         isMobileOpen={isMobileSidebarOpen}
         setIsMobileOpen={setIsMobileSidebarOpen}
-        currentUser={currentUser}
+        currentUser={sidebarUser}
       />
-
-      {/* Main Content */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        {/* Top Header */}
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-10 shadow-sm">
           <div className="flex items-center gap-4">
-            <button 
-              className="md:hidden text-gray-600 hover:bg-gray-100 p-2 rounded-lg"
-              onClick={() => setIsMobileSidebarOpen(true)}
-            >
+            <button className="md:hidden text-gray-600 hover:bg-gray-100 p-2 rounded-lg" onClick={() => setIsMobileSidebarOpen(true)}>
               <Menu size={24} />
             </button>
             <div className="hidden md:flex items-center bg-gray-100 rounded-lg px-3 py-2 w-64">
               <Search size={18} className="text-gray-400 mr-2" />
-              <input 
-                type="text" 
-                placeholder="Buscar no sistema..." 
-                className="bg-transparent border-none outline-none text-sm w-full text-gray-600"
-              />
+              <input type="text" placeholder="Buscar no sistema..." className="bg-transparent border-none outline-none text-sm w-full text-gray-600" />
             </div>
           </div>
-
           <div className="flex items-center gap-4">
-            <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
-              <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-            </button>
-            <div className="h-8 w-px bg-gray-200 mx-2"></div>
-            <div className="flex items-center gap-3">
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-bold text-gray-800">{companySettings.name}</p>
-                <p className="text-xs text-green-600 font-medium">
-                  {currentUser.name}
-                </p>
-              </div>
-              <button 
-                onClick={handleLogout}
-                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors ml-2"
-                title="Sair do Sistema"
-              >
-                <LogOut size={20} />
-              </button>
+            <div className="text-right hidden sm:block">
+              <p className="text-sm font-bold text-gray-800">{company?.nome || 'Minha Empresa'}</p>
+              <p className="text-xs text-green-600 font-medium">{profile?.nome}</p>
             </div>
+            <button onClick={() => signOut()} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors ml-2" title="Sair">
+              <LogOut size={20} />
+            </button>
           </div>
         </header>
-
-        {/* View Content */}
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-8">
           {renderView()}
         </main>
       </div>
     </div>
+  );
+};
+
+// Rota Protegida (Exige Login)
+const ProtectedRoute: React.FC = () => {
+  const { session, loading } = useAuth();
+  if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={40} /></div>;
+  return session ? <Outlet /> : <Navigate to="/login" replace />;
+};
+
+const App: React.FC = () => {
+  return (
+    <Router>
+      <AuthProvider>
+        <Routes>
+          {/* Public Landing Page */}
+          <Route path="/" element={<Home />} />
+          
+          {/* Public Auth Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* Protected App Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/plans" element={<Plans />} />
+            <Route path="/payment/:planId" element={<Payment />} />
+            <Route path="/expired" element={<Expired />} />
+            
+            {/* Dashboard / Main App System */}
+            <Route path="/app" element={<MainLayout />} />
+          </Route>
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </Router>
   );
 };
 

@@ -157,11 +157,32 @@ export interface FinancialRecord {
   netAmount?: number;
 }
 
+// --- SUPABASE & SAAS TYPES ---
+
+export interface SupabaseProfile {
+  id: string; // Auth ID
+  empresa_id: string;
+  nome: string;
+  email: string;
+  plano: 'mensal' | 'trimestral' | 'anual' | 'trial';
+  assinatura_status: 'ativa' | 'inativa' | 'vencida';
+  assinatura_vencimento: string; // ISO Date
+  created_at: string;
+}
+
+export interface SupabaseCompany {
+  id: string;
+  nome: string;
+  cnpj?: string;
+  telefone?: string;
+  created_at: string;
+}
+
 export interface User {
   id: string;
   name: string;
-  username: string; // Usuário de acesso
-  password?: string; // Senha
+  username?: string;
+  password?: string;
   email: string;
   role: string;
   permissions: {
@@ -172,11 +193,14 @@ export interface User {
     settings: boolean;
     admin: boolean;
   };
+  // Vinculação com dados reais do Supabase
+  profile?: SupabaseProfile;
+  company?: SupabaseCompany;
 }
 
 export interface Goals {
   globalRevenue: number;
-  productRevenue: number; // Alterado de accessoryUnits para Revenue (R$)
+  productRevenue: number; 
   serviceRevenue: number;
 }
 
