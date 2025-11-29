@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { login } from '../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
 import { Smartphone, Lock, User, Loader2, ArrowLeft } from 'lucide-react';
 
@@ -16,10 +16,7 @@ export const Login: React.FC = () => {
     setError('');
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { error } = await login(email, password);
 
       if (error) throw error;
       navigate('/app'); 

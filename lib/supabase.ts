@@ -1,22 +1,55 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Função auxiliar para ler variáveis de ambiente de forma segura (funciona em Vite e CRA)
-const getEnv = (key: string, viteKey: string) => {
-  // Verifica process.env (CRA / Node)
-  if (typeof process !== 'undefined' && process.env && process.env[key]) {
-    return process.env[key];
-  }
-  // Verifica import.meta.env (Vite)
-  // @ts-ignore
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[viteKey]) {
-    // @ts-ignore
-    return import.meta.env[viteKey];
-  }
-  return '';
-};
-
-// URL e Key do Supabase (Substitua pelos seus dados do painel do Supabase se não usar .env)
-const SUPABASE_URL = getEnv('REACT_APP_SUPABASE_URL', 'VITE_SUPABASE_URL') || 'https://placeholder-project.supabase.co';
-const SUPABASE_ANON_KEY = getEnv('REACT_APP_SUPABASE_ANON_KEY', 'VITE_SUPABASE_ANON_KEY') || 'placeholder-anon-key';
+// 🔧 SUA URL E CHAVE DO SUPABASE
+const SUPABASE_URL = "https://eeozqzibfsmbwvbezspk.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlb3pxemliZnNtYnd2YmV6c3BrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNzQyMTYsImV4cCI6MjA3OTk1MDIxNn0._lEvmSIq6ZEde3a1MzVQBPS6ZSvAJpHn8cu2QRPNKWw";
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// 🔥 Retorna o usuário atual (se estiver logado)
+export async function getCurrentUser() {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+}
+
+// 🔥 Login com e-mail e senha
+export async function login(email: string, password: string) {
+  return await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+}
+
+// 🔥 Registrar usuário (dispara o trigger e cria empresa automática)
+export async function register(email: string, password: string, metadata: any = {}) {
+  return await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: metadata
+    }
+  });
+}
+
+// 🔥 Logout
+export async function logout() {
+  return await supabase.auth.signOut();
+}
+
+// 🔥 Busca dados da empresa do usuário logado
+export async function getMyCompany() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { data: null, error: { message: 'Usuário não logado' } };
+
+  const companyId = user.user_metadata?.company_id || user.app_metadata?.company_id;
+
+  if (!companyId) return { data: null, error: { message: 'ID da empresa não encontrado' } };
+
+  const { data, error } = await supabase
+    .from("empresas")
+    .select("*")
+    .eq("id", companyId)
+    .single();
+
+  return { data, error };
+}

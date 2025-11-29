@@ -25,14 +25,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let mounted = true;
 
+    // Timeout de segurança: Se o Supabase não responder em 1.5 segundos, libera o app como deslogado
+    // Isso evita a tela branca se as chaves estiverem erradas
+    const safetyTimeout = setTimeout(() => {
+        if (mounted && loading) {
+            console.warn("Auth check demorou muito. Forçando carregamento da página.");
+            setLoading(false);
+        }
+    }, 1500);
+
     const initAuth = async () => {
       try {
-        // 1. Check active session
+        // Tenta obter sessão
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          // Se houver erro (ex: url inválida), apenas assumimos deslogado
-          console.warn('Erro ao verificar sessão:', error.message);
+          console.warn('Sessão não iniciada (provavelmente chaves inválidas ou usuário deslogado):', error.message);
           if (mounted) setLoading(false);
           return;
         }
@@ -46,14 +54,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
       } catch (err) {
-        console.error('Erro inesperado na autenticação:', err);
+        console.error('Erro fatal na autenticação:', err);
         if (mounted) setLoading(false);
       }
     };
 
     initAuth();
 
-    // 2. Listen for changes
+    // Listener de mudanças de estado
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (mounted) {
         setSession(session);
@@ -62,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           setProfile(null);
           setCompany(null);
-          setSubscriptionStatus('loading'); // Reset status? Ou inactive
+          setSubscriptionStatus('loading');
           setLoading(false);
         }
       }
@@ -70,6 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       mounted = false;
+      clearTimeout(safetyTimeout);
       subscription.unsubscribe();
     };
   }, []);
@@ -82,14 +91,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', userId)
         .single();
 
-      if (profileError) {
-        console.warn("Perfil não encontrado ou erro:", profileError.message);
-        // Se não achar perfil, não trava, só deixa null
-      } else {
+      if (!profileError && profileData) {
         setProfile(profileData);
-        if (profileData) checkSubscription(profileData);
+        checkSubscription(profileData);
 
-        if (profileData && profileData.empresa_id) {
+        if (profileData.empresa_id) {
           const { data: companyData } = await supabase
             .from('empresas')
             .select('*')
@@ -105,29 +111,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const checkSubscription = (profile: SupabaseProfile | null) => {
-    if (!profile) {
-      setSubscriptionStatus('inactive');
-      return;
-    }
-
+  const checkSubscription = (profile: SupabaseProfile) => {
     if (profile.assinatura_status !== 'ativa') {
       setSubscriptionStatus(profile.assinatura_status as any || 'inactive');
       return;
     }
 
-    // Verificar data de vencimento
     if (profile.assinatura_vencimento) {
         const hoje = new Date();
         const vencimento = new Date(profile.assinatura_vencimento);
-
-        if (vencimento < hoje) {
-            setSubscriptionStatus('expired');
-        } else {
-            setSubscriptionStatus('active');
-        }
+        setSubscriptionStatus(vencimento < hoje ? 'expired' : 'active');
     } else {
-        // Se ativa mas sem data (caso de erro), assume ativa ou inativa?
         setSubscriptionStatus('active');
     }
   };

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Search, Plus, Filter, Download, Upload, AlertTriangle, X, Save, Trash2, Image as ImageIcon, Package, Wrench } from 'lucide-react';
 import { Product } from '../types';
 
@@ -13,23 +13,13 @@ const CATEGORIES = [
   'Serviços'
 ];
 
-const INITIAL_PRODUCTS: Product[] = [
-  { id: '1', name: 'Tela iPhone 13 Pro OEM', category: 'Diversos', price: 1200, cost: 600, stock: 4, minStock: 5, image: 'https://picsum.photos/100/100?random=1', type: 'PRODUCT', compatible: 'iPhone 13 Pro, A2638' },
-  { id: '2', name: 'Película de Vidro 3D', category: 'Peliculas 3D', price: 30, cost: 5, stock: 150, minStock: 20, image: 'https://picsum.photos/100/100?random=2', type: 'PRODUCT', compatible: 'iPhone 11, XR' },
-  { id: '3', name: 'Cabo USB-C Original', category: 'Cabos', price: 80, cost: 35, stock: 42, minStock: 10, image: 'https://picsum.photos/100/100?random=3', type: 'PRODUCT', compatible: 'Samsung S20, S21, S22, Motorola' },
-  { id: '4', name: 'Formatação PC', category: 'Informatica', price: 150, cost: 0, stock: 0, minStock: 0, image: 'https://picsum.photos/100/100?random=4', type: 'SERVICE' },
-];
+interface InventoryProps {
+  products: Product[];
+  onSave: (product: Product) => void;
+  onDelete: (id: string) => void;
+}
 
-export const Inventory: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>(() => {
-    const saved = localStorage.getItem('techfix_products');
-    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
-  });
-
-  useEffect(() => {
-    localStorage.setItem('techfix_products', JSON.stringify(products));
-  }, [products]);
-
+export const Inventory: React.FC<InventoryProps> = ({ products, onSave, onDelete }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('Todas Categorias');
   
@@ -70,9 +60,7 @@ export const Inventory: React.FC = () => {
   };
 
   const handleDeleteProduct = (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este item?')) {
-      setProducts(products.filter(p => p.id !== id));
-    }
+    onDelete(id);
   };
 
   const handleSave = () => {
@@ -84,24 +72,14 @@ export const Inventory: React.FC = () => {
     const isService = formData.type === 'SERVICE';
 
     // Force stock to 0/ignored if it's a service, or keep user input
-    const finalData = {
-      ...formData,
-      stock: isService ? 0 : formData.stock,
-      minStock: isService ? 0 : formData.minStock,
+    const finalData: Product = {
+      ...(formData as Product),
+      stock: isService ? 0 : formData.stock || 0,
+      minStock: isService ? 0 : formData.minStock || 0,
+      id: editingProduct ? editingProduct.id : Math.random().toString(36).substr(2, 9) // ID handled by DB on insert usually, but passing temp ID for new item safety
     };
 
-    if (editingProduct) {
-      // Update existing
-      setProducts(products.map(p => p.id === editingProduct.id ? { ...finalData, id: p.id } as Product : p));
-    } else {
-      // Create new
-      const newProduct: Product = {
-        ...finalData as Product,
-        id: Math.random().toString(36).substr(2, 9),
-        image: formData.image || `https://picsum.photos/100/100?random=${Math.random()}`
-      };
-      setProducts([newProduct, ...products]);
-    }
+    onSave(finalData);
     setIsModalOpen(false);
   };
 

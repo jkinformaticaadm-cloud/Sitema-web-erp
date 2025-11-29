@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { register } from '../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
 import { Building, User, Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
 
@@ -28,44 +28,27 @@ export const Register: React.FC = () => {
     setError('');
 
     try {
-      // 1. Criar Auth User
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
+      // Passamos os dados extras (nome, empresa, etc) nos metadados
+      // para que o Trigger do Supabase possa criar a empresa e o perfil automaticamente.
+      const { data, error } = await register(formData.email, formData.password, {
+        nome: formData.nome,
+        empresa_nome: formData.empresaNome,
+        cnpj: formData.cnpj,
+        telefone: formData.telefone
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("Erro ao criar usuário");
+      if (error) throw error;
 
-      // 2. Criar Empresa
-      const { data: empresaData, error: empresaError } = await supabase
-        .from('empresas')
-        .insert([{ 
-          nome: formData.empresaNome, 
-          cnpj: formData.cnpj, 
-          telefone: formData.telefone 
-        }])
-        .select()
-        .single();
-
-      if (empresaError) throw empresaError;
-
-      // 3. Criar Perfil vinculado
-      const { error: perfilError } = await supabase
-        .from('perfis')
-        .insert([{
-          id: authData.user.id,
-          empresa_id: empresaData.id,
-          nome: formData.nome,
-          email: formData.email,
-          plano: 'pendente',
-          assinatura_status: 'inativa'
-        }]);
-
-      if (perfilError) throw perfilError;
-
-      // 4. Redirecionar para Planos
-      navigate('/plans');
+      // Se o usuário foi criado com sucesso
+      if (data.user) {
+        // Se houver sessão, redireciona direto. Se não, pode ser necessário confirmar email.
+        if (data.session) {
+            navigate('/plans');
+        } else {
+            alert("Cadastro realizado! Se necessário, verifique seu e-mail para confirmar.");
+            navigate('/login');
+        }
+      }
 
     } catch (err: any) {
       console.error(err);
