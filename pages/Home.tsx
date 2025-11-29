@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Smartphone, 
@@ -13,12 +13,39 @@ import {
   MapPin,
   Lock,
   Globe,
-  Star
+  Star,
+  Send,
+  Loader2
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export const Home: React.FC = () => {
   const { session } = useAuth();
+  const [formStatus, setFormStatus] = useState<'idle' | 'sending' | 'success'>('idle');
+  const [formData, setFormData] = useState({
+    nome: '',
+    telefone: '',
+    email: '',
+    assunto: 'Atendimento',
+    descricao: ''
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormStatus('sending');
+    
+    // Simulação de envio
+    setTimeout(() => {
+      setFormStatus('success');
+      alert(`Obrigado ${formData.nome}! Sua mensagem sobre "${formData.assunto}" foi enviada com sucesso.`);
+      setFormData({ nome: '', telefone: '', email: '', assunto: 'Atendimento', descricao: '' });
+      setFormStatus('idle');
+    }, 1500);
+  };
 
   return (
     <div className="min-h-screen bg-white font-sans text-gray-900 scroll-smooth">
@@ -258,10 +285,151 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer id="contato" className="bg-white pt-16 pb-8 border-t border-gray-100">
+      {/* NEW Contact Section */}
+      <section id="contato" className="py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+            {/* Contact Info */}
+            <div className="flex flex-col justify-center">
+              <h2 className="text-base text-blue-600 font-bold tracking-wide uppercase mb-2">Fale Conosco</h2>
+              <h3 className="text-4xl font-extrabold text-gray-900 mb-6">Estamos prontos para ajudar sua assistência</h3>
+              <p className="text-lg text-gray-600 mb-10 leading-relaxed">
+                Tem dúvidas sobre os planos, funcionalidades ou precisa de suporte técnico? Preencha o formulário ou utilize nossos canais diretos.
+              </p>
+
+              <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
+                    <Mail size={24} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900 text-lg">Email</h4>
+                    <p className="text-gray-600">contato@assistech.com.br</p>
+                    <p className="text-gray-500 text-sm">Resposta em até 24h</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center shrink-0">
+                    <Phone size={24} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900 text-lg">Telefone / WhatsApp</h4>
+                    <p className="text-gray-600">(11) 99999-9999</p>
+                    <p className="text-gray-500 text-sm">Seg. a Sex. das 9h às 18h</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center shrink-0">
+                    <MapPin size={24} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-gray-900 text-lg">Escritório</h4>
+                    <p className="text-gray-600">Av. Paulista, 1000 - Bela Vista</p>
+                    <p className="text-gray-500 text-sm">São Paulo, SP</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Contact Form */}
+            <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+              <h3 className="text-2xl font-bold text-gray-800 mb-6">Envie uma mensagem</h3>
+              
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Nome Completo</label>
+                  <input 
+                    type="text" 
+                    name="nome"
+                    required
+                    value={formData.nome}
+                    onChange={handleInputChange}
+                    placeholder="Seu nome"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-gray-50 focus:bg-white"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Telefone</label>
+                    <input 
+                      type="tel" 
+                      name="telefone"
+                      required
+                      value={formData.telefone}
+                      onChange={handleInputChange}
+                      placeholder="(00) 00000-0000"
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-gray-50 focus:bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+                    <input 
+                      type="email" 
+                      name="email"
+                      required
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      placeholder="seu@email.com"
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-gray-50 focus:bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Assunto</label>
+                  <select 
+                    name="assunto"
+                    value={formData.assunto}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-gray-50 focus:bg-white cursor-pointer"
+                  >
+                    <option value="Atendimento">Atendimento Geral</option>
+                    <option value="Suporte">Suporte Técnico</option>
+                    <option value="Assinatura">Planos e Assinatura</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Descrição</label>
+                  <textarea 
+                    name="descricao"
+                    required
+                    value={formData.descricao}
+                    onChange={handleInputChange}
+                    rows={4}
+                    placeholder="Como podemos ajudar?"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-gray-50 focus:bg-white resize-none"
+                  ></textarea>
+                </div>
+
+                <button 
+                  type="submit" 
+                  disabled={formStatus === 'sending'}
+                  className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold text-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-200 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {formStatus === 'sending' ? (
+                    <>
+                      <Loader2 size={20} className="animate-spin" /> Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <Send size={20} /> Enviar Mensagem
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-white py-12 border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
                 <div className="col-span-1 md:col-span-1">
                     <div className="flex items-center gap-2 mb-4">
                         <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
@@ -270,52 +438,34 @@ export const Home: React.FC = () => {
                         <span className="text-lg font-bold text-gray-900">AssisTech</span>
                     </div>
                     <p className="text-gray-500 text-sm leading-relaxed">
-                        Transformando a gestão de assistências técnicas em todo o Brasil. Simples, rápido e eficiente.
+                        Transformando a gestão de assistências técnicas em todo o Brasil.
                     </p>
                 </div>
                 
                 <div>
-                    <h4 className="font-bold text-gray-900 mb-4">Produto</h4>
+                    <h4 className="font-bold text-gray-900 mb-4">Links Rápidos</h4>
                     <ul className="space-y-2 text-sm text-gray-500">
                         <li><a href="#recursos" className="hover:text-blue-600">Recursos</a></li>
-                        <li><a href="#planos" className="hover:text-blue-600">Planos e Preços</a></li>
-                        <li><a href="#" className="hover:text-blue-600">Atualizações</a></li>
+                        <li><a href="#planos" className="hover:text-blue-600">Planos</a></li>
+                        <li><Link to="/login" className="hover:text-blue-600">Área do Cliente</Link></li>
                     </ul>
                 </div>
 
-                <div>
-                    <h4 className="font-bold text-gray-900 mb-4">Suporte</h4>
-                    <ul className="space-y-2 text-sm text-gray-500">
-                        <li><a href="#" className="hover:text-blue-600">Central de Ajuda</a></li>
-                        <li><a href="#" className="hover:text-blue-600">Documentação API</a></li>
-                        <li><a href="#" className="hover:text-blue-600">Status do Sistema</a></li>
-                    </ul>
-                </div>
-
-                <div>
-                    <h4 className="font-bold text-gray-900 mb-4">Contato</h4>
-                    <ul className="space-y-2 text-sm text-gray-500">
-                        <li className="flex items-center gap-2"><Mail size={16}/> contato@assistech.com.br</li>
-                        <li className="flex items-center gap-2"><Phone size={16}/> (11) 99999-9999</li>
-                        <li className="flex items-center gap-2"><MapPin size={16}/> São Paulo, SP</li>
-                    </ul>
+                <div className="col-span-2 md:text-right">
+                     <p className="text-sm text-gray-400">© 2024 AssisTech. Todos os direitos reservados.</p>
+                     <div className="flex gap-4 justify-start md:justify-end mt-2">
+                        <a href="#" className="text-gray-400 hover:text-blue-600 text-sm">Termos de Uso</a>
+                        <a href="#" className="text-gray-400 hover:text-blue-600 text-sm">Privacidade</a>
+                    </div>
                 </div>
             </div>
             
-            <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-                <div className="flex items-center gap-2">
-                    <p className="text-sm text-gray-400">© 2024 AssisTech. Todos os direitos reservados.</p>
-                    
-                    {/* Botão de Admin Visível */}
-                    <Link to="/login" className="flex items-center gap-2 ml-4 text-xs font-bold text-gray-500 hover:text-blue-600 transition-colors border border-gray-200 px-3 py-1.5 rounded-lg hover:border-blue-200 bg-gray-50 hover:bg-blue-50 group">
-                        <ShieldCheck size={14} className="group-hover:scale-110 transition-transform" />
-                        <span>Área Administrativa</span>
-                    </Link>
-                </div>
-                <div className="flex gap-4">
-                    <a href="#" className="text-gray-400 hover:text-blue-600 text-sm">Termos de Uso</a>
-                    <a href="#" className="text-gray-400 hover:text-blue-600 text-sm">Privacidade</a>
-                </div>
+            <div className="border-t border-gray-100 pt-8 flex justify-center">
+                {/* Botão de Admin Visível */}
+                <Link to="/login" className="flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-blue-600 transition-colors border border-gray-200 px-4 py-2 rounded-full hover:border-blue-200 bg-gray-50 hover:bg-blue-50 group">
+                    <ShieldCheck size={14} className="group-hover:scale-110 transition-transform" />
+                    <span>Área Administrativa</span>
+                </Link>
             </div>
         </div>
       </footer>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Component, ErrorInfo, ReactNode } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Sidebar } from './components/Sidebar';
@@ -28,7 +28,7 @@ const INITIAL_GOALS: Goals = { globalRevenue: 40000, productRevenue: 15000, serv
 const INITIAL_COMPANY_SETTINGS: CompanySettings = { name: 'AssisTech', legalName: '', cnpj: '', ie: '', address: '', phone1: '', phone2: '', email: '', logo: '' };
 
 interface ErrorBoundaryProps {
-  children: React.ReactNode;
+  children?: ReactNode;
 }
 
 interface ErrorBoundaryState {
@@ -36,17 +36,17 @@ interface ErrorBoundaryState {
   error: any;
 }
 
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public state: ErrorBoundaryState = {
+    hasError: false,
+    error: null
+  };
 
   static getDerivedStateFromError(error: any): ErrorBoundaryState {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: any, errorInfo: React.ErrorInfo) {
+  componentDidCatch(error: any, errorInfo: ErrorInfo) {
     console.error("Erro crítico na aplicação:", error, errorInfo);
   }
 
