@@ -19,9 +19,9 @@ export const PLANS: Plan[] = [
   { 
     id: 'anual', 
     name: 'Plano Anual PRO', 
-    price: 29.90, 
+    price: 358.80, 
     days: 365, 
-    description: 'Acesso completo por 1 ano com preço promocional.' 
+    description: 'Acesso completo por 1 ano. Equivalente a R$ 29,90/mês.' 
   },
 ];
 

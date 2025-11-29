@@ -357,10 +357,10 @@ export const Home: React.FC = () => {
 
               <div className="flex items-baseline gap-1 mb-2">
                 <span className="text-5xl font-extrabold text-white">R$ 29,90</span>
-                <span className="text-blue-200 font-medium">/ano</span>
+                <span className="text-blue-200 font-medium">/mês</span>
               </div>
               <p className="text-sm text-blue-200 mb-6 bg-blue-900/30 p-2 rounded inline-block self-start border border-blue-400/30">
-                 Equivale a <strong>R$ 2,49/mês</strong>
+                 Faturado anualmente: <strong>R$ 358,80</strong>
               </p>
 
               <ul className="space-y-4 mb-8 text-white flex-1">

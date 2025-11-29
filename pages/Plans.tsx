@@ -40,13 +40,16 @@ export const Plans: React.FC = () => {
                 
                 <p className="text-gray-500 mb-6">{plan.description}</p>
 
-                <div className="my-6 flex items-baseline">
-                  {plan.price === 0 ? (
+                <div className="my-6 flex flex-col">
+                  {plan.id === 'trial' ? (
                       <span className="text-4xl font-extrabold text-green-600">Grátis</span>
                   ) : (
                       <>
-                        <span className="text-4xl font-extrabold text-gray-900">R$ {plan.price.toFixed(2).replace('.', ',')}</span>
-                        <span className="text-gray-500 ml-1 text-sm font-medium">/ano</span>
+                        <div className="flex items-baseline">
+                            <span className="text-4xl font-extrabold text-gray-900">R$ 29,90</span>
+                            <span className="text-gray-500 ml-1 text-sm font-medium">/mês</span>
+                        </div>
+                        <span className="text-xs text-blue-600 font-medium mt-1">Total de R$ {plan.price.toFixed(2).replace('.', ',')} / ano</span>
                       </>
                   )}
                 </div>
@@ -80,7 +83,7 @@ export const Plans: React.FC = () => {
               
               {plan.id === 'anual' && (
                   <div className="bg-blue-50 px-8 py-3 text-center text-blue-700 text-sm font-medium border-t border-blue-100">
-                      Equivale a apenas R$ 2,49 /mês!
+                      Pagamento único de R$ 358,80
                   </div>
               )}
             </div>
