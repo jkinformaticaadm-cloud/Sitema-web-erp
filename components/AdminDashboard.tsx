@@ -13,8 +13,14 @@ import {
   Filter,
   Trash2,
   RefreshCw,
-  Edit,
-  DollarSign
+  Eye,
+  DollarSign,
+  X,
+  Calendar,
+  Mail,
+  Smartphone,
+  Database,
+  Activity
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -45,6 +51,10 @@ export const AdminDashboard: React.FC = () => {
 
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
+    
+    // Modal View State
+    const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
     // Save changes to LocalStorage
     useEffect(() => {
@@ -87,6 +97,7 @@ export const AdminDashboard: React.FC = () => {
     const handleDeleteTenant = (id: string) => {
         if(confirm("ATENÇÃO: Tem certeza que deseja excluir esta empresa e todos os seus dados?")) {
             setTenants(prev => prev.filter(t => t.id !== id));
+            setIsViewModalOpen(false); // Fecha modal se estiver aberto
         }
     };
 
@@ -100,6 +111,11 @@ export const AdminDashboard: React.FC = () => {
             }
             return t;
         }));
+    };
+
+    const handleViewTenant = (tenant: Tenant) => {
+        setSelectedTenant(tenant);
+        setIsViewModalOpen(true);
     };
 
     // Filtering
@@ -306,6 +322,15 @@ export const AdminDashboard: React.FC = () => {
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex justify-end gap-2 opacity-100 sm:opacity-60 group-hover:opacity-100 transition-opacity">
                                                 
+                                                {/* Visualizar */}
+                                                <button 
+                                                    onClick={() => handleViewTenant(tenant)}
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-200"
+                                                    title="Ver Detalhes"
+                                                >
+                                                    <Eye size={18} />
+                                                </button>
+
                                                 {/* Bloquear/Desbloquear */}
                                                 {tenant.status === 'blocked' ? (
                                                     <button 
@@ -348,6 +373,141 @@ export const AdminDashboard: React.FC = () => {
                     </div>
                 </div>
             </main>
+
+            {/* View Details Modal */}
+            {isViewModalOpen && selectedTenant && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-0 md:p-4">
+                    <div className="bg-white w-full h-full md:h-auto md:max-h-[90vh] md:max-w-3xl flex flex-col md:rounded-xl shadow-2xl animate-scale-in">
+                        {/* Header */}
+                        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 md:rounded-t-xl flex justify-between items-center flex-shrink-0">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-lg">
+                                    {selectedTenant.companyName.charAt(0)}
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-gray-800">{selectedTenant.companyName}</h3>
+                                    <p className="text-xs text-gray-500">ID: {selectedTenant.id} • Criado em: {selectedTenant.createdAt}</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setIsViewModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-200">
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-gray-50/50">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                
+                                {/* Info Cards */}
+                                <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                                    <h4 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+                                        <Building size={16} className="text-blue-500"/> Dados da Empresa
+                                    </h4>
+                                    <div className="space-y-3">
+                                        <div>
+                                            <p className="text-xs text-gray-500">Status da Conta</p>
+                                            <div className="mt-1">{getStatusBadge(selectedTenant.status)}</div>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500">Plano Atual</p>
+                                            <p className="font-medium text-gray-800 uppercase flex items-center gap-1">
+                                                {selectedTenant.plan} 
+                                                {selectedTenant.plan === 'trial' && <span className="text-xs bg-yellow-100 text-yellow-800 px-1 rounded ml-1">Grátis</span>}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                                    <h4 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+                                        <Users size={16} className="text-purple-500"/> Responsável
+                                    </h4>
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-2">
+                                            <div className="bg-gray-100 p-1.5 rounded text-gray-500"><Users size={14}/></div>
+                                            <div>
+                                                <p className="text-xs text-gray-500">Nome</p>
+                                                <p className="font-medium text-gray-800">{selectedTenant.ownerName}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="bg-gray-100 p-1.5 rounded text-gray-500"><Mail size={14}/></div>
+                                            <div>
+                                                <p className="text-xs text-gray-500">Email</p>
+                                                <p className="font-medium text-gray-800 break-all">{selectedTenant.ownerEmail}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="bg-gray-100 p-1.5 rounded text-gray-500"><Calendar size={14}/></div>
+                                            <div>
+                                                <p className="text-xs text-gray-500">Último Acesso</p>
+                                                <p className="font-medium text-gray-800">{selectedTenant.lastLogin}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* System Data Mockup */}
+                                <div className="md:col-span-2 bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                                    <h4 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+                                        <Database size={16} className="text-green-500"/> Dados do Sistema (Simulação)
+                                    </h4>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 text-center">
+                                            <p className="text-xs text-blue-600 font-bold uppercase mb-1">Clientes</p>
+                                            <p className="text-2xl font-bold text-blue-800">{Math.floor(Math.random() * 150) + 20}</p>
+                                        </div>
+                                        <div className="bg-green-50 p-3 rounded-lg border border-green-100 text-center">
+                                            <p className="text-xs text-green-600 font-bold uppercase mb-1">Vendas</p>
+                                            <p className="text-2xl font-bold text-green-800">{Math.floor(Math.random() * 500) + 50}</p>
+                                        </div>
+                                        <div className="bg-orange-50 p-3 rounded-lg border border-orange-100 text-center">
+                                            <p className="text-xs text-orange-600 font-bold uppercase mb-1">Produtos</p>
+                                            <p className="text-2xl font-bold text-orange-800">{Math.floor(Math.random() * 200) + 10}</p>
+                                        </div>
+                                        <div className="bg-purple-50 p-3 rounded-lg border border-purple-100 text-center">
+                                            <p className="text-xs text-purple-600 font-bold uppercase mb-1">Usuários</p>
+                                            <p className="text-2xl font-bold text-purple-800">{selectedTenant.usersCount}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Danger Zone */}
+                                <div className="md:col-span-2 bg-red-50 p-5 rounded-xl border border-red-100">
+                                    <h4 className="text-sm font-bold text-red-800 mb-2 flex items-center gap-2">
+                                        <ShieldAlert size={16}/> Zona de Perigo
+                                    </h4>
+                                    <div className="flex flex-wrap gap-3">
+                                        <button 
+                                            onClick={() => toggleTenantStatus(selectedTenant.id)}
+                                            className="px-4 py-2 bg-white border border-red-200 text-red-700 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors"
+                                        >
+                                            {selectedTenant.status === 'blocked' ? 'Desbloquear Empresa' : 'Bloquear Acesso da Empresa'}
+                                        </button>
+                                        <button 
+                                            onClick={() => handleDeleteTenant(selectedTenant.id)}
+                                            className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
+                                        >
+                                            Excluir Empresa Definitivamente
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 md:rounded-b-xl flex justify-end">
+                            <button 
+                                onClick={() => setIsViewModalOpen(false)}
+                                className="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium transition-colors"
+                            >
+                                Fechar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
