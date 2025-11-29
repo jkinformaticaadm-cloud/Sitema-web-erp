@@ -12,7 +12,8 @@ import {
   Phone, 
   MapPin,
   Lock,
-  Globe
+  Globe,
+  Star
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -202,61 +203,55 @@ export const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Escolha seu plano</h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">Comece gratuitamente. Cancele a qualquer momento. Sem fidelidade.</p>
+            <p className="text-gray-400 max-w-2xl mx-auto">Oferta por tempo limitado. Tenha acesso completo ao sistema.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Mensal */}
-            <div className="bg-gray-800 rounded-2xl p-8 border border-gray-700 hover:border-gray-600 transition-colors flex flex-col">
-              <h3 className="text-lg font-medium text-gray-300 mb-4">Mensal</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Teste Grátis */}
+            <div className="bg-gray-800 rounded-2xl p-8 border border-gray-700 hover:border-green-500 transition-all flex flex-col group relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-green-500"></div>
+              <h3 className="text-2xl font-bold text-white mb-2">Teste Grátis</h3>
+              <p className="text-gray-400 text-sm mb-6">Para quem quer conhecer.</p>
+              
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-bold">R$ 49,90</span>
-                <span className="text-gray-500">/mês</span>
+                <span className="text-4xl font-bold text-green-400">R$ 0,00</span>
               </div>
+              
               <ul className="space-y-4 mb-8 text-gray-300 flex-1">
-                <li className="flex gap-3"><CheckCircle size={20} className="text-blue-500" /> Sistema Completo</li>
-                <li className="flex gap-3"><CheckCircle size={20} className="text-blue-500" /> Suporte via Email</li>
-                <li className="flex gap-3"><CheckCircle size={20} className="text-blue-500" /> 2 Usuários</li>
+                <li className="flex gap-3"><CheckCircle size={20} className="text-green-500" /> 3 Dias de Acesso Total</li>
+                <li className="flex gap-3"><CheckCircle size={20} className="text-green-500" /> Sem compromisso</li>
+                <li className="flex gap-3"><CheckCircle size={20} className="text-green-500" /> Não requer cartão</li>
               </ul>
-              <Link to="/register" className="block w-full py-3 bg-gray-700 hover:bg-gray-600 text-white text-center rounded-xl font-bold transition-colors">
-                Assinar Mensal
+              <Link to="/register" className="block w-full py-4 bg-gray-700 group-hover:bg-green-600 text-white text-center rounded-xl font-bold transition-all">
+                Começar Grátis
               </Link>
             </div>
 
-            {/* Trimestral (Destaque) */}
-            <div className="bg-gradient-to-b from-blue-600 to-blue-700 rounded-2xl p-8 border border-blue-500 shadow-2xl relative transform md:-translate-y-4 flex flex-col">
-              <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-lg shadow-sm">MAIS VENDIDO</div>
-              <h3 className="text-lg font-medium text-blue-100 mb-4">Trimestral</h3>
+            {/* Anual PRO */}
+            <div className="bg-gradient-to-b from-blue-600 to-blue-800 rounded-2xl p-8 border border-blue-500 shadow-2xl relative transform md:-translate-y-4 flex flex-col hover:scale-105 transition-transform duration-300">
+              <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-lg shadow-sm flex items-center gap-1">
+                <Star size={12} fill="currentColor" /> OFERTA ESPECIAL
+              </div>
+              
+              <h3 className="text-2xl font-bold text-white mb-2">Anual PRO</h3>
+              <p className="text-blue-200 text-sm mb-6">Acesso completo por 1 ano.</p>
+
               <div className="flex items-baseline gap-1 mb-2">
-                <span className="text-4xl font-bold">R$ 129,90</span>
-                <span className="text-blue-200">/tri</span>
+                <span className="text-5xl font-extrabold text-white">R$ 29,90</span>
+                <span className="text-blue-200 font-medium">/ano</span>
               </div>
-              <p className="text-sm text-blue-200 mb-6 bg-blue-800/30 p-2 rounded inline-block self-start">Economia de R$ 20,00</p>
-              <ul className="space-y-4 mb-8 text-white flex-1">
-                <li className="flex gap-3"><CheckCircle size={20} className="text-white" /> Todos recursos do Mensal</li>
-                <li className="flex gap-3"><CheckCircle size={20} className="text-white" /> Suporte Prioritário</li>
-                <li className="flex gap-3"><CheckCircle size={20} className="text-white" /> 5 Usuários</li>
-                <li className="flex gap-3"><CheckCircle size={20} className="text-white" /> Backup Automático</li>
-              </ul>
-              <Link to="/register" className="block w-full py-3 bg-white text-blue-700 hover:bg-blue-50 text-center rounded-xl font-bold transition-colors shadow-lg">
-                Começar Agora
-              </Link>
-            </div>
+              <p className="text-sm text-blue-200 mb-6 bg-blue-900/30 p-2 rounded inline-block self-start border border-blue-400/30">
+                 Equivale a <strong>R$ 2,49/mês</strong>
+              </p>
 
-            {/* Anual */}
-            <div className="bg-gray-800 rounded-2xl p-8 border border-gray-700 hover:border-gray-600 transition-colors flex flex-col">
-              <h3 className="text-lg font-medium text-gray-300 mb-4">Anual</h3>
-              <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-bold">R$ 449,90</span>
-                <span className="text-gray-500">/ano</span>
-              </div>
-              <ul className="space-y-4 mb-8 text-gray-300 flex-1">
-                <li className="flex gap-3"><CheckCircle size={20} className="text-blue-500" /> Acesso Vitalício aos dados</li>
-                <li className="flex gap-3"><CheckCircle size={20} className="text-blue-500" /> Usuários Ilimitados</li>
-                <li className="flex gap-3"><CheckCircle size={20} className="text-blue-500" /> Consultoria de Implantação</li>
+              <ul className="space-y-4 mb-8 text-white flex-1">
+                <li className="flex gap-3"><CheckCircle size={20} className="text-yellow-400" /> <strong>Tudo do Teste Grátis</strong></li>
+                <li className="flex gap-3"><CheckCircle size={20} className="text-yellow-400" /> Acesso por 12 meses</li>
+                <li className="flex gap-3"><CheckCircle size={20} className="text-yellow-400" /> Gestão de OS e Vendas</li>
+                <li className="flex gap-3"><CheckCircle size={20} className="text-yellow-400" /> Suporte Prioritário</li>
               </ul>
-              <Link to="/register" className="block w-full py-3 bg-gray-700 hover:bg-gray-600 text-white text-center rounded-xl font-bold transition-colors">
-                Assinar Anual
+              <Link to="/register" className="block w-full py-4 bg-white text-blue-700 hover:bg-gray-50 text-center rounded-xl font-bold transition-colors shadow-lg">
+                Quero essa oferta
               </Link>
             </div>
           </div>
