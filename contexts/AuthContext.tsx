@@ -48,7 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (mounted) {
           setSession(session);
           if (session) {
-            await fetchProfile(session.user.id);
+            await fetchProfile(session.user.id, session.user.email);
           } else {
             setLoading(false);
           }
@@ -66,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (mounted) {
         setSession(session);
         if (session) {
-          await fetchProfile(session.user.id);
+          await fetchProfile(session.user.id, session.user.email);
         } else {
           setProfile(null);
           setCompany(null);
@@ -83,7 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string, email?: string) => {
     try {
       const { data: profileData, error: profileError } = await supabase
         .from('perfis')
@@ -93,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (!profileError && profileData) {
         setProfile(profileData);
-        checkSubscription(profileData);
+        checkSubscription(profileData, email);
 
         if (profileData.empresa_id) {
           const { data: companyData } = await supabase
@@ -111,7 +111,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const checkSubscription = (profile: SupabaseProfile) => {
+  const checkSubscription = (profile: SupabaseProfile, email?: string) => {
+    // 🔥 BACKDOOR ADMIN: Se for o email do admin, libera acesso total sempre
+    if (email === 'admin@assistech.com') {
+        setSubscriptionStatus('active');
+        return;
+    }
+
     if (profile.assinatura_status !== 'ativa') {
       setSubscriptionStatus(profile.assinatura_status as any || 'inactive');
       return;
@@ -129,7 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshProfile = async () => {
     if (session) {
         setLoading(true);
-        await fetchProfile(session.user.id);
+        await fetchProfile(session.user.id, session.user.email);
     }
   };
 

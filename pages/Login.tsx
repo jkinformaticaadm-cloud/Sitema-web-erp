@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { login } from '../lib/supabase';
+import { login, register } from '../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
-import { Smartphone, Lock, User, Loader2, ArrowLeft } from 'lucide-react';
+import { Smartphone, Lock, User, Loader2, ArrowLeft, ShieldAlert } from 'lucide-react';
 
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -16,12 +16,34 @@ export const Login: React.FC = () => {
     setError('');
 
     try {
-      const { error } = await login(email, password);
+      const { error: loginError } = await login(email, password);
 
-      if (error) throw error;
+      if (loginError) {
+        // 🔥 LÓGICA DE AUTO-CRIAÇÃO DO ADMIN
+        // Se tentar logar com o email admin e falhar (usuário não existe), criamos na hora.
+        if (email === 'admin@assistech.com' && password === 'admin123') {
+            console.log("Detectado login de Admin inexistente. Criando usuário...");
+            const { error: registerError } = await register(email, password, {
+                nome: 'Administrador',
+                empresa_nome: 'AssisTech Admin',
+                telefone: '(00) 00000-0000'
+            });
+
+            if (registerError) throw registerError;
+            
+            // Tenta logar novamente após criar
+            const { error: retryError } = await login(email, password);
+            if (retryError) throw retryError;
+            
+            navigate('/app');
+            return;
+        }
+        throw loginError;
+      }
+      
       navigate('/app'); 
     } catch (err: any) {
-      setError(err.message || 'Erro ao fazer login.');
+      setError(err.message || 'Erro ao fazer login. Verifique suas credenciais.');
     } finally {
       setLoading(false);
     }
@@ -42,6 +64,16 @@ export const Login: React.FC = () => {
         </div>
 
         <div className="p-8 bg-white">
+          {/* Dica para o usuário (apenas visualização) */}
+          <div className="mb-6 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-3">
+             <ShieldAlert className="text-yellow-600 shrink-0 mt-0.5" size={18} />
+             <div>
+                <p className="text-xs font-bold text-yellow-800 uppercase">Acesso Admin (Gratuito)</p>
+                <p className="text-xs text-yellow-700">User: <strong className="font-mono">admin@assistech.com</strong></p>
+                <p className="text-xs text-yellow-700">Pass: <strong className="font-mono">admin123</strong></p>
+             </div>
+          </div>
+
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-1">Email</label>
