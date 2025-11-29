@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 
 // 🔧 SUA URL E CHAVE DO SUPABASE
-const SUPABASE_URL = "https://eeozqzibfsmbwvbezspk.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlb3pxemliZnNtYnd2YmV6c3BrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNzQyMTYsImV4cCI6MjA3OTk1MDIxNn0._lEvmSIq6ZEde3a1MzVQBPS6ZSvAJpHn8cu2QRPNKWw";
+// Tenta ler do .env, caso contrário usa o fallback (para garantir funcionamento em todos ambientes)
+const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || "https://eeozqzibfsmbwvbezspk.supabase.co";
+const SUPABASE_ANON_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlb3pxemliZnNtYnd2YmV6c3BrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzNzQyMTYsImV4cCI6MjA3OTk1MDIxNn0._lEvmSIq6ZEde3a1MzVQBPS6ZSvAJpHn8cu2QRPNKWw";
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 

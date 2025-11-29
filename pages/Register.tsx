@@ -73,7 +73,7 @@ export const Register: React.FC = () => {
               <li className="flex items-center gap-2">✓ PDV Integrado</li>
             </ul>
           </div>
-          <p className="text-xs text-blue-200 mt-8">© RTJK SaaS</p>
+          <p className="text-xs text-blue-200 mt-8">© AssisTech</p>
         </div>
 
         {/* Lado Direito - Form */}

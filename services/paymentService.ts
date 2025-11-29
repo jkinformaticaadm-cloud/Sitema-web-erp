@@ -26,7 +26,7 @@ export const generatePixPayment = async (planId: string, userId: string) => {
   return {
     success: true,
     txid: `pix_${Math.random().toString(36).substr(2, 9)}`,
-    copiaCola: "00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-426614174000520400005303986540549.905802BR5913RTJK SISTEMAS6008SAO PAULO62070503***6304ABCD",
+    copiaCola: "00020126580014BR.GOV.BCB.PIX0136123e4567-e89b-12d3-a456-426614174000520400005303986540549.905802BR5913ASSISTECH SAAS6008SAO PAULO62070503***6304ABCD",
     expirationMinutes: 30,
     value: plan.price
   };

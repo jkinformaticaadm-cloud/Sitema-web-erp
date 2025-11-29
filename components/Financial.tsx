@@ -58,23 +58,43 @@ export const Financial: React.FC = () => {
 
   // --- PERSISTENCE STATE ---
   const [machines, setMachines] = useState<CardMachine[]>(() => {
-    const saved = localStorage.getItem('techfix_machines');
-    return saved ? JSON.parse(saved) : INITIAL_MACHINES;
+    try {
+        const saved = localStorage.getItem('techfix_machines');
+        return saved ? JSON.parse(saved) : INITIAL_MACHINES;
+    } catch (e) {
+        console.error(e);
+        return INITIAL_MACHINES;
+    }
   });
 
   const [pixTerminals, setPixTerminals] = useState<PixConfig[]>(() => {
-    const saved = localStorage.getItem('techfix_pix_terminals');
-    return saved ? JSON.parse(saved) : INITIAL_PIX_TERMINALS;
+    try {
+        const saved = localStorage.getItem('techfix_pix_terminals');
+        return saved ? JSON.parse(saved) : INITIAL_PIX_TERMINALS;
+    } catch (e) {
+        console.error(e);
+        return INITIAL_PIX_TERMINALS;
+    }
   });
 
   const [pixBanks, setPixBanks] = useState<PixConfig[]>(() => {
-    const saved = localStorage.getItem('techfix_pix_banks');
-    return saved ? JSON.parse(saved) : INITIAL_PIX_BANKS;
+    try {
+        const saved = localStorage.getItem('techfix_pix_banks');
+        return saved ? JSON.parse(saved) : INITIAL_PIX_BANKS;
+    } catch (e) {
+        console.error(e);
+        return INITIAL_PIX_BANKS;
+    }
   });
 
   const [records, setRecords] = useState<FinancialRecord[]>(() => {
-    const saved = localStorage.getItem('techfix_financial_records');
-    return saved ? JSON.parse(saved) : INITIAL_RECORDS;
+    try {
+        const saved = localStorage.getItem('techfix_financial_records');
+        return saved ? JSON.parse(saved) : INITIAL_RECORDS;
+    } catch (e) {
+        console.error(e);
+        return INITIAL_RECORDS;
+    }
   });
 
   // --- EFFECTS TO SAVE ---

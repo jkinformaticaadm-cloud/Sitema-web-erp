@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Sidebar } from './components/Sidebar';
@@ -18,13 +18,64 @@ import { Payment } from './pages/Payment';
 import { Expired } from './pages/Expired';
 import { Home } from './pages/Home';
 import { View, CashierTransaction, Customer, Goals, CompanySettings, Product } from './types';
-import { Menu, Search, LogOut, Loader2 } from 'lucide-react';
+import { Menu, Search, LogOut, Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { supabase } from './lib/supabase';
 
 // Mocks iniciais para garantir funcionamento das telas (apenas Fallback)
 const INITIAL_TRANSACTIONS: CashierTransaction[] = [];
 const INITIAL_GOALS: Goals = { globalRevenue: 40000, productRevenue: 15000, serviceRevenue: 25000 };
-const INITIAL_COMPANY_SETTINGS: CompanySettings = { name: 'TechFix', legalName: '', cnpj: '', ie: '', address: '', phone1: '', phone2: '', email: '', logo: '' };
+const INITIAL_COMPANY_SETTINGS: CompanySettings = { name: 'AssisTech', legalName: '', cnpj: '', ie: '', address: '', phone1: '', phone2: '', email: '', logo: '' };
+
+// Componente para capturar erros e evitar tela branca total
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean, error: any }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error("Erro crítico na aplicação:", error, errorInfo);
+  }
+
+  handleReset = () => {
+    // Limpa dados locais que podem estar corrompidos
+    localStorage.clear();
+    window.location.href = '/';
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+          <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center border border-red-100">
+            <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle size={32} />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Ops! Algo deu errado.</h2>
+            <p className="text-gray-500 mb-6">
+              O sistema encontrou um erro inesperado. Isso geralmente acontece por dados antigos no navegador.
+            </p>
+            <div className="bg-gray-100 p-3 rounded-lg text-left text-xs font-mono text-gray-600 mb-6 overflow-auto max-h-32">
+              {this.state.error?.toString()}
+            </div>
+            <button 
+              onClick={this.handleReset}
+              className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+            >
+              <RefreshCw size={18} /> Reiniciar Sistema
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children; 
+  }
+}
 
 const MainLayout: React.FC = () => {
   const { signOut, profile, company, subscriptionStatus, loading } = useAuth();
@@ -265,22 +316,24 @@ const ProtectedRoute: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <Router>
-      <AuthProvider>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route element={<ProtectedRoute />}>
-            <Route path="/plans" element={<Plans />} />
-            <Route path="/payment/:planId" element={<Payment />} />
-            <Route path="/expired" element={<Expired />} />
-            <Route path="/app" element={<MainLayout />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </AuthProvider>
-    </Router>
+    <ErrorBoundary>
+      <Router>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/plans" element={<Plans />} />
+              <Route path="/payment/:planId" element={<Payment />} />
+              <Route path="/expired" element={<Expired />} />
+              <Route path="/app" element={<MainLayout />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AuthProvider>
+      </Router>
+    </ErrorBoundary>
   );
 };
 

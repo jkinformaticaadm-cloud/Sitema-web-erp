@@ -28,10 +28,15 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers, pro
   const [pixConfigs, setPixConfigs] = useState<PixConfig[]>([]);
 
   useEffect(() => {
-      const savedMachines = localStorage.getItem('techfix_machines');
-      if (savedMachines) setMachines(JSON.parse(savedMachines));
-      const savedPix = localStorage.getItem('techfix_pix_terminals');
-      if (savedPix) setPixConfigs(JSON.parse(savedPix));
+      try {
+        const savedMachines = localStorage.getItem('techfix_machines');
+        if (savedMachines) setMachines(JSON.parse(savedMachines));
+      } catch (e) { console.error(e); }
+
+      try {
+        const savedPix = localStorage.getItem('techfix_pix_terminals');
+        if (savedPix) setPixConfigs(JSON.parse(savedPix));
+      } catch (e) { console.error(e); }
   }, []);
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -41,8 +46,13 @@ export const Orders: React.FC<OrdersProps> = ({ onAddTransaction, customers, pro
   const [printMode, setPrintMode] = useState<'A4' | 'THERMAL'>('A4');
 
   const [orders, setOrders] = useState<Order[]>(() => {
-    const saved = localStorage.getItem('techfix_orders');
-    return saved ? JSON.parse(saved) : INITIAL_ORDERS;
+    try {
+        const saved = localStorage.getItem('techfix_orders');
+        return saved ? JSON.parse(saved) : INITIAL_ORDERS;
+    } catch (e) {
+        console.error("Error parsing orders", e);
+        return INITIAL_ORDERS;
+    }
   });
 
   useEffect(() => { localStorage.setItem('techfix_orders', JSON.stringify(orders)); }, [orders]);

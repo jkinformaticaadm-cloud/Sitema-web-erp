@@ -29,7 +29,7 @@ export const Home: React.FC = () => {
               <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20 transform hover:scale-105 transition-transform">
                 <Smartphone size={24} />
               </div>
-              <span className="text-xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700">RTJK SaaS</span>
+              <span className="text-xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-indigo-700">AssisTech</span>
             </div>
             
             <div className="hidden md:flex items-center gap-8 text-sm font-bold text-gray-500">
@@ -112,7 +112,7 @@ export const Home: React.FC = () => {
                   <div className="w-3 h-3 rounded-full bg-green-500"></div>
                 </div>
                 <div className="ml-4 px-4 py-1.5 bg-gray-800 rounded-lg text-xs text-gray-400 font-mono flex items-center gap-2">
-                    <Lock size={10} /> app.rtjk.com.br/dashboard
+                    <Lock size={10} /> app.assistech.com.br/dashboard
                 </div>
               </div>
               
@@ -272,7 +272,7 @@ export const Home: React.FC = () => {
                         <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
                             <Smartphone size={18} />
                         </div>
-                        <span className="text-lg font-bold text-gray-900">RTJK SaaS</span>
+                        <span className="text-lg font-bold text-gray-900">AssisTech</span>
                     </div>
                     <p className="text-gray-500 text-sm leading-relaxed">
                         Transformando a gestão de assistências técnicas em todo o Brasil. Simples, rápido e eficiente.
@@ -300,7 +300,7 @@ export const Home: React.FC = () => {
                 <div>
                     <h4 className="font-bold text-gray-900 mb-4">Contato</h4>
                     <ul className="space-y-2 text-sm text-gray-500">
-                        <li className="flex items-center gap-2"><Mail size={16}/> contato@rtjk.com.br</li>
+                        <li className="flex items-center gap-2"><Mail size={16}/> contato@assistech.com.br</li>
                         <li className="flex items-center gap-2"><Phone size={16}/> (11) 99999-9999</li>
                         <li className="flex items-center gap-2"><MapPin size={16}/> São Paulo, SP</li>
                     </ul>
@@ -308,7 +308,7 @@ export const Home: React.FC = () => {
             </div>
             
             <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-                <p className="text-sm text-gray-400">© 2024 RTJK Sistemas. Todos os direitos reservados.</p>
+                <p className="text-sm text-gray-400">© 2024 AssisTech. Todos os direitos reservados.</p>
                 <div className="flex gap-4">
                     <a href="#" className="text-gray-400 hover:text-blue-600 text-sm">Termos de Uso</a>
                     <a href="#" className="text-gray-400 hover:text-blue-600 text-sm">Privacidade</a>

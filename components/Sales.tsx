@@ -21,11 +21,15 @@ export const Sales: React.FC<SalesProps> = ({ customers, products, companySettin
   const [pixConfigs, setPixConfigs] = useState<PixConfig[]>([]);
 
   useEffect(() => {
-      const savedMachines = localStorage.getItem('techfix_machines');
-      if (savedMachines) setMachines(JSON.parse(savedMachines));
+      try {
+        const savedMachines = localStorage.getItem('techfix_machines');
+        if (savedMachines) setMachines(JSON.parse(savedMachines));
+      } catch (e) { console.error("Error parsing machines", e); }
 
-      const savedPix = localStorage.getItem('techfix_pix_terminals');
-      if (savedPix) setPixConfigs(JSON.parse(savedPix));
+      try {
+        const savedPix = localStorage.getItem('techfix_pix_terminals');
+        if (savedPix) setPixConfigs(JSON.parse(savedPix));
+      } catch (e) { console.error("Error parsing pix", e); }
   }, []);
 
   // Sale State
@@ -62,10 +66,15 @@ export const Sales: React.FC<SalesProps> = ({ customers, products, companySettin
   const [customerSearchQuery, setCustomerSearchQuery] = useState('');
   const [historySearchQuery, setHistorySearchQuery] = useState('');
   
-  // Sales History State with LocalStorage
+  // Sales History State with LocalStorage (Safe Parse)
   const [salesHistory, setSalesHistory] = useState<CompletedSale[]>(() => {
-    const saved = localStorage.getItem('techfix_sales');
-    return saved ? JSON.parse(saved) : INITIAL_SALES_HISTORY;
+    try {
+        const saved = localStorage.getItem('techfix_sales');
+        return saved ? JSON.parse(saved) : INITIAL_SALES_HISTORY;
+    } catch (e) {
+        console.error("Error parsing sales history", e);
+        return INITIAL_SALES_HISTORY;
+    }
   });
 
   useEffect(() => {

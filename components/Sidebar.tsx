@@ -59,7 +59,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onChangeView, isM
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="p-6 border-b border-slate-800 flex justify-between items-center">
-            <h1 className="text-xl font-bold text-white tracking-tight">RTJK INFOCELL</h1>
+            <h1 className="text-xl font-bold text-white tracking-tight">AssisTech</h1>
             <button className="md:hidden" onClick={() => setIsMobileOpen(false)}>
               <X size={24} />
             </button>
