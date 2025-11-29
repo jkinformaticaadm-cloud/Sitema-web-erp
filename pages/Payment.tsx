@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useHistory } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { checkPaymentStatus, generatePixPayment, PLANS } from '../services/paymentService';
 import { useAuth } from '../contexts/AuthContext';
@@ -10,7 +10,7 @@ import { Copy, CheckCircle, Loader2, ArrowLeft, Zap } from 'lucide-react';
 export const Payment: React.FC = () => {
   const { planId } = useParams<{ planId: string }>();
   const { session, refreshProfile } = useAuth();
-  const navigate = useNavigate();
+  const history = useHistory();
   
   const [loading, setLoading] = useState(true);
   const [pixData, setPixData] = useState<{ qr: string, code: string, txid: string } | null>(null);
@@ -91,7 +91,7 @@ export const Payment: React.FC = () => {
     await refreshProfile();
 
     setTimeout(() => {
-        navigate('/app');
+        history.push('/app');
     }, 2500);
   };
 
@@ -120,7 +120,7 @@ export const Payment: React.FC = () => {
         ) : (
             <>
                 <div className="mb-6 flex justify-between items-center">
-                    <button onClick={() => navigate('/plans')} className="text-gray-400 hover:text-gray-600"><ArrowLeft /></button>
+                    <button onClick={() => history.push('/plans')} className="text-gray-400 hover:text-gray-600"><ArrowLeft /></button>
                     <h2 className="text-xl font-bold text-gray-800">
                         {plan.price === 0 ? 'Ativando Teste' : 'Pagamento via Pix'}
                     </h2>

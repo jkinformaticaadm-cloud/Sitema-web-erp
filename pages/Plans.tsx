@@ -1,13 +1,13 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { PLANS } from '../services/paymentService';
 import { Check, Zap, Star } from 'lucide-react';
 
 export const Plans: React.FC = () => {
-  const navigate = useNavigate();
+  const history = useHistory();
 
   const handleSelectPlan = (planId: string) => {
-    navigate(`/payment/${planId}`);
+    history.push(`/payment/${planId}`);
   };
 
   return (

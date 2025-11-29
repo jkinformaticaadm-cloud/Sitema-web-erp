@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { login, register } from '../lib/supabase';
-import { useNavigate, Link } from 'react-router-dom';
+import { useHistory, Link } from 'react-router-dom';
 import { Smartphone, Lock, User, Loader2, ArrowLeft, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -9,7 +9,7 @@ export const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
+  const history = useHistory();
   const { loginAsAdminMock } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -38,7 +38,7 @@ export const Login: React.FC = () => {
                 const { error: retryError } = await login(email, password);
                 if (!retryError) {
                     // SE FOR ADMIN, VAI PARA O PAINEL DE ADMIN
-                    navigate('/admin');
+                    history.push('/admin');
                     return;
                 }
             } catch (regError) {
@@ -48,7 +48,7 @@ export const Login: React.FC = () => {
             // 🚨 ULTIMO RECURSO: Se tudo falhar (banco quebrado), entra no modo MOCK (Local)
             console.warn("Ativando modo Admin Mock (Sem Banco de Dados)");
             loginAsAdminMock();
-            navigate('/admin'); // Admin Mock sempre vai pro painel Admin
+            history.push('/admin'); // Admin Mock sempre vai pro painel Admin
             return;
         }
         throw loginError;
@@ -56,9 +56,9 @@ export const Login: React.FC = () => {
       
       // Sucesso normal: verifica se é admin para redirecionar corretamente
       if (email === 'admin@assistech.com') {
-          navigate('/admin');
+          history.push('/admin');
       } else {
-          navigate('/app'); 
+          history.push('/app'); 
       }
 
     } catch (err: any) {
@@ -67,7 +67,7 @@ export const Login: React.FC = () => {
       // Se for admin, forçamos a entrada mesmo com erro genérico
       if (email === 'admin@assistech.com' && password === 'admin123') {
           loginAsAdminMock();
-          navigate('/admin');
+          history.push('/admin');
           return;
       }
 

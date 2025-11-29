@@ -1,5 +1,5 @@
-import React, { useEffect, useState, ErrorInfo, ReactNode, Component } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import React, { useEffect, useState, ErrorInfo, ReactNode } from 'react';
+import { BrowserRouter as Router, Switch, Route, Redirect } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './components/Dashboard';
@@ -36,7 +36,7 @@ interface ErrorBoundaryState {
   error: any;
 }
 
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = {
@@ -103,7 +103,22 @@ const MainLayout: React.FC = () => {
   const [transactions, setTransactions] = React.useState<CashierTransaction[]>(INITIAL_TRANSACTIONS);
   const [goals, setGoals] = React.useState<Goals>(INITIAL_GOALS);
   const [companySettings, setCompanySettings] = React.useState<CompanySettings>(INITIAL_COMPANY_SETTINGS);
-  const [users, setUsers] = React.useState<User[]>([]);
+  
+  const [users, setUsers] = React.useState<User[]>(() => {
+      try {
+          const saved = localStorage.getItem('techfix_users');
+          return saved ? JSON.parse(saved) : [];
+      } catch (e) {
+          return [];
+      }
+  });
+
+  // Save users to persistence
+  useEffect(() => {
+      if (users.length > 0) {
+          localStorage.setItem('techfix_users', JSON.stringify(users));
+      }
+  }, [users]);
 
   // Verifica se é modo Mock (Admin Local)
   const isMockMode = profile?.id === 'mock-admin-id';
@@ -213,8 +228,8 @@ const MainLayout: React.FC = () => {
 
   if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={40} /></div>;
 
-  if (subscriptionStatus === 'expired') return <Navigate to="/expired" replace />;
-  if (subscriptionStatus === 'inactive') return <Navigate to="/plans" replace />;
+  if (subscriptionStatus === 'expired') return <Redirect to="/expired" />;
+  if (subscriptionStatus === 'inactive') return <Redirect to="/plans" />;
 
   // --- ACTIONS ---
 
@@ -413,10 +428,17 @@ const MainLayout: React.FC = () => {
   );
 };
 
-const ProtectedRoute: React.FC = () => {
+const ProtectedRoute = ({ component: Component, ...rest }: any) => {
   const { session, loading } = useAuth();
   if (loading) return <div className="h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-blue-600" size={40} /></div>;
-  return session ? <Outlet /> : <Navigate to="/login" replace />;
+  return (
+    <Route
+      {...rest}
+      render={(props: any) =>
+        session ? <Component {...props} /> : <Redirect to="/login" />
+      }
+    />
+  );
 };
 
 const App: React.FC = () => {
@@ -424,22 +446,20 @@ const App: React.FC = () => {
     <ErrorBoundary>
       <Router>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+          <Switch>
+            <Route exact path="/" component={Home} />
+            <Route path="/login" component={Login} />
+            <Route path="/register" component={Register} />
             
-            {/* Protected Routes (App and Admin) */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/plans" element={<Plans />} />
-              <Route path="/payment/:planId" element={<Payment />} />
-              <Route path="/expired" element={<Expired />} />
-              <Route path="/app" element={<MainLayout />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-            </Route>
+            {/* Protected Routes */}
+            <ProtectedRoute path="/plans" component={Plans} />
+            <ProtectedRoute path="/payment/:planId" component={Payment} />
+            <ProtectedRoute path="/expired" component={Expired} />
+            <ProtectedRoute path="/app" component={MainLayout} />
+            <ProtectedRoute path="/admin" component={AdminDashboard} />
 
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+            <Redirect to="/" />
+          </Switch>
         </AuthProvider>
       </Router>
     </ErrorBoundary>

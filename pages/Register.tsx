@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { register } from '../lib/supabase';
-import { useNavigate, Link } from 'react-router-dom';
+import { useHistory, Link } from 'react-router-dom';
 import { Building, User, Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
 
 export const Register: React.FC = () => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
+  const history = useHistory();
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -43,10 +43,10 @@ export const Register: React.FC = () => {
       if (data.user) {
         // Se houver sessão, redireciona direto. Se não, pode ser necessário confirmar email.
         if (data.session) {
-            navigate('/plans');
+            history.push('/plans');
         } else {
             alert("Cadastro realizado! Se necessário, verifique seu e-mail para confirmar.");
-            navigate('/login');
+            history.push('/login');
         }
       }
 

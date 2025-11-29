@@ -26,7 +26,7 @@ import {
   FileText
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { Tenant } from '../types';
 
 // Mock Data for Tenants (Initial State)
@@ -59,7 +59,7 @@ const getTenantStats = (id: string) => {
 
 export const AdminDashboard: React.FC = () => {
     const { signOut } = useAuth();
-    const navigate = useNavigate();
+    const history = useHistory();
     
     const [tenants, setTenants] = useState<Tenant[]>(() => {
         try {
@@ -95,7 +95,7 @@ export const AdminDashboard: React.FC = () => {
 
     const handleLogout = async () => {
         await signOut();
-        navigate('/');
+        history.push('/');
     };
 
     const handleResetData = () => {

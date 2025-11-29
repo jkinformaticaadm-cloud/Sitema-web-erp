@@ -1,10 +1,10 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { AlertTriangle, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export const Expired: React.FC = () => {
-  const navigate = useNavigate();
+  const history = useHistory();
   const { signOut, profile } = useAuth();
 
   return (
@@ -22,7 +22,7 @@ export const Expired: React.FC = () => {
 
         <div className="space-y-4">
           <button 
-            onClick={() => navigate('/plans')}
+            onClick={() => history.push('/plans')}
             className="w-full py-4 bg-red-600 text-white rounded-xl font-bold text-lg hover:bg-red-700 transition-colors shadow-lg shadow-red-200"
           >
             Renovar Assinatura Agora
